@@ -1,0 +1,327 @@
+export type StatusTone = 'good' | 'warning' | 'critical' | 'muted' | 'info';
+
+export const apiaries = [
+  {
+    id: 'apiary-1',
+    name: 'Pčelinjak Bagremova dolina',
+    location: 'Topola, Srbija',
+    hivesCount: 18,
+    activeDevices: 16,
+    status: 'Stabilno',
+    statusTone: 'good' as StatusTone,
+    note: 'Bagremova paša, južna ekspozicija i dobar prilaz vozilom.',
+  },
+  {
+    id: 'apiary-2',
+    name: 'Pčelinjak Lipov gaj',
+    location: 'Fruška gora',
+    hivesCount: 12,
+    activeDevices: 10,
+    status: 'Pažnja',
+    statusTone: 'warning' as StatusTone,
+    note: 'Lipova i livadska paša, jedna košnica pod pojačanim nadzorom.',
+  },
+  {
+    id: 'apiary-3',
+    name: 'Pčelinjak Suncokretova strana',
+    location: 'Bijeljina',
+    hivesCount: 9,
+    activeDevices: 8,
+    status: 'Stabilno',
+    statusTone: 'good' as StatusTone,
+    note: 'Sezonska lokacija uz parcele suncokreta i uljane repice.',
+  },
+];
+
+export const hives = [
+  {
+    id: 'hive-1',
+    code: 'K-01',
+    apiary: 'Pčelinjak Bagremova dolina',
+    type: 'LR',
+    weight: 45.2,
+    temperature: 34.8,
+    humidity: 61,
+    battery: 84,
+    status: 'Stabilno',
+    statusTone: 'good' as StatusTone,
+    deviceSerial: 'SA-2026-12345',
+  },
+  {
+    id: 'hive-2',
+    code: 'K-02',
+    apiary: 'Pčelinjak Bagremova dolina',
+    type: 'DB',
+    weight: 39.7,
+    temperature: 35.5,
+    humidity: 58,
+    battery: 27,
+    status: 'Pad težine',
+    statusTone: 'critical' as StatusTone,
+    deviceSerial: 'SA-2026-12346',
+  },
+  {
+    id: 'hive-3',
+    code: 'K-03',
+    apiary: 'Pčelinjak Lipov gaj',
+    type: 'LR',
+    weight: 42.8,
+    temperature: 33.9,
+    humidity: 64,
+    battery: 76,
+    status: 'Stabilno',
+    statusTone: 'good' as StatusTone,
+    deviceSerial: 'SA-2026-12347',
+  },
+  {
+    id: 'hive-4',
+    code: 'K-04',
+    apiary: 'Pčelinjak Suncokretova strana',
+    type: 'Farrar',
+    weight: 47.4,
+    temperature: 34.2,
+    humidity: 60,
+    battery: 91,
+    status: 'Stabilno',
+    statusTone: 'good' as StatusTone,
+    deviceSerial: 'SA-2026-12348',
+  },
+];
+
+export const devices = [
+  {
+    id: 'device-1',
+    name: 'Pametna vaga K-01',
+    serial: 'SA-2026-12345',
+    paired: true,
+    hive: 'K-01',
+    battery: 84,
+    signal: '98%',
+    statusTone: 'good' as StatusTone,
+  },
+  {
+    id: 'device-2',
+    name: 'Pametna vaga K-02',
+    serial: 'SA-2026-12346',
+    paired: true,
+    hive: 'K-02',
+    battery: 27,
+    signal: '91%',
+    statusTone: 'warning' as StatusTone,
+  },
+  {
+    id: 'device-3',
+    name: 'Senzor klima K-03',
+    serial: 'SA-2026-12347',
+    paired: true,
+    hive: 'K-03',
+    battery: 76,
+    signal: '94%',
+    statusTone: 'good' as StatusTone,
+  },
+  {
+    id: 'device-4',
+    name: 'Rezervna pametna vaga',
+    serial: 'SA-2026-00991',
+    paired: false,
+    hive: 'Nije uparena',
+    battery: 100,
+    signal: '-',
+    statusTone: 'muted' as StatusTone,
+  },
+];
+
+export const alerts = [
+  {
+    id: 'alert-1',
+    type: 'Težina',
+    title: 'Nagli pad težine',
+    description: 'Košnica K-02 izgubila je 1.8 kg u poslednja 24h.',
+    priority: 'Visok',
+    time: 'Danas 06:15',
+    read: false,
+    severity: 'critical' as StatusTone,
+  },
+  {
+    id: 'alert-2',
+    type: 'Baterija',
+    title: 'Slaba baterija',
+    description: 'Uređaj SA-2026-12346 je ispod praga od 30%.',
+    priority: 'Srednji',
+    time: 'Danas 08:40',
+    read: false,
+    severity: 'warning' as StatusTone,
+  },
+  {
+    id: 'alert-3',
+    type: 'Tretiranje',
+    title: 'Tretiranje pesticidima u radijusu 5 km',
+    description: 'Parcela B04 ima najavljeno tretiranje 27.04.2026. od 06:00.',
+    priority: 'Srednji',
+    time: 'Juče 18:05',
+    read: true,
+    severity: 'warning' as StatusTone,
+  },
+  {
+    id: 'alert-4',
+    type: 'Sistem',
+    title: 'Uređaj sinhronizovan',
+    description: 'Uređaj SA-2026-12345 je poslao poslednje merenje.',
+    priority: 'Nizak',
+    time: 'Juče 09:10',
+    read: true,
+    severity: 'good' as StatusTone,
+  },
+];
+
+export const weightTrend = [
+  { day: '19.04', weight: 42.6 },
+  { day: '20.04', weight: 43.1 },
+  { day: '21.04', weight: 43.8 },
+  { day: '22.04', weight: 44.3 },
+  { day: '23.04', weight: 43.6 },
+  { day: '24.04', weight: 44.7 },
+  { day: '25.04', weight: 45.2 },
+];
+
+export const dailyWeightChange = [
+  { day: '19.04', change: 0.4 },
+  { day: '20.04', change: 0.5 },
+  { day: '21.04', change: 0.7 },
+  { day: '22.04', change: 0.5 },
+  { day: '23.04', change: -0.7 },
+  { day: '24.04', change: 1.1 },
+  { day: '25.04', change: 0.5 },
+];
+
+export const telemetryTimeline = [
+  { time: '06:00', weight: 44.1, temperature: 31.8, humidity: 66 },
+  { time: '09:00', weight: 44.3, temperature: 33.2, humidity: 63 },
+  { time: '12:00', weight: 44.8, temperature: 35.4, humidity: 58 },
+  { time: '15:00', weight: 45.0, temperature: 36.1, humidity: 56 },
+  { time: '18:00', weight: 45.2, temperature: 34.8, humidity: 61 },
+];
+
+export const parcels = [
+  {
+    id: 'parcel-1',
+    name: 'Parcela A12',
+    coordinates: '44.2381, 20.6719',
+    crop: 'Uljana repica',
+    distance: '1.4 km',
+    status: 'Aktivna',
+    statusTone: 'good' as StatusTone,
+  },
+  {
+    id: 'parcel-2',
+    name: 'Parcela B04',
+    coordinates: '44.2297, 20.6842',
+    crop: 'Voćnjak',
+    distance: '0.8 km',
+    status: 'Tretiranje najavljeno',
+    statusTone: 'warning' as StatusTone,
+  },
+  {
+    id: 'parcel-3',
+    name: 'Parcela C19',
+    coordinates: '44.2450, 20.6991',
+    crop: 'Suncokret',
+    distance: '2.2 km',
+    status: 'Aktivna',
+    statusTone: 'good' as StatusTone,
+  },
+];
+
+export const crops = [
+  {
+    id: 'crop-1',
+    parcel: 'Parcela A12',
+    crop: 'Uljana repica',
+    floweringPeriod: 'April - maj',
+    note: 'Važna rana paša uz obavezno praćenje tretiranja.',
+    statusTone: 'warning' as StatusTone,
+  },
+  {
+    id: 'crop-2',
+    parcel: 'Parcela B04',
+    crop: 'Jabuka',
+    floweringPeriod: 'April',
+    note: 'Voćnjak u radijusu 1 km od pčelinjaka.',
+    statusTone: 'warning' as StatusTone,
+  },
+  {
+    id: 'crop-3',
+    parcel: 'Parcela C19',
+    crop: 'Suncokret',
+    floweringPeriod: 'Jun - jul',
+    note: 'Planirana selidbena paša za letnji period.',
+    statusTone: 'good' as StatusTone,
+  },
+];
+
+export const sprayingAnnouncements = [
+  {
+    id: 'spray-1',
+    parcel: 'Parcela B04',
+    date: '27.04.2026.',
+    duration: '06:00 - 10:00',
+    status: 'Najavljeno',
+    statusTone: 'warning' as StatusTone,
+    notifiedBeekeepers: 12,
+    radius: '5 km',
+  },
+  {
+    id: 'spray-2',
+    parcel: 'Parcela A12',
+    date: '29.04.2026.',
+    duration: '20:00 - 22:00',
+    status: 'U proveri',
+    statusTone: 'muted' as StatusTone,
+    notifiedBeekeepers: 8,
+    radius: '3 km',
+  },
+  {
+    id: 'spray-3',
+    parcel: 'Parcela C19',
+    date: '21.04.2026.',
+    duration: '05:30 - 08:00',
+    status: 'Završeno',
+    statusTone: 'good' as StatusTone,
+    notifiedBeekeepers: 9,
+    radius: '4 km',
+  },
+];
+
+export const diaryEntries = [
+  {
+    id: 'diary-1',
+    date: '25.04.2026.',
+    hive: 'K-01',
+    honeyFrames: 6,
+    brood: '7 ramova',
+    queen: 'Prisutna',
+    note: 'Dobra aktivnost na letu, dodata satna osnova.',
+  },
+  {
+    id: 'diary-2',
+    date: '24.04.2026.',
+    hive: 'K-02',
+    honeyFrames: 4,
+    brood: '5 ramova',
+    queen: 'Prisutna',
+    note: 'Proveriti težinu nakon najavljenog pada.',
+  },
+  {
+    id: 'diary-3',
+    date: '22.04.2026.',
+    hive: 'K-03',
+    honeyFrames: 5,
+    brood: '6 ramova',
+    queen: 'Prisutna',
+    note: 'Mirno društvo, nema znakova rojevog nagona.',
+  },
+];
+
+export const averageBattery = Math.round(
+  devices.reduce((total, device) => total + device.battery, 0) / devices.length,
+);

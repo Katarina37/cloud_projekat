@@ -20,6 +20,8 @@ public class SmartApiaryDbContext : DbContext
 
     public DbSet<TelemetryReading> TelemetryReadings => Set<TelemetryReading>();
 
+    public DbSet<HiveInspectionRecord> HiveInspectionRecords => Set<HiveInspectionRecord>();
+
     public DbSet<Parcel> Parcels => Set<Parcel>();
 
     public DbSet<Crop> Crops => Set<Crop>();

@@ -74,12 +74,12 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
         var title = "Pesticide spraying scheduled";
         var message = BuildScheduledMessage(parcel.Name, announcement.StartTime, announcement.DurationHours, announcement.PreparationType);
 
-        foreach (var apiary in nearbyApiaries)
+        foreach (var beekeeperId in beekeeperIds)
         {
-            var notification = new Notification(apiary.BeekeeperId, NotificationType.PesticideWarning, title, message);
+            var notification = new Notification(beekeeperId, NotificationType.PesticideWarning, title, message);
 
             await _notificationRepository.AddAsync(notification, cancellationToken);
-            await _notificationSender.SendToUserAsync(apiary.BeekeeperId, title, message, cancellationToken);
+            await _notificationSender.SendToUserAsync(beekeeperId, title, message, cancellationToken);
         }
 
         announcement.SetNotifiedBeekeepersCount(beekeeperIds.Count);

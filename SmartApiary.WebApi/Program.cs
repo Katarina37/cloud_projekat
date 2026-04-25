@@ -1,5 +1,7 @@
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using SmartApiary.Application.Behaviors;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Infrastructure.Extensions;
@@ -22,6 +24,7 @@ builder.Services.AddMediatR(configuration =>
 });
 
 builder.Services.AddValidatorsFromAssembly(applicationAssembly);
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
