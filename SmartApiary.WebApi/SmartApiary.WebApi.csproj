@@ -2,7 +2,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SmartApiary.Application\SmartApiary.Application.csproj" />
-    <ProjectReference Include="..\SmartApiary.Domain\SmartApiary.Domain.csproj" />
+    <ProjectReference Include="..\SmartApiary.Infrastructure\SmartApiary.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -10,6 +10,8 @@ public interface IDeviceRepository
 
     Task<Device?> GetByHiveIdAsync(Guid hiveId, CancellationToken cancellationToken = default);
 
+    Task<Device?> GetByAccessTokenAsync(string accessToken, CancellationToken cancellationToken = default);
+
     Task AddAsync(Device device, CancellationToken cancellationToken = default);
 
     void Update(Device device);

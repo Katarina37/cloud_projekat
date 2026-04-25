@@ -4,6 +4,12 @@ namespace SmartApiary.Domain.Models;
 
 public class Parcel
 {
+    private Parcel()
+    {
+        Name = null!;
+        Location = null!;
+    }
+
     public Parcel(Guid farmerId, string name, GeoLocation location)
     {
         if (farmerId == Guid.Empty)

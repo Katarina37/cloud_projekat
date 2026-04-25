@@ -4,6 +4,12 @@ namespace SmartApiary.Domain.Models;
 
 public class Apiary
 {
+    private Apiary()
+    {
+        Name = null!;
+        Location = null!;
+    }
+
     public Apiary(
         Guid beekeeperId,
         string name,
