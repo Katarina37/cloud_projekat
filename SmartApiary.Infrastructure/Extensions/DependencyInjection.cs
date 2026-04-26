@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IApiaryRepository, ApiaryRepository>();
         services.AddScoped<IHiveRepository, HiveRepository>();
+        services.AddScoped<IHiveInspectionRepository, HiveInspectionRepository>();
         services.AddScoped<IDeviceRepository, DeviceRepository>();
         services.AddScoped<IParcelRepository, ParcelRepository>();
         services.AddScoped<ICropRepository, CropRepository>();
@@ -35,6 +36,11 @@ public static class DependencyInjection
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IDeviceTokenGenerator, DeviceTokenGenerator>();
         services.AddSingleton<INotificationSender, NoopNotificationSender>();
+        services.AddHttpClient<IWeatherService, WeatherService>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.openweathermap.org/");
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
 
         return services;
     }

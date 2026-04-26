@@ -12,15 +12,11 @@ public class HiveInspectionRecordConfiguration : IEntityTypeConfiguration<HiveIn
 
         builder.HasKey(record => record.Id);
 
-        builder.Property(record => record.BottomBoardColor)
-            .IsRequired()
-            .HasMaxLength(80);
-
         builder.Property(record => record.Notes)
             .HasMaxLength(1000);
 
         builder.HasIndex(record => record.HiveId);
 
-        builder.HasIndex(record => record.InspectionDateTime);
+        builder.HasIndex(record => record.Date);
     }
 }

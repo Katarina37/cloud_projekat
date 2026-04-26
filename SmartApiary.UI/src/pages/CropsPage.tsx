@@ -1,17 +1,20 @@
 import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { Wheat } from 'lucide-react';
+import { Pencil, Plus, Trash2, Wheat } from 'lucide-react';
 import {
+  deleteCrop,
   getApiErrorMessage,
   getCropsByParcel,
   getParcels,
   type CropDto,
   type ParcelDto,
 } from '../api/apiClient';
+import CropFormModal from '../components/CropFormModal';
 import PageHeader from '../components/PageHeader';
 
 const loadingMessage = 'Učitavanje kultura...';
 const loadErrorMessage = 'Greška pri učitavanju kultura.';
-const emptyMessage = 'Nema podataka za prikaz';
+const noParcelsMessage = 'Prvo dodajte parcelu da biste mogli uneti kulturu.';
+const emptyCropsMessage = 'Nema unetih kultura za ovu parcelu.';
 
 export default function CropsPage() {
   const [parcels, setParcels] = useState<ParcelDto[]>([]);
@@ -19,11 +22,34 @@ export default function CropsPage() {
   const [crops, setCrops] = useState<CropDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingCrop, setEditingCrop] = useState<CropDto | null>(null);
+  const [deletingCropId, setDeletingCropId] = useState<string | null>(null);
 
   const loadCropsForParcel = useCallback(async (parcelId: string) => {
     const crops = await getCropsByParcel(parcelId);
     setCrops(crops);
   }, []);
+
+  const fetchCropsForParcel = useCallback(
+    async (parcelId: string) => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await loadCropsForParcel(parcelId);
+        return true;
+      } catch {
+        setCrops([]);
+        setError(loadErrorMessage);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loadCropsForParcel],
+  );
 
   const loadInitialData = useCallback(async () => {
     setLoading(true);
@@ -41,11 +67,11 @@ export default function CropsPage() {
       } else {
         setCrops([]);
       }
-    } catch (requestError) {
+    } catch {
       setParcels([]);
       setSelectedParcelId('');
       setCrops([]);
-      setError(getApiErrorMessage(requestError, loadErrorMessage));
+      setError(loadErrorMessage);
     } finally {
       setLoading(false);
     }
@@ -58,6 +84,7 @@ export default function CropsPage() {
   const handleParcelChange = async (event: ChangeEvent<HTMLSelectElement>) => {
     const nextParcelId = event.target.value;
 
+    setSuccessMessage(null);
     setSelectedParcelId(nextParcelId);
     setCrops([]);
 
@@ -65,22 +92,77 @@ export default function CropsPage() {
       return;
     }
 
-    setLoading(true);
+    await fetchCropsForParcel(nextParcelId);
+  };
+
+  const handleCropCreated = async () => {
+    if (selectedParcelId) {
+      const refreshed = await fetchCropsForParcel(selectedParcelId);
+
+      if (refreshed) {
+        setSuccessMessage('Kultura je uspešno dodata.');
+      }
+    }
+  };
+
+  const handleCropUpdated = async () => {
+    if (selectedParcelId) {
+      const refreshed = await fetchCropsForParcel(selectedParcelId);
+
+      if (refreshed) {
+        setSuccessMessage('Kultura je uspešno izmenjena.');
+      }
+    }
+  };
+
+  const handleDeleteCrop = async (crop: CropDto) => {
+    const confirmed = window.confirm(`Da li želite da obrišete kulturu "${crop.name}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingCropId(crop.id);
     setError(null);
+    setSuccessMessage(null);
 
     try {
-      await loadCropsForParcel(nextParcelId);
-    } catch (requestError) {
-      setCrops([]);
-      setError(getApiErrorMessage(requestError, loadErrorMessage));
+      await deleteCrop(crop.id);
+
+      if (selectedParcelId) {
+        const refreshed = await fetchCropsForParcel(selectedParcelId);
+
+        if (refreshed) {
+          setSuccessMessage('Kultura je uspešno obrisana.');
+        }
+      }
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Greška pri brisanju kulture.'));
     } finally {
-      setLoading(false);
+      setDeletingCropId(null);
     }
   };
 
   return (
     <div className="page-stack">
-      <PageHeader title="Kulture" subtitle="Kulture za izabranu parcelu" />
+      <PageHeader
+        title="Kulture"
+        subtitle="Kulture za izabranu parcelu"
+        action={
+          <button
+            className="primary-button apiary-add-button"
+            disabled={!selectedParcelId}
+            onClick={() => {
+              setSuccessMessage(null);
+              setIsCreateModalOpen(true);
+            }}
+            type="button"
+          >
+            <Plus size={18} />
+            Dodaj kulturu
+          </button>
+        }
+      />
 
       {parcels.length > 0 ? (
         <section className="section-card">
@@ -101,17 +183,23 @@ export default function CropsPage() {
 
       {loading ? <section className="section-card">{loadingMessage}</section> : null}
 
-      {!loading && error ? (
+      {successMessage ? <section className="section-card message-card success">{successMessage}</section> : null}
+
+      {error ? (
         <section className="section-card message-card error" role="alert">
-          {loadErrorMessage}
+          {error}
         </section>
       ) : null}
 
-      {!loading && !error && (parcels.length === 0 || crops.length === 0) ? (
-        <section className="section-card">{emptyMessage}</section>
+      {!loading && !error && parcels.length === 0 ? (
+        <section className="section-card">{noParcelsMessage}</section>
       ) : null}
 
-      {!loading && !error && crops.length > 0 ? (
+      {!loading && !error && selectedParcelId && crops.length === 0 ? (
+        <section className="section-card">{emptyCropsMessage}</section>
+      ) : null}
+
+      {!loading && !error && selectedParcelId && crops.length > 0 ? (
         <section className="card-grid three">
           {crops.map((crop) => (
             <article className="section-card crop-card" key={crop.id}>
@@ -120,25 +208,72 @@ export default function CropsPage() {
                   <Wheat size={18} />
                 </div>
               </div>
-              <h2>{crop.name}</h2>
-              {crop.notes ? <p>{crop.notes}</p> : null}
+
+              <div>
+                <h2>{crop.name}</h2>
+                {crop.notes ? <p>{crop.notes}</p> : null}
+              </div>
+
               <div className="detail-grid">
                 <div>
-                  <span>Početak cvetanja</span>
+                  <span>ExpectedBloomingStart</span>
                   <strong>{formatDate(crop.expectedBloomingStart)}</strong>
                 </div>
                 <div>
-                  <span>Kraj cvetanja</span>
+                  <span>ExpectedBloomingEnd</span>
                   <strong>{formatDate(crop.expectedBloomingEnd)}</strong>
                 </div>
-                <div>
-                  <span>Površina</span>
-                  <strong>{crop.area ?? '-'}</strong>
-                </div>
+                {crop.area !== null && crop.area !== undefined ? (
+                  <div>
+                    <span>Area</span>
+                    <strong>{crop.area}</strong>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="card-action-row">
+                <button
+                  className="secondary-action-button"
+                  disabled={deletingCropId === crop.id}
+                  onClick={() => {
+                    setSuccessMessage(null);
+                    setEditingCrop(crop);
+                  }}
+                  type="button"
+                >
+                  <Pencil size={16} />
+                  Izmeni
+                </button>
+                <button
+                  className="danger-action-button"
+                  disabled={deletingCropId === crop.id}
+                  onClick={() => void handleDeleteCrop(crop)}
+                  type="button"
+                >
+                  <Trash2 size={16} />
+                  {deletingCropId === crop.id ? 'Brisanje...' : 'Obriši'}
+                </button>
               </div>
             </article>
           ))}
         </section>
+      ) : null}
+
+      {isCreateModalOpen ? (
+        <CropFormModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onSaved={handleCropCreated}
+          selectedParcelId={selectedParcelId}
+        />
+      ) : null}
+
+      {editingCrop ? (
+        <CropFormModal
+          crop={editingCrop}
+          onClose={() => setEditingCrop(null)}
+          onSaved={handleCropUpdated}
+          selectedParcelId={selectedParcelId}
+        />
       ) : null}
     </div>
   );

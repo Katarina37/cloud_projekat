@@ -50,6 +50,27 @@ export type CreateHiveRequest = {
 
 export type UpdateHiveRequest = Omit<CreateHiveRequest, 'apiaryId'>;
 
+export type HiveInspectionDto = {
+  id: string;
+  hiveId: string;
+  date: string;
+  framesWithHoney: number;
+  broodFrames: number;
+  queenPresent: boolean;
+  notes?: string | null;
+};
+
+export type CreateHiveInspectionRequest = {
+  hiveId: string;
+  date: string;
+  framesWithHoney: number;
+  broodFrames: number;
+  queenPresent: boolean;
+  notes?: string | null;
+};
+
+export type UpdateHiveInspectionRequest = CreateHiveInspectionRequest;
+
 export type ParcelDto = {
   id: string;
   name: string;
@@ -57,6 +78,14 @@ export type ParcelDto = {
   longitude: number;
   createdAt: string;
 };
+
+export type CreateParcelRequest = {
+  name: string;
+  latitude: number;
+  longitude: number;
+};
+
+export type UpdateParcelRequest = CreateParcelRequest;
 
 export type CropDto = {
   id: string;
@@ -68,6 +97,17 @@ export type CropDto = {
   notes?: string | null;
 };
 
+export type CreateCropRequest = {
+  parcelId: string;
+  name: string;
+  expectedBloomingStart: string;
+  expectedBloomingEnd: string;
+  area?: number | null;
+  notes?: string | null;
+};
+
+export type UpdateCropRequest = Omit<CreateCropRequest, 'parcelId'>;
+
 export type SprayingAnnouncementDto = {
   id: string;
   parcelId: string;
@@ -78,6 +118,18 @@ export type SprayingAnnouncementDto = {
   notifiedBeekeepersCount: number;
   createdAt: string;
   cancelledAt?: string | null;
+};
+
+export type CreateSprayingRequest = {
+  parcelId: string;
+  startTime: string;
+  durationHours: number;
+  preparationType?: string | null;
+};
+
+export type RescheduleSprayingRequest = {
+  newStartTime: string;
+  newDurationHours: number;
 };
 
 export type DeviceDto = {
@@ -125,14 +177,18 @@ export type DailyWeightDeltaDto = {
   deltaKg: number;
 };
 
-export type AlertDto = {
+export type NotificationDto = {
   id: string;
+  userId: string;
   title: string;
   message: string;
   type: string | number;
   createdAt: string;
   isRead: boolean;
+  readAt?: string | null;
 };
+
+export type AlertDto = NotificationDto;
 
 export type AlertSettingsDto = {
   userId: string;
@@ -153,6 +209,19 @@ export type ResultResponse<T> = {
   Error?: unknown;
   value?: T;
   Value?: T;
+  warning?: unknown;
+  Warning?: unknown;
+  weatherWarning?: unknown;
+  WeatherWarning?: unknown;
+  weatherWarningMessage?: unknown;
+  WeatherWarningMessage?: unknown;
+  message?: unknown;
+  Message?: unknown;
+};
+
+export type SprayingActionResult<T = void> = {
+  value: T | undefined;
+  weatherWarning: string | null;
 };
 
 const apiClient = axios.create({
@@ -215,6 +284,34 @@ export async function updateHive(hiveId: string, payload: UpdateHiveRequest): Pr
 export async function deleteHive(hiveId: string): Promise<void> {
   const response = await apiClient.delete<ResultResponse<void>>(`/hives/${hiveId}`);
   unwrapResult(response.data, 'Failed to delete hive');
+}
+
+export async function getHiveInspectionsByHive(hiveId: string): Promise<HiveInspectionDto[]> {
+  const response = await apiClient.get<HiveInspectionApiDto[] | ResultResponse<HiveInspectionApiDto[]>>(
+    `/hive-inspections/by-hive/${hiveId}`,
+  );
+
+  return (unwrapResult(response.data, 'Failed to load hive inspections') ?? []).map(normalizeHiveInspection);
+}
+
+export async function createHiveInspection(
+  payload: CreateHiveInspectionRequest,
+): Promise<string | undefined> {
+  const response = await apiClient.post<string | ResultResponse<string>>('/hive-inspections', payload);
+  return unwrapResult(response.data, 'Failed to create hive inspection');
+}
+
+export async function updateHiveInspection(
+  inspectionId: string,
+  payload: UpdateHiveInspectionRequest,
+): Promise<void> {
+  const response = await apiClient.put<ResultResponse<void>>(`/hive-inspections/${inspectionId}`, payload);
+  unwrapResult(response.data, 'Failed to update hive inspection');
+}
+
+export async function deleteHiveInspection(inspectionId: string): Promise<void> {
+  const response = await apiClient.delete<ResultResponse<void>>(`/hive-inspections/${inspectionId}`);
+  unwrapResult(response.data, 'Failed to delete hive inspection');
 }
 
 export async function getDeviceByHive(hiveId: string): Promise<DeviceDto | null> {
@@ -287,17 +384,22 @@ export async function getDailyWeightDeltas(
   return (unwrapResult(response.data, 'Failed to load daily weight delta') ?? []).map(normalizeDailyWeightDelta);
 }
 
-export async function getAlerts(): Promise<AlertDto[]> {
-  const response = await apiClient.get<AlertApiDto[] | AlertApiDto | ResultResponse<AlertApiDto[] | AlertApiDto | null>>(
-    '/alerts',
+export async function getNotifications(): Promise<NotificationDto[]> {
+  const response = await apiClient.get<NotificationApiDto[] | ResultResponse<NotificationApiDto[] | null>>(
+    '/notifications',
   );
-  const alerts = unwrapResult(response.data, 'Failed to load alerts');
+  const notifications = unwrapResult(response.data, 'Failed to load notifications');
 
-  if (Array.isArray(alerts)) {
-    return alerts.map(normalizeAlert);
-  }
+  return (notifications ?? []).map(normalizeNotification);
+}
 
-  return isAlertApiDto(alerts) ? [normalizeAlert(alerts)] : [];
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  const response = await apiClient.put<ResultResponse<void>>(`/notifications/${notificationId}/read`);
+  unwrapResult(response.data, 'Failed to mark notification as read');
+}
+
+export async function getAlerts(): Promise<AlertDto[]> {
+  return getNotifications();
 }
 
 export async function getAlertSettings(): Promise<AlertSettingsDto | null> {
@@ -316,10 +418,40 @@ export async function getParcels(): Promise<ParcelDto[]> {
   return unwrapResult(response.data, 'Failed to load parcels') ?? [];
 }
 
+export async function createParcel(payload: CreateParcelRequest): Promise<string | undefined> {
+  const response = await apiClient.post<string | ResultResponse<string>>('/parcels', payload);
+  return unwrapResult(response.data, 'Failed to create parcel');
+}
+
+export async function updateParcel(parcelId: string, payload: UpdateParcelRequest): Promise<void> {
+  const response = await apiClient.put<ResultResponse<void>>(`/parcels/${parcelId}`, payload);
+  unwrapResult(response.data, 'Failed to update parcel');
+}
+
+export async function deleteParcel(parcelId: string): Promise<void> {
+  const response = await apiClient.delete<ResultResponse<void>>(`/parcels/${parcelId}`);
+  unwrapResult(response.data, 'Failed to delete parcel');
+}
+
 export async function getCropsByParcel(parcelId: string): Promise<CropDto[]> {
   const response = await apiClient.get<CropApiDto[] | ResultResponse<CropApiDto[]>>(`/crops/by-parcel/${parcelId}`);
 
   return (unwrapResult(response.data, 'Failed to load crops') ?? []).map(normalizeCrop);
+}
+
+export async function createCrop(payload: CreateCropRequest): Promise<string | undefined> {
+  const response = await apiClient.post<string | ResultResponse<string>>('/crops', payload);
+  return unwrapResult(response.data, 'Failed to create crop');
+}
+
+export async function updateCrop(cropId: string, payload: UpdateCropRequest): Promise<void> {
+  const response = await apiClient.put<ResultResponse<void>>(`/crops/${cropId}`, payload);
+  unwrapResult(response.data, 'Failed to update crop');
+}
+
+export async function deleteCrop(cropId: string): Promise<void> {
+  const response = await apiClient.delete<ResultResponse<void>>(`/crops/${cropId}`);
+  unwrapResult(response.data, 'Failed to delete crop');
 }
 
 export async function getSprayingByParcel(parcelId: string): Promise<SprayingAnnouncementDto[]> {
@@ -330,6 +462,34 @@ export async function getSprayingByParcel(parcelId: string): Promise<SprayingAnn
   return (unwrapResult(response.data, 'Failed to load spraying announcements') ?? []).map(
     normalizeSprayingAnnouncement,
   );
+}
+
+export async function createSpraying(payload: CreateSprayingRequest): Promise<SprayingActionResult<string>> {
+  const response = await apiClient.post<string | ResultResponse<string>>('/spraying', payload);
+  return unwrapSprayingActionResult(response.data, 'Failed to schedule spraying announcement');
+}
+
+export async function rescheduleSpraying(
+  sprayingId: string,
+  payload: RescheduleSprayingRequest,
+): Promise<SprayingActionResult> {
+  const response = await apiClient.put<ResultResponse<void>>(`/spraying/${sprayingId}/reschedule`, payload);
+  return unwrapSprayingActionResult(response.data, 'Failed to reschedule spraying announcement');
+}
+
+export async function cancelSpraying(sprayingId: string): Promise<void> {
+  const response = await apiClient.put<ResultResponse<void>>(`/spraying/${sprayingId}/cancel`);
+  unwrapResult(response.data, 'Failed to cancel spraying announcement');
+}
+
+export async function completeSpraying(sprayingId: string): Promise<void> {
+  const response = await apiClient.put<ResultResponse<void>>(`/spraying/${sprayingId}/complete`);
+  unwrapResult(response.data, 'Failed to complete spraying announcement');
+}
+
+export async function getSprayingNotificationStatus(sprayingId: string): Promise<number> {
+  const response = await apiClient.get<number | ResultResponse<number>>(`/spraying/${sprayingId}/notifications`);
+  return unwrapResult(response.data, 'Failed to load spraying notification status') ?? 0;
 }
 
 export function getApiErrorMessage(error: unknown, fallbackError: string) {
@@ -360,6 +520,71 @@ function isResultResponse<T>(data: T | ResultResponse<T>): data is ResultRespons
     );
 }
 
+function unwrapSprayingActionResult<T>(
+  data: T | ResultResponse<T>,
+  fallbackError: string,
+): SprayingActionResult<T> {
+  return {
+    value: unwrapResult(data, fallbackError),
+    weatherWarning: getResponseWeatherWarning(data),
+  };
+}
+
+const defaultWeatherWarningMessage = 'Upozorenje: loši vremenski uslovi – preporučuje se pomeranje termina.';
+
+const weatherWarningResponseKeys = [
+  'warning',
+  'Warning',
+  'weatherWarning',
+  'WeatherWarning',
+  'weatherWarningMessage',
+  'WeatherWarningMessage',
+  'message',
+  'Message',
+] as const;
+
+function getResponseWeatherWarning(data: unknown): string | null {
+  if (!isRecord(data)) {
+    return null;
+  }
+
+  for (const key of weatherWarningResponseKeys) {
+    if (!(key in data)) {
+      continue;
+    }
+
+    const weatherWarning = getWeatherWarningText(data[key]);
+
+    if (weatherWarning) {
+      return weatherWarning;
+    }
+  }
+
+  return null;
+}
+
+function getWeatherWarningText(value: unknown): string | null {
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim();
+
+    return trimmedValue.length > 0 ? trimmedValue : null;
+  }
+
+  if (typeof value === 'boolean') {
+    return value ? defaultWeatherWarningMessage : null;
+  }
+
+  if (isRecord(value)) {
+    return getResponseWeatherWarning(value) ?? (Object.keys(value).length > 0 ? defaultWeatherWarningMessage : null);
+  }
+
+  return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 type TelemetryReadingApiDto = Partial<TelemetryReadingDto> & {
   Id?: string;
   HiveId?: string;
@@ -385,13 +610,25 @@ type DailyWeightDeltaApiDto = Partial<DailyWeightDeltaDto> & {
   DeltaKg?: number;
 };
 
-type AlertApiDto = Partial<AlertDto> & {
+type HiveInspectionApiDto = Partial<HiveInspectionDto> & {
   Id?: string;
+  HiveId?: string;
+  Date?: string;
+  FramesWithHoney?: number;
+  BroodFrames?: number;
+  QueenPresent?: boolean;
+  Notes?: string | null;
+};
+
+type NotificationApiDto = Partial<NotificationDto> & {
+  Id?: string;
+  UserId?: string;
   Title?: string;
   Message?: string;
   Type?: string | number;
   CreatedAt?: string;
   IsRead?: boolean;
+  ReadAt?: string | null;
 };
 
 type AlertSettingsApiDto = Partial<AlertSettingsDto> & {
@@ -453,14 +690,28 @@ function normalizeDailyWeightDelta(delta: DailyWeightDeltaApiDto): DailyWeightDe
   };
 }
 
-function normalizeAlert(alert: AlertApiDto): AlertDto {
+function normalizeHiveInspection(record: HiveInspectionApiDto): HiveInspectionDto {
   return {
-    id: alert.id ?? alert.Id ?? '',
-    title: alert.title ?? alert.Title ?? 'Upozorenje',
-    message: alert.message ?? alert.Message ?? '',
-    type: alert.type ?? alert.Type ?? 'Info',
-    createdAt: alert.createdAt ?? alert.CreatedAt ?? '',
-    isRead: alert.isRead ?? alert.IsRead ?? false,
+    id: record.id ?? record.Id ?? '',
+    hiveId: record.hiveId ?? record.HiveId ?? '',
+    date: record.date ?? record.Date ?? '',
+    framesWithHoney: record.framesWithHoney ?? record.FramesWithHoney ?? 0,
+    broodFrames: record.broodFrames ?? record.BroodFrames ?? 0,
+    queenPresent: record.queenPresent ?? record.QueenPresent ?? false,
+    notes: record.notes ?? record.Notes ?? null,
+  };
+}
+
+function normalizeNotification(notification: NotificationApiDto): NotificationDto {
+  return {
+    id: notification.id ?? notification.Id ?? '',
+    userId: notification.userId ?? notification.UserId ?? '',
+    title: notification.title ?? notification.Title ?? 'Upozorenje',
+    message: notification.message ?? notification.Message ?? '',
+    type: notification.type ?? notification.Type ?? 'Info',
+    createdAt: notification.createdAt ?? notification.CreatedAt ?? '',
+    isRead: notification.isRead ?? notification.IsRead ?? false,
+    readAt: notification.readAt ?? notification.ReadAt ?? null,
   };
 }
 
@@ -496,19 +747,6 @@ function normalizeSprayingAnnouncement(announcement: SprayingAnnouncementApiDto)
     createdAt: announcement.createdAt ?? announcement.CreatedAt ?? '',
     cancelledAt: announcement.cancelledAt ?? announcement.CancelledAt ?? null,
   };
-}
-
-function isAlertApiDto(value: unknown): value is AlertApiDto {
-  return typeof value === 'object'
-    && value !== null
-    && (
-      'title' in value
-      || 'Title' in value
-      || 'message' in value
-      || 'Message' in value
-      || 'isRead' in value
-      || 'IsRead' in value
-    );
 }
 
 function getErrorMessage(error: unknown, fallbackError: string) {

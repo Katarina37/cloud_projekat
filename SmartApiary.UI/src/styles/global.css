@@ -554,6 +554,16 @@ a {
   background: #f7fff9;
 }
 
+.alert-card.info {
+  border-color: #fed7aa;
+  background: #fffaf2;
+}
+
+.alert-card.muted {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
 .alert-icon {
   width: 38px;
   height: 38px;
@@ -573,6 +583,20 @@ a {
 .alert-card.good .alert-icon {
   color: #15803d;
   background: #dcfce7;
+}
+
+.alert-card.info .alert-icon {
+  color: #7c2d12;
+  background: #fff7d6;
+}
+
+.alert-card.muted .alert-icon {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.alert-content {
+  min-width: 0;
 }
 
 .alert-heading,
@@ -608,11 +632,16 @@ a {
 
 .alert-meta {
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .alert-meta small {
   color: var(--muted);
   font-size: 12px;
+}
+
+.alert-meta .secondary-action-button {
+  max-width: 100%;
 }
 
 .device-summary {
@@ -908,25 +937,29 @@ a {
 }
 
 .apiary-add-button,
-.apiary-submit-button {
+.apiary-submit-button,
+.orange-button {
   color: #ffffff;
   background: var(--orange);
   box-shadow: 0 10px 18px rgba(249, 115, 22, 0.22);
 }
 
 .apiary-add-button:hover,
-.apiary-submit-button:hover {
+.apiary-submit-button:hover,
+.orange-button:hover {
   background: var(--orange-dark);
 }
 
 .apiary-add-button:disabled,
-.apiary-submit-button:disabled {
+.apiary-submit-button:disabled,
+.orange-button:disabled {
   cursor: not-allowed;
   opacity: 0.72;
 }
 
 .apiary-add-button:disabled:hover,
-.apiary-submit-button:disabled:hover {
+.apiary-submit-button:disabled:hover,
+.orange-button:disabled:hover {
   background: var(--orange);
 }
 
@@ -945,6 +978,28 @@ a {
   color: #15803d;
   border-color: #bbf7d0;
   background: #f7fff9;
+}
+
+.message-card.warning {
+  color: #92400e;
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.weather-warning-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.weather-warning-icon {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  color: #92400e;
+  background: #ffedd5;
 }
 
 .access-token-box {
@@ -1019,6 +1074,17 @@ a {
   border-color: #facc15;
   background: #fff7d6;
   color: #7c2d12;
+}
+
+.orange-action-button {
+  color: var(--orange-dark);
+  border-color: #fed7aa;
+}
+
+.orange-action-button:hover {
+  color: #9a3412;
+  border-color: var(--orange);
+  background: #fff7ed;
 }
 
 .danger-action-button {
@@ -1108,6 +1174,17 @@ a {
   color: var(--muted);
   font-size: 13px;
   font-weight: 800;
+}
+
+.modal-form .checkbox-label {
+  flex-direction: row;
+  align-items: center;
+  color: var(--text);
+}
+
+.modal-form .checkbox-label input {
+  width: 18px;
+  min-height: 18px;
 }
 
 .modal-form input,

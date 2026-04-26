@@ -12,6 +12,7 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
+    private readonly IWeatherService _weatherService;
     private readonly ISprayingNotificationService _sprayingNotificationService;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -19,12 +20,14 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
     public ScheduleSprayingCommandHandler(
         ICurrentUserService currentUserService,
         IParcelRepository parcelRepository,
+        IWeatherService weatherService,
         ISprayingNotificationService sprayingNotificationService,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _parcelRepository = parcelRepository;
+        _weatherService = weatherService;
         _sprayingNotificationService = sprayingNotificationService;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _unitOfWork = unitOfWork;
@@ -48,6 +51,8 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
             return Result<Guid>.Failure("Parcel does not belong to the current farmer.");
         }
 
+        var weatherWarning = await GetWeatherWarningAsync(parcel, request.StartTime, cancellationToken);
+
         var announcement = new SprayingAnnouncement(
             request.ParcelId,
             request.StartTime,
@@ -68,7 +73,32 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
         await _sprayingAnnouncementRepository.AddAsync(announcement, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<Guid>.Success(announcement.Id);
+        return Result<Guid>.Success(announcement.Id, weatherWarning);
+    }
+
+    private async Task<string?> GetWeatherWarningAsync(
+        Parcel parcel,
+        DateTime startTime,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var weather = await _weatherService.GetWeatherAsync(
+                parcel.Location.Latitude,
+                parcel.Location.Longitude,
+                startTime,
+                cancellationToken);
+
+            return SprayingWeatherWarning.Build(weather);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string BuildScheduledMessage(

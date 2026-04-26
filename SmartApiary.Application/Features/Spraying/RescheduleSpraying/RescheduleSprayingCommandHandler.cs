@@ -4,6 +4,7 @@ using SmartApiary.Application.Features.Spraying;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Enums;
+using SmartApiary.Domain.Models;
 
 namespace SmartApiary.Application.Features.Spraying.RescheduleSpraying;
 
@@ -11,6 +12,7 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
+    private readonly IWeatherService _weatherService;
     private readonly ISprayingNotificationService _sprayingNotificationService;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -19,12 +21,14 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
         ICurrentUserService currentUserService,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IParcelRepository parcelRepository,
+        IWeatherService weatherService,
         ISprayingNotificationService sprayingNotificationService,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _parcelRepository = parcelRepository;
+        _weatherService = weatherService;
         _sprayingNotificationService = sprayingNotificationService;
         _unitOfWork = unitOfWork;
     }
@@ -55,6 +59,8 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
             return Result.Failure("Spraying announcement does not belong to the current farmer.");
         }
 
+        var weatherWarning = await GetWeatherWarningAsync(parcel, request.NewStartTime, cancellationToken);
+
         announcement.Reschedule(request.NewStartTime, request.NewDurationHours);
 
         var title = "Pesticide spraying changed";
@@ -69,6 +75,31 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
         _sprayingAnnouncementRepository.Update(announcement);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success();
+        return Result.Success(weatherWarning);
+    }
+
+    private async Task<string?> GetWeatherWarningAsync(
+        Parcel parcel,
+        DateTime startTime,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var weather = await _weatherService.GetWeatherAsync(
+                parcel.Location.Latitude,
+                parcel.Location.Longitude,
+                startTime,
+                cancellationToken);
+
+            return SprayingWeatherWarning.Build(weather);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

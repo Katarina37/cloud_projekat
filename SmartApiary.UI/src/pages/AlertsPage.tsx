@@ -1,64 +1,118 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { getAlerts, getApiErrorMessage, type AlertDto } from '../api/apiClient';
+import {
+  getApiErrorMessage,
+  getNotifications,
+  markNotificationAsRead,
+  type NotificationDto,
+} from '../api/apiClient';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
 import StatusBadge, { type StatusTone } from '../components/StatusBadge';
 
-const loadingMessage = 'Učitavanje upozorenja...';
-const loadErrorMessage = 'Greška pri učitavanju upozorenja.';
-const emptyMessage = 'Nema podataka za prikaz';
+const loadingMessage = 'Učitavanje obaveštenja...';
+const loadErrorMessage = 'Greška pri učitavanju obaveštenja.';
+const markAsReadErrorMessage = 'Greška pri označavanju obaveštenja.';
+const emptyMessage = 'Nema obaveštenja.';
+const markAsReadSuccessMessage = 'Obaveštenje je označeno kao pročitano.';
+
+const notificationTypeLabels: Record<string, string> = {
+  PesticideWarning: 'Upozorenje o pesticidima',
+  BatteryLow: 'Slaba baterija',
+  WeightDrop: 'Nagli pad težine',
+  SprayingChanged: 'Promena termina tretiranja',
+  SprayingCancelled: 'Otkazano tretiranje',
+};
+
+const notificationTypeTones: Record<string, StatusTone> = {
+  PesticideWarning: 'critical',
+  BatteryLow: 'warning',
+  WeightDrop: 'warning',
+  SprayingChanged: 'info',
+  SprayingCancelled: 'critical',
+};
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<AlertDto[]>([]);
+  const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [markingNotificationId, setMarkingNotificationId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAlerts = async () => {
+    const fetchNotifications = async () => {
       setLoading(true);
       setError(null);
+      setSuccessMessage(null);
 
       try {
-        const alerts = await getAlerts();
-        setAlerts(alerts);
+        const notifications = await getNotifications();
+        setNotifications(notifications);
       } catch (requestError) {
-        setAlerts([]);
+        setNotifications([]);
         setError(getApiErrorMessage(requestError, loadErrorMessage));
       } finally {
         setLoading(false);
       }
     };
 
-    void fetchAlerts();
+    void fetchNotifications();
   }, []);
 
   const unreadCount = useMemo(
-    () => alerts.filter((alert) => !alert.isRead).length,
-    [alerts],
+    () => notifications.filter((notification) => !notification.isRead).length,
+    [notifications],
   );
   const typeCount = useMemo(
-    () => new Set(alerts.map((alert) => String(alert.type))).size,
-    [alerts],
+    () => new Set(notifications.map((notification) => String(notification.type))).size,
+    [notifications],
   );
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    setMarkingNotificationId(notificationId);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await markNotificationAsRead(notificationId);
+      setNotifications((currentNotifications) =>
+        currentNotifications.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true, readAt: new Date().toISOString() }
+            : notification,
+        ),
+      );
+      setSuccessMessage(markAsReadSuccessMessage);
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, markAsReadErrorMessage));
+    } finally {
+      setMarkingNotificationId(null);
+    }
+  };
 
   return (
     <div className="page-stack">
-      <PageHeader title="Upozorenja" subtitle="Pregled dostupnih upozorenja" />
+      <PageHeader title="Upozorenja" subtitle="Pregled obaveštenja iz pčelinjaka" />
 
       {loading ? <section className="section-card">{loadingMessage}</section> : null}
 
       {!loading && error ? (
         <section className="section-card message-card error" role="alert">
-          {loadErrorMessage}
+          {error}
         </section>
       ) : null}
 
-      {!loading && !error && alerts.length === 0 ? (
+      {!loading && successMessage ? (
+        <section className="section-card message-card success" role="status">
+          {successMessage}
+        </section>
+      ) : null}
+
+      {!loading && !error && notifications.length === 0 ? (
         <section className="section-card">{emptyMessage}</section>
       ) : null}
 
-      {!loading && !error && alerts.length > 0 ? (
+      {!loading && notifications.length > 0 ? (
         <>
           <section className="summary-grid">
             <article className="summary-tile">
@@ -71,16 +125,16 @@ export default function AlertsPage() {
             </article>
             <article className="summary-tile">
               <span>Ukupno</span>
-              <strong>{alerts.length}</strong>
+              <strong>{notifications.length}</strong>
             </article>
           </section>
 
-          <SectionCard title="Lista upozorenja" subtitle="Najnovije stavke">
+          <SectionCard title="Lista obaveštenja" subtitle="Najnovije stavke">
             <div className="alert-list">
-              {alerts.map((alert, index) => {
-                const tone: StatusTone = alert.isRead ? 'muted' : 'info';
-                const Icon = alert.isRead ? CheckCircle2 : AlertTriangle;
-                const key = alert.id || `${alert.title}-${alert.createdAt}-${index}`;
+              {notifications.map((notification, index) => {
+                const tone = getNotificationTone(notification);
+                const Icon = notification.isRead ? CheckCircle2 : AlertTriangle;
+                const key = notification.id || `${notification.title}-${notification.createdAt}-${index}`;
 
                 return (
                   <article className={`alert-card ${tone}`} key={key}>
@@ -90,14 +144,27 @@ export default function AlertsPage() {
                     <div className="alert-content">
                       <div className="alert-heading">
                         <div>
-                          <strong>{alert.title}</strong>
-                          <span>{String(alert.type)}</span>
+                          <strong>{notification.title}</strong>
+                          <span>{getNotificationTypeLabel(notification.type)}</span>
                         </div>
-                        <StatusBadge tone={tone}>{alert.isRead ? 'Pročitano' : 'Nepročitano'}</StatusBadge>
+                        <StatusBadge tone={notification.isRead ? 'muted' : tone}>
+                          {notification.isRead ? 'Pročitano' : 'Nepročitano'}
+                        </StatusBadge>
                       </div>
-                      <p>{alert.message}</p>
+                      <p>{notification.message}</p>
                       <div className="alert-meta">
-                        <small>{formatDate(alert.createdAt)}</small>
+                        <small>{formatDate(notification.createdAt)}</small>
+                        {!notification.isRead ? (
+                          <button
+                            className="secondary-action-button"
+                            disabled={markingNotificationId === notification.id}
+                            onClick={() => void handleMarkAsRead(notification.id)}
+                            type="button"
+                          >
+                            <CheckCircle2 size={16} />
+                            Označi kao pročitano
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   </article>
@@ -109,6 +176,18 @@ export default function AlertsPage() {
       ) : null}
     </div>
   );
+}
+
+function getNotificationTypeLabel(type: string | number) {
+  return notificationTypeLabels[String(type)] ?? String(type);
+}
+
+function getNotificationTone(notification: NotificationDto): StatusTone {
+  if (notification.isRead) {
+    return 'muted';
+  }
+
+  return notificationTypeTones[String(notification.type)] ?? 'info';
 }
 
 function formatDate(value: string) {
