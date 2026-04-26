@@ -1,48 +1,51 @@
 import { type FormEvent, useState } from 'react';
 import { X } from 'lucide-react';
-import { createHive, getApiErrorMessage, type CreateHiveRequest } from '../api/apiClient';
+import {
+  createHive,
+  getApiErrorMessage,
+  updateHive,
+  type CreateHiveRequest,
+  type HiveDto,
+  type HiveType,
+  type HiveTypeValue,
+  type UpdateHiveRequest,
+} from '../api/apiClient';
 
 type HiveFormModalProps = {
   selectedApiaryId: string;
+  hive?: HiveDto;
   onClose: () => void;
-  onHiveCreated: () => Promise<void>;
+  onSaved: () => Promise<void>;
 };
+
+type ValidatedHiveForm =
+  | { operation: 'create'; payload: CreateHiveRequest }
+  | { operation: 'edit'; payload: UpdateHiveRequest };
 
 const HIVE_TYPE_OPTIONS = [
   { label: 'LR', value: 0 },
   { label: 'DB', value: 1 },
   { label: 'Poloska', value: 2 },
   { label: 'Other', value: 3 },
-] as const satisfies readonly { label: string; value: CreateHiveRequest['type'] }[];
+] as const satisfies readonly { label: string; value: HiveTypeValue }[];
 
-type HiveTypeLabel = (typeof HIVE_TYPE_OPTIONS)[number]['label'];
-
-export default function HiveFormModal({ selectedApiaryId, onClose, onHiveCreated }: HiveFormModalProps) {
-  const [label, setLabel] = useState('');
-  const [type, setType] = useState<HiveTypeLabel>('LR');
-  const [boxColor, setBoxColor] = useState('');
-  const [queenAgeYears, setQueenAgeYears] = useState('0');
-  const [notes, setNotes] = useState('');
+export default function HiveFormModal({ selectedApiaryId, hive, onClose, onSaved }: HiveFormModalProps) {
+  const isEditMode = Boolean(hive);
+  const [label, setLabel] = useState(hive?.label ?? '');
+  const [type, setType] = useState<HiveTypeValue>(getHiveTypeValue(hive?.type));
+  const [boxColor, setBoxColor] = useState(hive?.boxColor ?? '');
+  const [queenAgeYears, setQueenAgeYears] = useState(hive ? String(hive.queenAgeYears) : '0');
+  const [notes, setNotes] = useState(hive?.notes ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const resetForm = () => {
-    setLabel('');
-    setType('LR');
-    setBoxColor('');
-    setQueenAgeYears('0');
-    setNotes('');
-    setError(null);
-  };
-
-  const validateForm = (): CreateHiveRequest | null => {
+  const validateForm = (): ValidatedHiveForm | null => {
     const trimmedLabel = label.trim();
     const trimmedBoxColor = boxColor.trim();
     const trimmedNotes = notes.trim();
     const parsedQueenAgeYears = Number(queenAgeYears);
-    const selectedType = HIVE_TYPE_OPTIONS.find((option) => option.label === type);
 
-    if (!selectedApiaryId) {
+    if (!isEditMode && !selectedApiaryId) {
       setError('Izaberite pčelinjak.');
       return null;
     }
@@ -62,49 +65,64 @@ export default function HiveFormModal({ selectedApiaryId, onClose, onHiveCreated
       return null;
     }
 
-    if (!selectedType) {
-      setError('Type nije validan.');
-      return null;
-    }
-
-    setError(null);
-    return {
-      apiaryId: selectedApiaryId,
+    const payload = {
       label: trimmedLabel,
-      type: selectedType.value,
+      type,
       boxColor: trimmedBoxColor,
       queenAgeYears: parsedQueenAgeYears,
       notes: trimmedNotes.length > 0 ? trimmedNotes : null,
+    };
+
+    setError(null);
+
+    if (hive) {
+      return { operation: 'edit', payload };
+    }
+
+    return {
+      operation: 'create',
+      payload: {
+        apiaryId: selectedApiaryId,
+        ...payload,
+      },
     };
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const payload = validateForm();
+    const result = validateForm();
 
-    if (!payload) {
+    if (!result) {
       return;
     }
 
     setLoading(true);
 
     try {
-      await createHive(payload);
-      await onHiveCreated();
-      resetForm();
+      if (result.operation === 'edit' && hive) {
+        await updateHive(hive.id, result.payload);
+      } else if (result.operation === 'create') {
+        await createHive(result.payload);
+      }
+
+      await onSaved();
       setLoading(false);
       onClose();
     } catch (error) {
-      setError(getApiErrorMessage(error, 'Greška pri dodavanju košnice.'));
+      setError(
+        getApiErrorMessage(error, isEditMode ? 'Greška pri izmeni košnice.' : 'Greška pri dodavanju košnice.'),
+      );
       setLoading(false);
     }
   };
 
+  const title = isEditMode ? 'Izmeni košnicu' : 'Dodaj košnicu';
+
   return (
     <div className="modal-overlay" onClick={onClose} role="presentation">
       <section
-        aria-labelledby="create-hive-title"
+        aria-labelledby="hive-form-title"
         aria-modal="true"
         className="modal-card"
         onClick={(event) => event.stopPropagation()}
@@ -112,8 +130,8 @@ export default function HiveFormModal({ selectedApiaryId, onClose, onHiveCreated
       >
         <div className="modal-header">
           <div>
-            <h2 id="create-hive-title">Dodaj košnicu</h2>
-            <p>Unesi osnovne podatke za izabrani pčelinjak.</p>
+            <h2 id="hive-form-title">{title}</h2>
+            <p>Unesi osnovne podatke za košnicu.</p>
           </div>
           <button aria-label="Zatvori modal" className="modal-close-button" type="button" onClick={onClose}>
             <X size={18} />
@@ -134,9 +152,9 @@ export default function HiveFormModal({ selectedApiaryId, onClose, onHiveCreated
 
           <label>
             Type
-            <select onChange={(event) => setType(event.target.value as HiveTypeLabel)} value={type}>
+            <select onChange={(event) => setType(Number(event.target.value) as HiveTypeValue)} value={type}>
               {HIVE_TYPE_OPTIONS.map((option) => (
-                <option key={option.label} value={option.label}>
+                <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
@@ -181,10 +199,38 @@ export default function HiveFormModal({ selectedApiaryId, onClose, onHiveCreated
           ) : null}
 
           <button className="primary-button apiary-submit-button" disabled={loading} type="submit">
-            {loading ? 'Dodavanje...' : 'Dodaj košnicu'}
+            {loading ? 'Čuvanje...' : title}
           </button>
         </form>
       </section>
     </div>
   );
+}
+
+function getHiveTypeValue(type?: HiveType): HiveTypeValue {
+  if (type === 0 || type === 1 || type === 2 || type === 3) {
+    return type;
+  }
+
+  if (typeof type === 'string') {
+    const parsedType = Number(type);
+
+    if (parsedType === 0 || parsedType === 1 || parsedType === 2 || parsedType === 3) {
+      return parsedType;
+    }
+
+    if (type === 'DB') {
+      return 1;
+    }
+
+    if (type === 'Poloska') {
+      return 2;
+    }
+
+    if (type === 'Other') {
+      return 3;
+    }
+  }
+
+  return 0;
 }

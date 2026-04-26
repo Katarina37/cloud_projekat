@@ -11,7 +11,7 @@ import {
   Sprout,
   Wheat,
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 const navigation = [
   { to: '/pregled', label: 'Pregled', icon: LayoutDashboard },
@@ -27,12 +27,7 @@ const navigation = [
   { to: '/podesavanja', label: 'Podešavanja', icon: Settings },
 ];
 
-const apiBackedPages = new Set(['/pcelinjaci', '/parcele', '/podesavanja']);
-
 export default function Sidebar() {
-  const { pathname } = useLocation();
-  const usesRealApi = apiBackedPages.has(pathname);
-
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -61,13 +56,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
-      {!usesRealApi ? (
-        <div className="sidebar-note">
-          <span>Demo podaci</span>
-          <strong>Lokalni prikaz</strong>
-        </div>
-      ) : null}
     </aside>
   );
 }

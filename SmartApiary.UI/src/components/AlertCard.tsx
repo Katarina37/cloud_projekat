@@ -1,6 +1,5 @@
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
-import type { StatusTone } from '../data/mockData';
-import StatusBadge from './StatusBadge';
+import StatusBadge, { type StatusTone } from './StatusBadge';
 
 type AlertCardProps = {
   title: string;

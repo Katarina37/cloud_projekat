@@ -1,19 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Save, SlidersHorizontal } from 'lucide-react';
-import apiClient, { unwrapResult, type ResultResponse } from '../api/apiClient';
+import {
+  getAlertSettings,
+  updateAlertSettings,
+  type AlertSettingsDto,
+} from '../api/apiClient';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
-
-type AlertSettingsDto = {
-  userId?: string;
-  UserId?: string;
-  weightDropThresholdKg?: number;
-  WeightDropThresholdKg?: number;
-  updatedAt?: string;
-  UpdatedAt?: string;
-};
-
-type AlertSettingsApiData = AlertSettingsDto | ResultResponse<AlertSettingsDto | null>;
 
 const defaultWeightDropThresholdKg = 10;
 const loadingMessage = 'Učitavanje podešavanja...';
@@ -21,9 +14,6 @@ const loadErrorMessage = 'Greška pri učitavanju podešavanja.';
 const saveErrorMessage = 'Greška pri čuvanju podešavanja.';
 const validationMessage = 'Prag pada težine mora biti veći od 0.';
 const successText = 'Podešavanja su sačuvana.';
-
-const getWeightDropThreshold = (settings: AlertSettingsDto | null) =>
-  settings?.weightDropThresholdKg ?? settings?.WeightDropThresholdKg ?? defaultWeightDropThresholdKg;
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AlertSettingsDto | null>(null);
@@ -40,14 +30,10 @@ export default function SettingsPage() {
       setSuccessMessage(null);
 
       try {
-        const response = await apiClient.get<AlertSettingsApiData>('/alerts');
-        const nextSettings = unwrapResult<AlertSettingsDto | null>(
-          response.data,
-          'Failed to load alert settings',
-        );
+        const settings = await getAlertSettings();
 
-        setSettings(nextSettings);
-        setWeightDropThresholdKg(getWeightDropThreshold(nextSettings));
+        setSettings(settings);
+        setWeightDropThresholdKg(settings?.weightDropThresholdKg ?? defaultWeightDropThresholdKg);
       } catch {
         setSettings(null);
         setWeightDropThresholdKg(defaultWeightDropThresholdKg);
@@ -57,7 +43,7 @@ export default function SettingsPage() {
       }
     };
 
-    fetchSettings();
+    void fetchSettings();
   }, []);
 
   const handleSave = async () => {
@@ -72,9 +58,10 @@ export default function SettingsPage() {
     setError(null);
 
     try {
-      await apiClient.put('/alerts', { weightDropThresholdKg });
+      await updateAlertSettings({ weightDropThresholdKg });
       setSettings((currentSettings) => ({
-        ...(currentSettings ?? {}),
+        userId: currentSettings?.userId ?? '',
+        updatedAt: currentSettings?.updatedAt ?? '',
         weightDropThresholdKg,
       }));
       setSuccessMessage(successText);
@@ -108,13 +95,13 @@ export default function SettingsPage() {
       {loading ? <section className="section-card">{loadingMessage}</section> : null}
 
       {!loading && error ? (
-        <section className="section-card" style={{ color: 'var(--danger)' }}>
+        <section className="section-card message-card error" role="alert">
           {error}
         </section>
       ) : null}
 
       {!loading && successMessage ? (
-        <section className="section-card" style={{ color: 'var(--success)' }}>
+        <section className="section-card message-card success">
           {successMessage}
         </section>
       ) : null}
@@ -123,7 +110,7 @@ export default function SettingsPage() {
         <section className="settings-grid">
           <SectionCard
             title="Pragovi upozorenja"
-            subtitle="Podešavanja iz backend API-ja"
+            subtitle="Korisnička podešavanja za upozorenja"
             icon={<SlidersHorizontal size={18} />}
           >
             <div className="form-grid">

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import type { StatusTone } from '../data/mockData';
+
+export type StatusTone = 'good' | 'warning' | 'critical' | 'muted' | 'info';
 
 type StatusBadgeProps = {
   children: ReactNode;

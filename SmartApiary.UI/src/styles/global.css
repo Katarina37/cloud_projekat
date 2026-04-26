@@ -7,7 +7,7 @@
   --honey: #f6b800;
   --orange: #f97316;
   --orange-dark: #ea580c;
-  --cream: #fff8e7;
+  --cream: #f7f8fb;
   --danger: #ef4444;
   --success: #22c55e;
   --text: #1f2937;
@@ -15,7 +15,7 @@
   --border: #e5e7eb;
   --card: #ffffff;
   --surface: #f9fafb;
-  --shadow: 0 14px 30px rgba(31, 41, 55, 0.08);
+  --shadow: 0 12px 28px rgba(31, 41, 55, 0.07);
 }
 
 * {
@@ -29,11 +29,12 @@ html {
 
 body {
   margin: 0;
+  width: 100%;
   min-width: 320px;
   min-height: 100vh;
   overflow-x: hidden;
   background:
-    linear-gradient(180deg, rgba(255, 248, 231, 0.96) 0%, rgba(249, 250, 251, 0.96) 420px),
+    linear-gradient(180deg, rgba(255, 251, 235, 0.86) 0%, rgba(247, 248, 251, 0.98) 420px),
     var(--surface);
 }
 
@@ -55,7 +56,9 @@ a {
 
 .app-shell {
   display: flex;
+  width: 100%;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .sidebar {
@@ -69,7 +72,7 @@ a {
   gap: 22px;
   border-right: 1px solid rgba(229, 231, 235, 0.9);
   background: rgba(255, 255, 255, 0.94);
-  padding: 22px 16px;
+  padding: 24px;
 }
 
 .brand {
@@ -204,7 +207,7 @@ a {
   max-width: 1440px;
   min-height: 64px;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16px;
   margin: 0 auto;
   padding: 12px 32px;
@@ -230,7 +233,6 @@ a {
   white-space: nowrap;
 }
 
-.demo-pill,
 .status-badge,
 .primary-button,
 .inline-metric {
@@ -238,24 +240,11 @@ a {
   align-items: center;
 }
 
-.demo-pill {
-  flex: 0 0 auto;
-  gap: 8px;
-  min-height: 34px;
-  border: 1px solid rgba(246, 184, 0, 0.38);
-  border-radius: 999px;
-  background: #fff7d6;
-  color: #7c2d12;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 750;
-}
-
 .content-shell {
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 28px 32px;
+  padding: 32px;
 }
 
 .page-stack {
@@ -312,10 +301,14 @@ a {
   gap: 18px;
 }
 
+.dashboard-stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .stat-card,
 .section-card {
   border: 1px solid rgba(229, 231, 235, 0.96);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--card);
   box-shadow: var(--shadow);
 }
@@ -326,7 +319,7 @@ a {
   min-height: 120px;
   align-items: center;
   gap: 14px;
-  padding: 20px;
+  padding: 22px;
 }
 
 .stat-content {
@@ -345,6 +338,7 @@ a {
   color: var(--text);
   font-size: 27px;
   line-height: 1.05;
+  overflow-wrap: anywhere;
 }
 
 .stat-content small {
@@ -385,6 +379,7 @@ a {
 
 .section-card {
   min-width: 0;
+  overflow-wrap: anywhere;
   padding: 22px;
 }
 
@@ -424,6 +419,7 @@ a {
 }
 
 .chart-body {
+  min-width: 0;
   min-height: 240px;
 }
 
@@ -799,12 +795,22 @@ a {
   line-height: 1.35;
 }
 
-.filter-row {
+.filter-row,
+.device-filter-grid {
   display: grid;
+  gap: 14px;
+}
+
+.filter-row {
   grid-template-columns: minmax(240px, 380px);
 }
 
+.device-filter-grid {
+  grid-template-columns: repeat(2, minmax(240px, 380px));
+}
+
 .filter-row label,
+.device-filter-grid label,
 .form-grid label {
   display: flex;
   flex-direction: column;
@@ -815,6 +821,7 @@ a {
 }
 
 .filter-row select,
+.device-filter-grid select,
 .form-grid input {
   min-height: 42px;
   width: 100%;
@@ -921,6 +928,112 @@ a {
 .apiary-add-button:disabled:hover,
 .apiary-submit-button:disabled:hover {
   background: var(--orange);
+}
+
+.message-card {
+  display: grid;
+  gap: 12px;
+}
+
+.message-card.error {
+  color: var(--danger);
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.message-card.success {
+  color: #15803d;
+  border-color: #bbf7d0;
+  background: #f7fff9;
+}
+
+.access-token-box {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+}
+
+.access-token-box span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.access-token-box code {
+  display: block;
+  overflow-wrap: anywhere;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.device-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.card-action-row,
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.card-action-row {
+  margin-top: auto;
+}
+
+.table-actions-cell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.secondary-action-button,
+.danger-action-button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.secondary-action-button {
+  color: var(--text);
+}
+
+.secondary-action-button:hover {
+  border-color: #facc15;
+  background: #fff7d6;
+  color: #7c2d12;
+}
+
+.danger-action-button {
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.danger-action-button:hover {
+  background: #fff7f7;
+}
+
+.secondary-action-button:disabled,
+.danger-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
 }
 
 .modal-overlay {
@@ -1057,6 +1170,10 @@ a {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dashboard-card {
     grid-column: span 6;
   }
@@ -1084,7 +1201,7 @@ a {
     width: 100%;
     height: auto;
     flex-basis: auto;
-    padding: 18px 24px;
+    padding: 24px;
   }
 
   .side-nav {
@@ -1125,10 +1242,6 @@ a {
     flex-direction: column;
   }
 
-  .demo-pill {
-    min-height: 32px;
-  }
-
   .page-header {
     flex-direction: column;
   }
@@ -1143,12 +1256,14 @@ a {
   }
 
   .stats-grid,
+  .dashboard-stats-grid,
   .summary-grid,
   .measurement-strip,
   .device-summary,
   .detail-grid,
   .detail-grid.four,
-  .filter-row {
+  .filter-row,
+  .device-filter-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1164,13 +1279,15 @@ a {
   .entity-row,
   .compact-row,
   .alert-heading,
-  .alert-meta {
+  .alert-meta,
+  .device-card-main {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .entity-metrics,
-  .row-badges {
+  .row-badges,
+  .device-actions {
     align-items: flex-start;
     text-align: left;
   }

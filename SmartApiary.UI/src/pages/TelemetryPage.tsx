@@ -1,101 +1,227 @@
-import { Battery, Droplets, Scale, Thermometer } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import ChartCard from '../components/ChartCard';
+  getApiaries,
+  getApiErrorMessage,
+  getDailyWeightDeltas,
+  getHivesByApiary,
+  getLatestHiveStatus,
+  getTelemetryForHive,
+  type ApiaryDto,
+  type DailyWeightDeltaDto,
+  type HiveDto,
+  type LatestHiveStatusDto,
+  type TelemetryReadingDto,
+} from '../api/apiClient';
 import PageHeader from '../components/PageHeader';
-import SectionCard from '../components/SectionCard';
-import { hives, telemetryTimeline, weightTrend } from '../data/mockData';
+import TelemetryCharts from '../components/TelemetryCharts';
+import TelemetryFilters from '../components/TelemetryFilters';
+import TelemetryStatusCards from '../components/TelemetryStatusCards';
 
-const latestMeasurement = telemetryTimeline[telemetryTimeline.length - 1];
+const telemetryLoadErrorMessage = 'Greška pri učitavanju telemetrije.';
 
 export default function TelemetryPage() {
+  const [apiaries, setApiaries] = useState<ApiaryDto[]>([]);
+  const [selectedApiaryId, setSelectedApiaryId] = useState('');
+  const [hives, setHives] = useState<HiveDto[]>([]);
+  const [selectedHiveId, setSelectedHiveId] = useState('');
+  const [telemetryReadings, setTelemetryReadings] = useState<TelemetryReadingDto[]>([]);
+  const [latestStatus, setLatestStatus] = useState<LatestHiveStatusDto | null>(null);
+  const [dailyDeltas, setDailyDeltas] = useState<DailyWeightDeltaDto[]>([]);
+  const [fromDate] = useState(() => formatApiDate(addDays(new Date(), -7)));
+  const [toDate] = useState(() => formatApiDate(new Date()));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const hasTelemetryForSelectedPeriod = telemetryReadings.length > 0;
+  const hasAnyTelemetry = hasTelemetryForSelectedPeriod || latestStatus !== null || dailyDeltas.length > 0;
+
+  const clearHiveTelemetry = () => {
+    setTelemetryReadings([]);
+    setLatestStatus(null);
+    setDailyDeltas([]);
+  };
+
+  const loadTelemetryForHive = useCallback(
+    async (hiveId: string) => {
+      const [telemetryReadings, latestStatus, dailyDeltas] = await Promise.all([
+        getTelemetryForHive(hiveId, fromDate, toDate),
+        getLatestHiveStatus(hiveId),
+        getDailyWeightDeltas(hiveId, fromDate, toDate),
+      ]);
+
+      setTelemetryReadings(telemetryReadings);
+      setLatestStatus(latestStatus);
+      setDailyDeltas(dailyDeltas);
+    },
+    [fromDate, toDate],
+  );
+
+  const loadHivesForApiary = useCallback(
+    async (apiaryId: string) => {
+      const hives = await getHivesByApiary(apiaryId);
+      const nextHiveId = hives[0]?.id ?? '';
+
+      setHives(hives);
+      setSelectedHiveId(nextHiveId);
+      clearHiveTelemetry();
+
+      if (nextHiveId) {
+        await loadTelemetryForHive(nextHiveId);
+      }
+    },
+    [loadTelemetryForHive],
+  );
+
+  const loadInitialData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const apiaries = await getApiaries();
+      const nextApiaryId = apiaries[0]?.id ?? '';
+
+      setApiaries(apiaries);
+      setSelectedApiaryId(nextApiaryId);
+
+      if (nextApiaryId) {
+        await loadHivesForApiary(nextApiaryId);
+      } else {
+        setHives([]);
+        setSelectedHiveId('');
+        clearHiveTelemetry();
+      }
+    } catch (error) {
+      setApiaries([]);
+      setSelectedApiaryId('');
+      setHives([]);
+      setSelectedHiveId('');
+      clearHiveTelemetry();
+      setError(getApiErrorMessage(error, telemetryLoadErrorMessage));
+    } finally {
+      setLoading(false);
+    }
+  }, [loadHivesForApiary]);
+
+  useEffect(() => {
+    void loadInitialData();
+  }, [loadInitialData]);
+
+  const handleApiaryChange = async (apiaryId: string) => {
+    setSelectedApiaryId(apiaryId);
+    setSelectedHiveId('');
+    setHives([]);
+    clearHiveTelemetry();
+
+    if (!apiaryId) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await loadHivesForApiary(apiaryId);
+    } catch (error) {
+      setHives([]);
+      setSelectedHiveId('');
+      clearHiveTelemetry();
+      setError(getApiErrorMessage(error, telemetryLoadErrorMessage));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHiveChange = async (hiveId: string) => {
+    setSelectedHiveId(hiveId);
+    clearHiveTelemetry();
+
+    if (!hiveId) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await loadTelemetryForHive(hiveId);
+    } catch (error) {
+      clearHiveTelemetry();
+      setError(getApiErrorMessage(error, telemetryLoadErrorMessage));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page-stack">
-      <PageHeader title="Telemetrija" subtitle="Grafovi težine, temperature, vlažnosti i poslednje merenje" />
+      <PageHeader
+        title="Telemetrija"
+        subtitle="Grafici težine, temperature, vlažnosti i poslednje merenje"
+      />
 
-      <SectionCard title="Filter" subtitle="Lokalni prikaz telemetrije">
-        <div className="filter-row">
-          <label>
-            Košnica
-            <select defaultValue="K-01">
-              {hives.map((hive) => (
-                <option key={hive.id} value={hive.code}>
-                  {hive.code} · {hive.apiary}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </SectionCard>
+      {apiaries.length > 0 ? (
+        <TelemetryFilters
+          apiaries={apiaries}
+          disabled={loading}
+          hives={hives}
+          onApiaryChange={(apiaryId) => void handleApiaryChange(apiaryId)}
+          onHiveChange={(hiveId) => void handleHiveChange(hiveId)}
+          selectedApiaryId={selectedApiaryId}
+          selectedHiveId={selectedHiveId}
+        />
+      ) : null}
 
-      <section className="card-grid two">
-        <ChartCard title="Graf težine" subtitle="Košnica K-01, poslednjih 7 dana">
-          <ResponsiveContainer width="100%" height={310}>
-            <LineChart data={weightTrend} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
-              <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
-              <XAxis dataKey="day" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} unit="kg" />
-              <Tooltip />
-              <Line type="monotone" dataKey="weight" name="Težina" stroke="#F97316" strokeWidth={3} dot={{ r: 4 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartCard>
+      {loading ? <section className="section-card">Učitavanje telemetrije...</section> : null}
 
-        <ChartCard title="Temperatura i vlažnost" subtitle="Unutrašnji uslovi košnice">
-          <ResponsiveContainer width="100%" height={310}>
-            <LineChart data={telemetryTimeline} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
-              <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
-              <XAxis dataKey="time" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="temperature" name="Temperatura" stroke="#EA580C" strokeWidth={3} />
-              <Line type="monotone" dataKey="humidity" name="Vlažnost" stroke="#22C55E" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartCard>
-      </section>
+      {error ? (
+        <section className="section-card message-card error" role="alert">
+          <strong>{telemetryLoadErrorMessage}</strong>
+          {error !== telemetryLoadErrorMessage ? <span>{error}</span> : null}
+        </section>
+      ) : null}
 
-      <SectionCard title="Poslednje merenje" subtitle="Košnica K-01 u 18:00">
-        <div className="measurement-strip">
-          <article className="measurement-tile">
-            <span>Težina</span>
-            <strong className="inline-metric">
-              <Scale size={17} />
-              {latestMeasurement.weight.toFixed(1)} kg
-            </strong>
-          </article>
-          <article className="measurement-tile">
-            <span>Temperatura</span>
-            <strong className="inline-metric">
-              <Thermometer size={17} />
-              {latestMeasurement.temperature.toFixed(1)}°C
-            </strong>
-          </article>
-          <article className="measurement-tile">
-            <span>Vlažnost</span>
-            <strong className="inline-metric">
-              <Droplets size={17} />
-              {latestMeasurement.humidity}%
-            </strong>
-          </article>
-          <article className="measurement-tile">
-            <span>Baterija</span>
-            <strong className="inline-metric">
-              <Battery size={17} />
-              84%
-            </strong>
-          </article>
-        </div>
-      </SectionCard>
+      {!loading && !error && apiaries.length === 0 ? (
+        <section className="section-card">Prvo dodajte pčelinjak.</section>
+      ) : null}
+
+      {!loading && !error && selectedApiaryId && hives.length === 0 ? (
+        <section className="section-card">Prvo dodajte košnicu za izabrani pčelinjak.</section>
+      ) : null}
+
+      {!loading && !error && selectedHiveId && !hasAnyTelemetry ? (
+        <>
+          <TelemetryStatusCards latestStatus={latestStatus} />
+          <section className="section-card">Za ovu košnicu još nema telemetrijskih podataka.</section>
+        </>
+      ) : null}
+
+      {!loading && !error && selectedHiveId && hasAnyTelemetry && !hasTelemetryForSelectedPeriod ? (
+        <>
+          <TelemetryStatusCards latestStatus={latestStatus} />
+          <section className="section-card">Za izabrani period nema telemetrijskih podataka za grafike.</section>
+        </>
+      ) : null}
+
+      {!loading && !error && selectedHiveId && hasTelemetryForSelectedPeriod ? (
+        <>
+          <TelemetryStatusCards latestStatus={latestStatus} />
+          <TelemetryCharts telemetryReadings={telemetryReadings} dailyDeltas={dailyDeltas} />
+        </>
+      ) : null}
     </div>
   );
+}
+
+function addDays(date: Date, days: number) {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+
+  return nextDate;
+}
+
+function formatApiDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
 }

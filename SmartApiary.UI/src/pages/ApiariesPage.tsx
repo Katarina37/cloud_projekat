@@ -1,18 +1,17 @@
-import { type FormEvent, useCallback, useEffect, useState } from 'react';
-import { MapPin, Plus, X } from 'lucide-react';
-import { createApiary, getApiaries, type ApiaryDto, type CreateApiaryRequest } from '../api/apiClient';
+import { useCallback, useEffect, useState } from 'react';
+import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
+import { deleteApiary, getApiaries, getApiErrorMessage, type ApiaryDto } from '../api/apiClient';
+import ApiaryFormModal from '../components/ApiaryFormModal';
 import PageHeader from '../components/PageHeader';
-
-type CreateApiaryModalProps = {
-  onClose: () => void;
-  onApiaryCreated: () => Promise<void>;
-};
 
 export default function ApiariesPage() {
   const [apiaries, setApiaries] = useState<ApiaryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingApiary, setEditingApiary] = useState<ApiaryDto | null>(null);
+  const [deletingApiaryId, setDeletingApiaryId] = useState<string | null>(null);
 
   const fetchApiaries = useCallback(async () => {
     setLoading(true);
@@ -21,8 +20,10 @@ export default function ApiariesPage() {
     try {
       const apiaries = await getApiaries();
       setApiaries(apiaries);
-    } catch {
-      setError('Greška pri učitavanju pčelinjaka.');
+      return true;
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Greška pri učitavanju pčelinjaka.'));
+      return false;
     } finally {
       setLoading(false);
     }
@@ -32,13 +33,61 @@ export default function ApiariesPage() {
     void fetchApiaries();
   }, [fetchApiaries]);
 
+  const handleApiaryCreated = async () => {
+    const refreshed = await fetchApiaries();
+
+    if (refreshed) {
+      setSuccessMessage('Pčelinjak je uspešno dodat.');
+    }
+  };
+
+  const handleApiaryUpdated = async () => {
+    const refreshed = await fetchApiaries();
+
+    if (refreshed) {
+      setSuccessMessage('Pčelinjak je uspešno izmenjen.');
+    }
+  };
+
+  const handleDeleteApiary = async (apiary: ApiaryDto) => {
+    const confirmed = window.confirm(`Da li želite da obrišete pčelinjak "${apiary.name}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingApiaryId(apiary.id);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await deleteApiary(apiary.id);
+      const refreshed = await fetchApiaries();
+
+      if (refreshed) {
+        setSuccessMessage('Pčelinjak je uspešno obrisan.');
+      }
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Greška pri brisanju pčelinjaka.'));
+    } finally {
+      setDeletingApiaryId(null);
+    }
+  };
+
   return (
     <div className="page-stack">
       <PageHeader
         title="Pčelinjaci"
         subtitle="Lokacije i osnovni podaci pčelinjaka"
         action={
-          <button className="primary-button apiary-add-button" type="button" onClick={() => setIsOpen(true)}>
+          <button
+            className="primary-button apiary-add-button"
+            type="button"
+            onClick={() => {
+              setSuccessMessage(null);
+              setIsCreateModalOpen(true);
+            }}
+          >
             <Plus size={18} />
             Dodaj pčelinjak
           </button>
@@ -47,8 +96,10 @@ export default function ApiariesPage() {
 
       {loading ? <section className="section-card">Učitavanje...</section> : null}
 
+      {successMessage ? <section className="section-card message-card success">{successMessage}</section> : null}
+
       {error ? (
-        <section className="section-card" style={{ color: 'var(--danger)' }}>
+        <section className="section-card message-card error" role="alert">
           {error}
         </section>
       ) : null}
@@ -66,9 +117,12 @@ export default function ApiariesPage() {
                   <MapPin size={18} />
                 </div>
               </div>
+
               <div>
                 <h2>{apiary.name}</h2>
+                {apiary.terrainDescription ? <p>{apiary.terrainDescription}</p> : null}
               </div>
+
               <div className="detail-grid">
                 <div>
                   <span>Latitude</span>
@@ -80,152 +134,55 @@ export default function ApiariesPage() {
                 </div>
                 <div>
                   <span>CreatedAt</span>
-                  <strong>{new Date(apiary.createdAt).toLocaleString()}</strong>
+                  <strong>{formatDate(apiary.createdAt)}</strong>
                 </div>
+              </div>
+
+              <div className="card-action-row">
+                <button
+                  className="secondary-action-button"
+                  disabled={deletingApiaryId === apiary.id}
+                  onClick={() => {
+                    setSuccessMessage(null);
+                    setEditingApiary(apiary);
+                  }}
+                  type="button"
+                >
+                  <Pencil size={16} />
+                  Izmeni
+                </button>
+                <button
+                  className="danger-action-button"
+                  disabled={deletingApiaryId === apiary.id}
+                  onClick={() => void handleDeleteApiary(apiary)}
+                  type="button"
+                >
+                  <Trash2 size={16} />
+                  {deletingApiaryId === apiary.id ? 'Brisanje...' : 'Obriši'}
+                </button>
               </div>
             </article>
           ))}
         </section>
       ) : null}
 
-      {isOpen ? <CreateApiaryModal onClose={() => setIsOpen(false)} onApiaryCreated={fetchApiaries} /> : null}
+      {isCreateModalOpen ? (
+        <ApiaryFormModal onClose={() => setIsCreateModalOpen(false)} onSaved={handleApiaryCreated} />
+      ) : null}
+
+      {editingApiary ? (
+        <ApiaryFormModal
+          apiary={editingApiary}
+          onClose={() => setEditingApiary(null)}
+          onSaved={handleApiaryUpdated}
+        />
+      ) : null}
     </div>
   );
 }
 
-function CreateApiaryModal({ onClose, onApiaryCreated }: CreateApiaryModalProps) {
-  const [name, setName] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function formatDate(value: string) {
+  const date = new Date(value);
 
-  const resetForm = () => {
-    setName('');
-    setLatitude('');
-    setLongitude('');
-    setError(null);
-  };
-
-  const validateForm = (): CreateApiaryRequest | null => {
-    const trimmedName = name.trim();
-    const parsedLatitude = Number(latitude);
-    const parsedLongitude = Number(longitude);
-
-    if (!trimmedName) {
-      setError('Name ne sme biti prazan.');
-      return null;
-    }
-
-    if (latitude.trim() === '' || !Number.isFinite(parsedLatitude) || parsedLatitude < -90 || parsedLatitude > 90) {
-      setError('Latitude mora biti između -90 i 90.');
-      return null;
-    }
-
-    if (longitude.trim() === '' || !Number.isFinite(parsedLongitude) || parsedLongitude < -180 || parsedLongitude > 180) {
-      setError('Longitude mora biti između -180 i 180.');
-      return null;
-    }
-
-    setError(null);
-    return {
-      name: trimmedName,
-      latitude: parsedLatitude,
-      longitude: parsedLongitude,
-    };
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const payload = validateForm();
-
-    if (!payload) {
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await createApiary(payload);
-      await onApiaryCreated();
-      resetForm();
-      setLoading(false);
-      onClose();
-    } catch {
-      setError('Greška pri dodavanju pčelinjaka.');
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="modal-overlay" onClick={onClose} role="presentation">
-      <section
-        aria-labelledby="create-apiary-title"
-        aria-modal="true"
-        className="modal-card"
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-      >
-        <div className="modal-header">
-          <div>
-            <h2 id="create-apiary-title">Dodaj pčelinjak</h2>
-            <p>Unesi osnovne podatke o lokaciji.</p>
-          </div>
-          <button aria-label="Zatvori modal" className="modal-close-button" type="button" onClick={onClose}>
-            <X size={18} />
-          </button>
-        </div>
-
-        <form className="modal-form" onSubmit={handleSubmit}>
-          <label>
-            Name
-            <input
-              autoFocus
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Bagremova dolina"
-              type="text"
-              value={name}
-            />
-          </label>
-
-          <label>
-            Latitude
-            <input
-              max="90"
-              min="-90"
-              onChange={(event) => setLatitude(event.target.value)}
-              placeholder="44.5"
-              step="any"
-              type="number"
-              value={latitude}
-            />
-          </label>
-
-          <label>
-            Longitude
-            <input
-              max="180"
-              min="-180"
-              onChange={(event) => setLongitude(event.target.value)}
-              placeholder="19.2"
-              step="any"
-              type="number"
-              value={longitude}
-            />
-          </label>
-
-          {error ? (
-            <p className="form-error" role="alert">
-              {error}
-            </p>
-          ) : null}
-
-          <button className="primary-button apiary-submit-button" disabled={loading} type="submit">
-            {loading ? 'Dodavanje...' : 'Dodaj pčelinjak'}
-          </button>
-        </form>
-      </section>
-    </div>
-  );
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
