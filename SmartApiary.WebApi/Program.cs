@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using SmartApiary.Application.Behaviors;
 using SmartApiary.Application.Common.Results;
+using SmartApiary.Application.Features.Spraying;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Infrastructure.Extensions;
 using SmartApiary.WebApi.Routing;
@@ -17,6 +18,16 @@ builder.Services.AddControllers(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddMediatR(configuration =>
 {
@@ -25,9 +36,10 @@ builder.Services.AddMediatR(configuration =>
 
 builder.Services.AddValidatorsFromAssembly(applicationAssembly);
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-
+builder.Services.AddScoped<ISprayingNotificationService, SprayingNotificationService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -36,6 +48,8 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 

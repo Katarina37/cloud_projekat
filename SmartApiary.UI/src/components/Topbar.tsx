@@ -48,9 +48,12 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
+const apiBackedPages = new Set(['/pcelinjaci', '/parcele', '/podesavanja']);
+
 export default function Topbar() {
   const { pathname } = useLocation();
   const meta = pageMeta[pathname] ?? pageMeta['/pregled'];
+  const usesRealApi = apiBackedPages.has(pathname);
 
   return (
     <header className="topbar">
@@ -60,10 +63,12 @@ export default function Topbar() {
           <span>{meta.subtitle}</span>
         </div>
 
-        <div className="demo-pill">
-          <BadgeCheck size={16} />
-          <span>Demo podaci</span>
-        </div>
+        {!usesRealApi ? (
+          <div className="demo-pill">
+            <BadgeCheck size={16} />
+            <span>Demo podaci</span>
+          </div>
+        ) : null}
       </div>
     </header>
   );

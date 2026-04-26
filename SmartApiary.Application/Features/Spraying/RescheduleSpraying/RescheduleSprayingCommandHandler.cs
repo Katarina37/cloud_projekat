@@ -1,21 +1,17 @@
 using MediatR;
 using SmartApiary.Application.Common.Results;
+using SmartApiary.Application.Features.Spraying;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Enums;
-using SmartApiary.Domain.Models;
 
 namespace SmartApiary.Application.Features.Spraying.RescheduleSpraying;
 
 public sealed class RescheduleSprayingCommandHandler : IRequestHandler<RescheduleSprayingCommand, Result>
 {
-    private const double NotificationRadiusKm = 5d;
-
-    private readonly IApiaryRepository _apiaryRepository;
     private readonly ICurrentUserService _currentUserService;
-    private readonly INotificationRepository _notificationRepository;
-    private readonly INotificationSender _notificationSender;
     private readonly IParcelRepository _parcelRepository;
+    private readonly ISprayingNotificationService _sprayingNotificationService;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -23,17 +19,13 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
         ICurrentUserService currentUserService,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IParcelRepository parcelRepository,
-        IApiaryRepository apiaryRepository,
-        INotificationRepository notificationRepository,
-        INotificationSender notificationSender,
+        ISprayingNotificationService sprayingNotificationService,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _parcelRepository = parcelRepository;
-        _apiaryRepository = apiaryRepository;
-        _notificationRepository = notificationRepository;
-        _notificationSender = notificationSender;
+        _sprayingNotificationService = sprayingNotificationService;
         _unitOfWork = unitOfWork;
     }
 
@@ -65,26 +57,14 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
 
         announcement.Reschedule(request.NewStartTime, request.NewDurationHours);
 
-        var nearbyApiaries = await _apiaryRepository.FindWithinRadiusAsync(
-            parcel.Location,
-            NotificationRadiusKm,
-            cancellationToken);
-
-        var beekeeperIds = nearbyApiaries
-            .Select(apiary => apiary.BeekeeperId)
-            .Distinct()
-            .ToList();
-
         var title = "Pesticide spraying changed";
         var message = $"Spraying on parcel '{parcel.Name}' was rescheduled to {announcement.StartTime:u} and will last {announcement.DurationHours} hour(s).";
-
-        foreach (var beekeeperId in beekeeperIds)
-        {
-            var notification = new Notification(beekeeperId, NotificationType.SprayingChanged, title, message);
-
-            await _notificationRepository.AddAsync(notification, cancellationToken);
-            await _notificationSender.SendToUserAsync(beekeeperId, title, message, cancellationToken);
-        }
+        await _sprayingNotificationService.NotifyNearbyBeekeepersAsync(
+            parcel.Location,
+            title,
+            message,
+            NotificationType.SprayingChanged,
+            cancellationToken);
 
         _sprayingAnnouncementRepository.Update(announcement);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

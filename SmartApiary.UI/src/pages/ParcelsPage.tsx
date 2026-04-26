@@ -1,52 +1,75 @@
-import { Leaf, MapPin } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Leaf } from 'lucide-react';
+import { getParcels, type ParcelDto } from '../api/apiClient';
 import PageHeader from '../components/PageHeader';
-import SectionCard from '../components/SectionCard';
-import StatusBadge from '../components/StatusBadge';
-import { parcels } from '../data/mockData';
 
 export default function ParcelsPage() {
+  const [parcels, setParcels] = useState<ParcelDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchParcels = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const parcels = await getParcels();
+        setParcels(parcels);
+      } catch {
+        setError('Greška pri učitavanju parcela.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchParcels();
+  }, []);
+
   return (
     <div className="page-stack">
       <PageHeader title="Parcele" subtitle="Naziv, koordinate i kultura povezani sa okruženjem pčelinjaka" />
 
-      <section className="parcels-layout">
-        <SectionCard title="Mapa parcela" subtitle="Stilizovan placeholder za buduću mapu">
-          <div className="map-placeholder" aria-label="Mapa parcela">
-            <span className="map-point primary">P</span>
-            <span className="map-point secondary">A12</span>
-            <span className="map-point warning">B04</span>
-            <span className="map-point green">C19</span>
-          </div>
-        </SectionCard>
+      {loading ? <section className="section-card">Učitavanje parcela...</section> : null}
 
-        <div className="parcel-list">
+      {error ? (
+        <section className="section-card" style={{ color: 'var(--danger)' }}>
+          {error}
+        </section>
+      ) : null}
+
+      {!loading && !error && parcels.length === 0 ? (
+        <section className="section-card">Nema unetih parcela.</section>
+      ) : null}
+
+      {!loading && !error && parcels.length > 0 ? (
+        <section className="card-grid three">
           {parcels.map((parcel) => (
             <article className="section-card parcel-card" key={parcel.id}>
               <div className="card-topline">
                 <div className="section-icon">
                   <Leaf size={18} />
                 </div>
-                <StatusBadge tone={parcel.statusTone}>{parcel.status}</StatusBadge>
               </div>
               <h2>{parcel.name}</h2>
-              <p>{parcel.crop}</p>
               <div className="detail-grid">
                 <div>
-                  <span>Koordinate</span>
-                  <strong>{parcel.coordinates}</strong>
+                  <span>Latitude</span>
+                  <strong>{parcel.latitude}</strong>
                 </div>
                 <div>
-                  <span>Udaljenost</span>
-                  <strong className="inline-metric">
-                    <MapPin size={15} />
-                    {parcel.distance}
-                  </strong>
+                  <span>Longitude</span>
+                  <strong>{parcel.longitude}</strong>
+                </div>
+                <div>
+                  <span>CreatedAt</span>
+                  <strong>{new Date(parcel.createdAt).toLocaleString()}</strong>
                 </div>
               </div>
             </article>
           ))}
-        </div>
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -11,13 +11,16 @@ public sealed class GetAlertSettingsQueryHandler : IRequestHandler<GetAlertSetti
     private const double DefaultWeightDropThresholdKg = 10d;
 
     private readonly ICurrentUserService _currentUserService;
+    private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IUserAlertSettingsRepository _userAlertSettingsRepository;
 
     public GetAlertSettingsQueryHandler(
         ICurrentUserService currentUserService,
+        IDateTimeProvider dateTimeProvider,
         IUserAlertSettingsRepository userAlertSettingsRepository)
     {
         _currentUserService = currentUserService;
+        _dateTimeProvider = dateTimeProvider;
         _userAlertSettingsRepository = userAlertSettingsRepository;
     }
 
@@ -37,7 +40,7 @@ public sealed class GetAlertSettingsQueryHandler : IRequestHandler<GetAlertSetti
             {
                 UserId = userId,
                 WeightDropThresholdKg = DefaultWeightDropThresholdKg,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = _dateTimeProvider.UtcNow
             }
             : new AlertSettingsDto
             {

@@ -21,7 +21,7 @@ export default function TelemetryPage() {
     <div className="page-stack">
       <PageHeader title="Telemetrija" subtitle="Grafovi težine, temperature, vlažnosti i poslednje merenje" />
 
-      <SectionCard title="Filter" subtitle="Placeholder dok API nije povezan">
+      <SectionCard title="Filter" subtitle="Lokalni prikaz telemetrije">
         <div className="filter-row">
           <label>
             Košnica

@@ -5,6 +5,8 @@ namespace SmartApiary.WebApi.Services;
 
 public sealed class CurrentUserService : ICurrentUserService
 {
+    private static readonly Guid DefaultUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public CurrentUserService(IHttpContextAccessor httpContextAccessor)
@@ -32,7 +34,9 @@ public sealed class CurrentUserService : ICurrentUserService
             ?? GetClaim("userId")
             ?? GetHeaderValue("X-User-Id");
 
-        return Guid.TryParse(value, out var userId) ? userId : null;
+        return Guid.TryParse(value, out var userId) && userId != Guid.Empty
+            ? userId
+            : DefaultUserId;
     }
 
     private string? GetClaim(string claimType)

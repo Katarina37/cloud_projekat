@@ -1,5 +1,6 @@
 using MediatR;
 using SmartApiary.Application.Common.Results;
+using SmartApiary.Application.Features.Spraying;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Enums;
@@ -9,30 +10,22 @@ namespace SmartApiary.Application.Features.Spraying.ScheduleSpraying;
 
 public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSprayingCommand, Result<Guid>>
 {
-    private const double NotificationRadiusKm = 5d;
-
-    private readonly IApiaryRepository _apiaryRepository;
     private readonly ICurrentUserService _currentUserService;
-    private readonly INotificationRepository _notificationRepository;
-    private readonly INotificationSender _notificationSender;
     private readonly IParcelRepository _parcelRepository;
+    private readonly ISprayingNotificationService _sprayingNotificationService;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public ScheduleSprayingCommandHandler(
         ICurrentUserService currentUserService,
         IParcelRepository parcelRepository,
-        IApiaryRepository apiaryRepository,
-        INotificationRepository notificationRepository,
-        INotificationSender notificationSender,
+        ISprayingNotificationService sprayingNotificationService,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _parcelRepository = parcelRepository;
-        _apiaryRepository = apiaryRepository;
-        _notificationRepository = notificationRepository;
-        _notificationSender = notificationSender;
+        _sprayingNotificationService = sprayingNotificationService;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _unitOfWork = unitOfWork;
     }
@@ -61,28 +54,16 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
             request.DurationHours,
             request.PreparationType);
 
-        var nearbyApiaries = await _apiaryRepository.FindWithinRadiusAsync(
-            parcel.Location,
-            NotificationRadiusKm,
-            cancellationToken);
-
-        var beekeeperIds = nearbyApiaries
-            .Select(apiary => apiary.BeekeeperId)
-            .Distinct()
-            .ToList();
-
         var title = "Pesticide spraying scheduled";
         var message = BuildScheduledMessage(parcel.Name, announcement.StartTime, announcement.DurationHours, announcement.PreparationType);
+        var notifiedBeekeepersCount = await _sprayingNotificationService.NotifyNearbyBeekeepersAsync(
+            parcel.Location,
+            title,
+            message,
+            NotificationType.PesticideWarning,
+            cancellationToken);
 
-        foreach (var beekeeperId in beekeeperIds)
-        {
-            var notification = new Notification(beekeeperId, NotificationType.PesticideWarning, title, message);
-
-            await _notificationRepository.AddAsync(notification, cancellationToken);
-            await _notificationSender.SendToUserAsync(beekeeperId, title, message, cancellationToken);
-        }
-
-        announcement.SetNotifiedBeekeepersCount(beekeeperIds.Count);
+        announcement.SetNotifiedBeekeepersCount(notifiedBeekeepersCount);
 
         await _sprayingAnnouncementRepository.AddAsync(announcement, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
