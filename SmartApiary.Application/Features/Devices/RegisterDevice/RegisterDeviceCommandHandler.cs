@@ -52,6 +52,14 @@ public sealed class RegisterDeviceCommandHandler : IRequestHandler<RegisterDevic
             return Result<Guid>.Failure("Hive does not belong to the current beekeeper.");
         }
 
+        var existingDeviceWithSerialNumber = await _deviceRepository.GetBySerialNumberAsync(
+            request.SerialNumber,
+            cancellationToken);
+        if (existingDeviceWithSerialNumber is not null)
+        {
+            return Result<Guid>.Failure("Device with this serial number is already registered.");
+        }
+
         var existingDevice = await _deviceRepository.GetByHiveIdAsync(request.HiveId, cancellationToken);
         if (existingDevice is not null)
         {

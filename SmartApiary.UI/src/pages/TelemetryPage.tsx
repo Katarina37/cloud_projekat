@@ -27,8 +27,8 @@ export default function TelemetryPage() {
   const [telemetryReadings, setTelemetryReadings] = useState<TelemetryReadingDto[]>([]);
   const [latestStatus, setLatestStatus] = useState<LatestHiveStatusDto | null>(null);
   const [dailyDeltas, setDailyDeltas] = useState<DailyWeightDeltaDto[]>([]);
-  const [fromDate] = useState(() => formatApiDate(addDays(new Date(), -7)));
-  const [toDate] = useState(() => formatApiDate(new Date()));
+  const [fromDate] = useState(() => formatApiDateTime(addDays(new Date(), -7)));
+  const [toDate] = useState(() => formatApiDateTime(new Date()));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasTelemetryForSelectedPeriod = telemetryReadings.length > 0;
@@ -218,10 +218,6 @@ function addDays(date: Date, days: number) {
   return nextDate;
 }
 
-function formatApiDate(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
+function formatApiDateTime(date: Date) {
+  return date.toISOString();
 }

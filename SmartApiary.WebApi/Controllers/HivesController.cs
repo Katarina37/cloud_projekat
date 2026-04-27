@@ -20,7 +20,7 @@ public sealed class HivesController : BaseController
         CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(command, cancellationToken);
-        return HandleResult(result);
+        return HandleCreatedResult(result, nameof(GetByApiary), new { apiaryId = command.ApiaryId });
     }
 
     [HttpPut("{id:guid}")]
@@ -37,7 +37,7 @@ public sealed class HivesController : BaseController
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(new DeleteHiveCommand(id), cancellationToken);
-        return HandleResult(result);
+        return HandleDeletedResult(result);
     }
 
     [HttpGet("by-apiary/{apiaryId:guid}")]

@@ -363,6 +363,13 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ActivationToken")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("ActivationTokenExpiresAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -384,6 +391,17 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiresAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -396,8 +414,16 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ActivationToken")
+                        .IsUnique()
+                        .HasFilter("[ActivationToken] IS NOT NULL");
+
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("PasswordResetToken")
+                        .IsUnique()
+                        .HasFilter("[PasswordResetToken] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
                 });

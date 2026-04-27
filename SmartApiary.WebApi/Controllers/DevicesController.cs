@@ -19,7 +19,7 @@ public sealed class DevicesController : BaseController
         CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(command, cancellationToken);
-        return HandleResult(result);
+        return HandleCreatedResult(result, nameof(GetByHive), new { hiveId = command.HiveId });
     }
 
     [HttpPost("activate")]

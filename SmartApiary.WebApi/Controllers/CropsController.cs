@@ -20,7 +20,7 @@ public sealed class CropsController : BaseController
         CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(command, cancellationToken);
-        return HandleResult(result);
+        return HandleCreatedResult(result, nameof(GetByParcel), new { parcelId = command.ParcelId });
     }
 
     [HttpPut("{id:guid}")]
@@ -37,7 +37,7 @@ public sealed class CropsController : BaseController
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(new DeleteCropCommand(id), cancellationToken);
-        return HandleResult(result);
+        return HandleDeletedResult(result);
     }
 
     [HttpGet("by-parcel/{parcelId:guid}")]

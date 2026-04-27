@@ -1,4 +1,5 @@
 using SmartApiary.Domain.Enums;
+using SmartApiary.Domain.Exceptions;
 
 namespace SmartApiary.Domain.Models;
 
@@ -36,6 +37,11 @@ public class Device
 
     public void Pair(string deviceIdentifier, string accessToken)
     {
+        if (Status == DeviceStatus.Paired)
+        {
+            throw new DomainException("Device is already paired.");
+        }
+
         DeviceIdentifier = RequireNotEmpty(deviceIdentifier, nameof(deviceIdentifier));
         AccessToken = RequireNotEmpty(accessToken, nameof(accessToken));
         Status = DeviceStatus.Paired;

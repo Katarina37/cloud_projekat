@@ -28,7 +28,7 @@ public sealed class HiveInspectionsController : BaseController
         CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(command, cancellationToken);
-        return HandleResult(result);
+        return HandleCreatedResult(result, nameof(GetByHive), new { hiveId = command.HiveId });
     }
 
     [HttpPut("{id:guid}")]
@@ -45,6 +45,6 @@ public sealed class HiveInspectionsController : BaseController
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(new DeleteHiveInspectionCommand(id), cancellationToken);
-        return HandleResult(result);
+        return HandleDeletedResult(result);
     }
 }

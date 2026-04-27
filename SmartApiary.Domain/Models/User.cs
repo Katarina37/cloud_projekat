@@ -4,6 +4,14 @@ namespace SmartApiary.Domain.Models;
 
 public class User
 {
+    private User()
+    {
+        FirstName = string.Empty;
+        LastName = string.Empty;
+        Email = string.Empty;
+        PhoneNumber = string.Empty;
+    }
+
     public User(
         string firstName,
         string lastName,
@@ -35,16 +43,55 @@ public class User
 
     public bool IsActive { get; private set; }
 
+    public string? PasswordHash { get; private set; }
+
+    public string? ActivationToken { get; private set; }
+
+    public DateTime? ActivationTokenExpiresAt { get; private set; }
+
+    public string? PasswordResetToken { get; private set; }
+
+    public DateTime? PasswordResetTokenExpiresAt { get; private set; }
+
     public DateTime CreatedAt { get; private set; }
 
-    public void Activate()
+    public void SetActivationToken(string token, DateTime expiresAt)
     {
+        ActivationToken = RequireNotEmpty(token, nameof(token));
+        ActivationTokenExpiresAt = expiresAt;
+        IsActive = false;
+    }
+
+    public void Activate(string passwordHash)
+    {
+        PasswordHash = RequireNotEmpty(passwordHash, nameof(passwordHash));
         IsActive = true;
+        ActivationToken = null;
+        ActivationTokenExpiresAt = null;
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
+    }
+
+    public void SetPasswordResetToken(string token, DateTime expiresAt)
+    {
+        PasswordResetToken = RequireNotEmpty(token, nameof(token));
+        PasswordResetTokenExpiresAt = expiresAt;
+    }
+
+    public void ResetPassword(string passwordHash)
+    {
+        PasswordHash = RequireNotEmpty(passwordHash, nameof(passwordHash));
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
     }
 
     public void Deactivate()
     {
         IsActive = false;
+        ActivationToken = null;
+        ActivationTokenExpiresAt = null;
+        PasswordResetToken = null;
+        PasswordResetTokenExpiresAt = null;
     }
 
     public void ChangeContactInfo(string email, string phoneNumber)

@@ -1,7 +1,7 @@
 import axios from 'axios';
+import { clearAuthToken, getAuthToken } from '../auth/authStorage';
 
 const apiBaseUrl = 'https://localhost:7035/api';
-const developmentUserId = '11111111-1111-1111-1111-111111111111';
 
 export type ApiaryDto = {
   id: string;
@@ -200,6 +200,55 @@ export type UpdateAlertSettingsRequest = {
   weightDropThresholdKg: number;
 };
 
+export type UserRole = 'Admin' | 'Beekeeper' | 'Farmer';
+
+export type LoginRequest = {
+  email: string;
+  password: string;
+};
+
+export type LoginResponseDto = {
+  token: string;
+  userId: string;
+  email: string;
+  role: UserRole;
+};
+
+export type ActivateAccountRequest = {
+  token: string;
+  password: string;
+  confirmPassword: string;
+};
+
+export type ForgotPasswordRequest = {
+  email: string;
+};
+
+export type ResetPasswordRequest = {
+  token: string;
+  password: string;
+  confirmPassword: string;
+};
+
+export type AdminUserDto = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  role: UserRole;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type CreateAdminUserRequest = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  role: UserRole;
+};
+
 export type ResultResponse<T> = {
   isSuccess?: boolean;
   IsSuccess?: boolean;
@@ -229,10 +278,29 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  config.headers['X-User-Id'] = developmentUserId;
+  const token = getAuthToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      clearAuthToken();
+
+      if (!isAuthPage(window.location.pathname)) {
+        window.location.assign('/login');
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export function unwrapResult<T>(data: T | ResultResponse<T>, fallbackError: string): T {
   if (!isResultResponse<T>(data)) {
@@ -244,6 +312,41 @@ export function unwrapResult<T>(data: T | ResultResponse<T>, fallbackError: stri
   }
 
   return (data.value ?? data.Value) as T;
+}
+
+export async function login(payload: LoginRequest): Promise<LoginResponseDto> {
+  const response = await apiClient.post<LoginResponseApiDto | ResultResponse<LoginResponseApiDto>>('/auth/login', payload);
+  return normalizeLoginResponse(unwrapResult(response.data, 'Invalid email or password'));
+}
+
+export async function activateAccount(payload: ActivateAccountRequest): Promise<void> {
+  const response = await apiClient.post<ResultResponse<void>>('/auth/activate', payload);
+  unwrapResult(response.data, 'Failed to activate account');
+}
+
+export async function forgotPassword(payload: ForgotPasswordRequest): Promise<void> {
+  const response = await apiClient.post<ResultResponse<void>>('/auth/forgot-password', payload);
+  unwrapResult(response.data, 'Failed to request password reset');
+}
+
+export async function resetPassword(payload: ResetPasswordRequest): Promise<void> {
+  const response = await apiClient.post<ResultResponse<void>>('/auth/reset-password', payload);
+  unwrapResult(response.data, 'Failed to reset password');
+}
+
+export async function getAdminUsers(): Promise<AdminUserDto[]> {
+  const response = await apiClient.get<AdminUserApiDto[] | ResultResponse<AdminUserApiDto[]>>('/admin/users');
+  return (unwrapResult(response.data, 'Failed to load users') ?? []).map(normalizeAdminUser);
+}
+
+export async function createAdminUser(payload: CreateAdminUserRequest): Promise<string | undefined> {
+  const response = await apiClient.post<string | ResultResponse<string>>('/admin/users', payload);
+  return unwrapResult(response.data, 'Failed to create user');
+}
+
+export async function deactivateAdminUser(userId: string): Promise<void> {
+  const response = await apiClient.put<ResultResponse<void>>(`/admin/users/${userId}/deactivate`);
+  unwrapResult(response.data, 'Failed to deactivate user');
 }
 
 export async function getApiaries(): Promise<ApiaryDto[]> {
@@ -585,6 +688,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+type LoginResponseApiDto = Partial<LoginResponseDto> & {
+  Token?: string;
+  UserId?: string;
+  Email?: string;
+  Role?: UserRole;
+};
+
+type AdminUserApiDto = Partial<AdminUserDto> & {
+  Id?: string;
+  FirstName?: string;
+  LastName?: string;
+  Email?: string;
+  PhoneNumber?: string;
+  Role?: UserRole;
+  IsActive?: boolean;
+  CreatedAt?: string;
+};
+
 type TelemetryReadingApiDto = Partial<TelemetryReadingDto> & {
   Id?: string;
   HiveId?: string;
@@ -658,6 +779,28 @@ type SprayingAnnouncementApiDto = Partial<SprayingAnnouncementDto> & {
   CreatedAt?: string;
   CancelledAt?: string | null;
 };
+
+function normalizeLoginResponse(response: LoginResponseApiDto): LoginResponseDto {
+  return {
+    token: response.token ?? response.Token ?? '',
+    userId: response.userId ?? response.UserId ?? '',
+    email: response.email ?? response.Email ?? '',
+    role: response.role ?? response.Role ?? 'Beekeeper',
+  };
+}
+
+function normalizeAdminUser(user: AdminUserApiDto): AdminUserDto {
+  return {
+    id: user.id ?? user.Id ?? '',
+    firstName: user.firstName ?? user.FirstName ?? '',
+    lastName: user.lastName ?? user.LastName ?? '',
+    email: user.email ?? user.Email ?? '',
+    phoneNumber: user.phoneNumber ?? user.PhoneNumber ?? '',
+    role: user.role ?? user.Role ?? 'Beekeeper',
+    isActive: user.isActive ?? user.IsActive ?? false,
+    createdAt: user.createdAt ?? user.CreatedAt ?? '',
+  };
+}
 
 function normalizeTelemetryReading(reading: TelemetryReadingApiDto): TelemetryReadingDto {
   return {
@@ -759,6 +902,13 @@ function getErrorMessage(error: unknown, fallbackError: string) {
   }
 
   return fallbackError;
+}
+
+function isAuthPage(pathname: string) {
+  return pathname === '/login'
+    || pathname === '/activate'
+    || pathname === '/forgot-password'
+    || pathname === '/reset-password';
 }
 
 export default apiClient;

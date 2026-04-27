@@ -18,6 +18,7 @@ import DashboardCharts from '../components/DashboardCharts';
 import DashboardStats from '../components/DashboardStats';
 import DashboardStatus from '../components/DashboardStatus';
 import PageHeader from '../components/PageHeader';
+import ParcelCropsOverview from '../components/ParcelCropsOverview';
 
 const dashboardErrorMessage = 'Greška pri učitavanju podataka';
 
@@ -227,14 +228,16 @@ export default function DashboardPage() {
           {selectedHiveId ? <DashboardCharts dailyDeltas={dailyDeltas} /> : null}
         </>
       ) : null}
+
+      <ParcelCropsOverview />
     </div>
   );
 }
 
 function getDashboardDateRange() {
   return {
-    from: formatApiDate(addDays(new Date(), -7)),
-    to: formatApiDate(new Date()),
+    from: formatApiDateTime(addDays(new Date(), -7)),
+    to: formatApiDateTime(new Date()),
   };
 }
 
@@ -245,10 +248,6 @@ function addDays(date: Date, days: number) {
   return nextDate;
 }
 
-function formatApiDate(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
+function formatApiDateTime(date: Date) {
+  return date.toISOString();
 }

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Telemetry.GetDailyWeightDelta;
 using SmartApiary.Application.Features.Telemetry.GetLatestHiveStatus;
@@ -14,13 +15,14 @@ public sealed class TelemetryController : BaseController
     {
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Receive(
         ReceiveTelemetryCommand command,
         CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(command, cancellationToken);
-        return HandleResult(result);
+        return HandleCreatedResult(result);
     }
 
     [HttpGet("{hiveId:guid}")]

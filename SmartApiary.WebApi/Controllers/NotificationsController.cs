@@ -23,12 +23,6 @@ public sealed class NotificationsController : BaseController
     public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(new MarkNotificationAsReadCommand(id), cancellationToken);
-
-        if (result.IsFailure && result.Error == "Notification was not found.")
-        {
-            return NotFound(result.Error);
-        }
-
         return HandleResult(result);
     }
 }

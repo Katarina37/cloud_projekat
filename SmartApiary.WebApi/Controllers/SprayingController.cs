@@ -22,7 +22,7 @@ public sealed class SprayingController : BaseController
         CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(command, cancellationToken);
-        return HandleResult(result);
+        return HandleCreatedResult(result, nameof(GetByParcel), new { parcelId = command.ParcelId });
     }
 
     [HttpPut("{id:guid}/reschedule")]

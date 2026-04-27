@@ -1,4 +1,6 @@
-import { useLocation } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { clearAuthToken } from '../auth/authStorage';
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   '/pregled': {
@@ -45,11 +47,21 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
     title: 'Podešavanja',
     subtitle: 'Pragovi i korisničke vrednosti',
   },
+  '/admin/korisnici': {
+    title: 'Korisnici',
+    subtitle: 'Administracija naloga',
+  },
 };
 
 export default function Topbar() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const meta = pageMeta[pathname] ?? pageMeta['/pregled'];
+
+  const handleLogout = () => {
+    clearAuthToken();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <header className="topbar">
@@ -58,6 +70,10 @@ export default function Topbar() {
           <strong>{meta.title}</strong>
           <span>{meta.subtitle}</span>
         </div>
+        <button className="secondary-action-button topbar-logout-button" onClick={handleLogout} type="button">
+          <LogOut size={16} />
+          Odjava
+        </button>
       </div>
     </header>
   );

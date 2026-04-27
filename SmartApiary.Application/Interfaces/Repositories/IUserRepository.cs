@@ -8,6 +8,12 @@ public interface IUserRepository
 
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
 
+    Task<User?> GetByActivationTokenAsync(string token, CancellationToken cancellationToken = default);
+
+    Task<User?> GetByPasswordResetTokenAsync(string token, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default);
+
     Task AddAsync(User user, CancellationToken cancellationToken = default);
 
     void Update(User user);

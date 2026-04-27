@@ -24,6 +24,24 @@ public class UserRepository : IUserRepository
         return _context.Users.FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
     }
 
+    public Task<User?> GetByActivationTokenAsync(string token, CancellationToken cancellationToken = default)
+    {
+        return _context.Users.FirstOrDefaultAsync(user => user.ActivationToken == token, cancellationToken);
+    }
+
+    public Task<User?> GetByPasswordResetTokenAsync(string token, CancellationToken cancellationToken = default)
+    {
+        return _context.Users.FirstOrDefaultAsync(user => user.PasswordResetToken == token, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .OrderBy(user => user.LastName)
+            .ThenBy(user => user.FirstName)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
     {
         await _context.Users.AddAsync(user, cancellationToken);

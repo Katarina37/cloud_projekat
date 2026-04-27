@@ -33,8 +33,13 @@ public static class DependencyInjection
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserAlertSettingsRepository, UserAlertSettingsRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IDeviceTokenGenerator, DeviceTokenGenerator>();
+        services.AddSingleton<IAccountTokenGenerator, AccountTokenGenerator>();
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddSingleton<IEmailService, EmailService>();
         services.AddSingleton<INotificationSender, NoopNotificationSender>();
         services.AddHttpClient<IWeatherService, WeatherService>(client =>
         {

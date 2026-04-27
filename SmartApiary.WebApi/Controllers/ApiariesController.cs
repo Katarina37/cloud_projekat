@@ -20,7 +20,7 @@ public sealed class ApiariesController : BaseController
         CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(command, cancellationToken);
-        return HandleResult(result);
+        return HandleCreatedResult(result, nameof(GetMy));
     }
 
     [HttpPut("{id:guid}")]
@@ -37,7 +37,7 @@ public sealed class ApiariesController : BaseController
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(new DeleteApiaryCommand(id), cancellationToken);
-        return HandleResult(result);
+        return HandleDeletedResult(result);
     }
 
     [HttpGet]

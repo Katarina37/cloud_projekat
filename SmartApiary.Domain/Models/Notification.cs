@@ -38,6 +38,11 @@ public class Notification
 
     public void MarkAsRead()
     {
+        if (IsRead)
+        {
+            return;
+        }
+
         IsRead = true;
         ReadAt = DateTime.UtcNow;
     }

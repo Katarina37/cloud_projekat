@@ -28,6 +28,19 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(32);
 
+        builder.Property(user => user.PasswordHash)
+            .HasMaxLength(512);
+
+        builder.Property(user => user.ActivationToken)
+            .HasMaxLength(256);
+
+        builder.Property(user => user.ActivationTokenExpiresAt);
+
+        builder.Property(user => user.PasswordResetToken)
+            .HasMaxLength(256);
+
+        builder.Property(user => user.PasswordResetTokenExpiresAt);
+
         builder.Property(user => user.Role)
             .IsRequired()
             .HasConversion<string>()
@@ -35,5 +48,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(user => user.Email)
             .IsUnique();
+
+        builder.HasIndex(user => user.ActivationToken)
+            .IsUnique()
+            .HasFilter("[ActivationToken] IS NOT NULL");
+
+        builder.HasIndex(user => user.PasswordResetToken)
+            .IsUnique()
+            .HasFilter("[PasswordResetToken] IS NOT NULL");
     }
 }

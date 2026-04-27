@@ -30,7 +30,7 @@ public sealed class WeatherService : IWeatherService
     {
         if (string.IsNullOrWhiteSpace(_apiKey))
         {
-            return CreateMockWeather();
+            return null;
         }
 
         try
@@ -42,7 +42,7 @@ public sealed class WeatherService : IWeatherService
             var forecastItem = SelectClosestForecast(forecast, dateTime);
 
             return forecastItem is null
-                ? CreateMockWeather()
+                ? null
                 : MapWeather(forecastItem);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -51,19 +51,19 @@ public sealed class WeatherService : IWeatherService
         }
         catch (OperationCanceledException)
         {
-            return CreateMockWeather();
+            return null;
         }
         catch (HttpRequestException)
         {
-            return CreateMockWeather();
+            return null;
         }
         catch (JsonException)
         {
-            return CreateMockWeather();
+            return null;
         }
         catch (NotSupportedException)
         {
-            return CreateMockWeather();
+            return null;
         }
     }
 
@@ -154,16 +154,6 @@ public sealed class WeatherService : IWeatherService
         return forecastItem.Conditions?
             .Select(condition => condition.Description ?? condition.Main)
             .FirstOrDefault(description => !string.IsNullOrWhiteSpace(description));
-    }
-
-    private static WeatherInfoDto CreateMockWeather()
-    {
-        return new WeatherInfoDto
-        {
-            WindSpeed = 0,
-            HasRain = false,
-            Description = "Mock weather data.",
-        };
     }
 
     private sealed class OpenWeatherForecastResponse

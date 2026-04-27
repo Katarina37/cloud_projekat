@@ -1,4 +1,5 @@
 using SmartApiary.Domain.Enums;
+using SmartApiary.Domain.Exceptions;
 
 namespace SmartApiary.Domain.Models;
 
@@ -45,18 +46,24 @@ public class SprayingAnnouncement
 
     public void Reschedule(DateTime startTime, int durationHours)
     {
+        EnsureCanChangeLifecycle();
+
         StartTime = startTime;
         DurationHours = RequirePositiveDuration(durationHours);
     }
 
     public void Cancel()
     {
+        EnsureCanChangeLifecycle();
+
         Status = SprayingStatus.Cancelled;
         CancelledAt = DateTime.UtcNow;
     }
 
     public void Complete()
     {
+        EnsureCanChangeLifecycle();
+
         Status = SprayingStatus.Completed;
     }
 
@@ -78,5 +85,18 @@ public class SprayingAnnouncement
         }
 
         return durationHours;
+    }
+
+    private void EnsureCanChangeLifecycle()
+    {
+        if (Status == SprayingStatus.Cancelled)
+        {
+            throw new DomainException("Cancelled spraying announcement cannot be changed.");
+        }
+
+        if (Status == SprayingStatus.Completed)
+        {
+            throw new DomainException("Completed spraying announcement cannot be changed.");
+        }
     }
 }

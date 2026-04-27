@@ -9,9 +9,11 @@ import {
   MapPinned,
   Settings,
   Sprout,
+  Users,
   Wheat,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
+import { getCurrentUserRole } from '../auth/authStorage';
 
 const navigation = [
   { to: '/pregled', label: 'Pregled', icon: LayoutDashboard },
@@ -27,7 +29,15 @@ const navigation = [
   { to: '/podesavanja', label: 'Podešavanja', icon: Settings },
 ];
 
+const adminNavigation = [
+  { to: '/admin/korisnici', label: 'Korisnici', icon: Users },
+];
+
 export default function Sidebar() {
+  const items = getCurrentUserRole() === 'Admin'
+    ? [...navigation, ...adminNavigation]
+    : navigation;
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -41,7 +51,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="side-nav" aria-label="Glavna navigacija">
-        {navigation.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
 
           return (
