@@ -19,6 +19,8 @@ import SprayingPage from '../pages/SprayingPage';
 import TelemetryPage from '../pages/TelemetryPage';
 import { getCurrentUserRole, hasAuthToken } from '../auth/authStorage';
 
+type UserRole = 'Admin' | 'Beekeeper' | 'Farmer';
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -57,20 +59,20 @@ export default function AppRouter() {
         />
 
         <Route element={<ProtectedLayout />}>
-          <Route index element={<Navigate to="/pregled" replace />} />
-          <Route path="/pregled" element={<DashboardPage />} />
-          <Route path="/pcelinjaci" element={<ApiariesPage />} />
-          <Route path="/kosnice" element={<HivesPage />} />
-          <Route path="/uredjaji" element={<DevicesPage />} />
-          <Route path="/telemetrija" element={<TelemetryPage />} />
-          <Route path="/upozorenja" element={<AlertsPage />} />
-          <Route path="/parcele" element={<ParcelsPage />} />
-          <Route path="/kulture" element={<CropsPage />} />
-          <Route path="/tretiranja" element={<SprayingPage />} />
-          <Route path="/dnevnik" element={<BeekeepingDiaryPage />} />
-          <Route path="/podesavanja" element={<SettingsPage />} />
-          <Route path="/admin/korisnici" element={<AdminRoute />} />
-          <Route path="*" element={<Navigate to="/pregled" replace />} />
+          <Route index element={<DefaultRoute />} />
+          <Route path="/pregled" element={<RoleRoute roles={['Beekeeper']}><DashboardPage /></RoleRoute>} />
+          <Route path="/pcelinjaci" element={<RoleRoute roles={['Beekeeper']}><ApiariesPage /></RoleRoute>} />
+          <Route path="/kosnice" element={<RoleRoute roles={['Beekeeper']}><HivesPage /></RoleRoute>} />
+          <Route path="/uredjaji" element={<RoleRoute roles={['Beekeeper']}><DevicesPage /></RoleRoute>} />
+          <Route path="/telemetrija" element={<RoleRoute roles={['Beekeeper']}><TelemetryPage /></RoleRoute>} />
+          <Route path="/upozorenja" element={<RoleRoute roles={['Beekeeper']}><AlertsPage /></RoleRoute>} />
+          <Route path="/parcele" element={<RoleRoute roles={['Farmer']}><ParcelsPage /></RoleRoute>} />
+          <Route path="/kulture" element={<RoleRoute roles={['Farmer']}><CropsPage /></RoleRoute>} />
+          <Route path="/tretiranja" element={<RoleRoute roles={['Farmer']}><SprayingPage /></RoleRoute>} />
+          <Route path="/dnevnik" element={<RoleRoute roles={['Beekeeper']}><BeekeepingDiaryPage /></RoleRoute>} />
+          <Route path="/podesavanja" element={<RoleRoute roles={['Beekeeper']}><SettingsPage /></RoleRoute>} />
+          <Route path="/admin/korisnici" element={<RoleRoute roles={['Admin']}><AdminUsersPage /></RoleRoute>} />
+          <Route path="*" element={<DefaultRoute />} />
         </Route>
       </Routes>
     </BrowserRouter>
@@ -78,13 +80,39 @@ export default function AppRouter() {
 }
 
 function ProtectedLayout() {
-  return hasAuthToken() ? <DashboardLayout /> : <Navigate to="/login" replace />;
+  return hasValidSession() ? <DashboardLayout /> : <Navigate to="/login" replace />;
 }
 
 function PublicRoute({ children }: { children: ReactElement }) {
-  return hasAuthToken() ? <Navigate to="/pregled" replace /> : children;
+  return hasValidSession()
+    ? <Navigate to={getDefaultPathForRole(getCurrentUserRole() as UserRole | null)} replace />
+    : children;
 }
 
-function AdminRoute() {
-  return getCurrentUserRole() === 'Admin' ? <AdminUsersPage /> : <Navigate to="/pregled" replace />;
+function hasValidSession() {
+  return hasAuthToken() && Boolean(getCurrentUserRole());
+}
+
+function RoleRoute({ children, roles }: { children: ReactElement; roles: UserRole[] }) {
+  const role = getCurrentUserRole() as UserRole | null;
+
+  return role && roles.includes(role)
+    ? children
+    : <Navigate to={getDefaultPathForRole(role)} replace />;
+}
+
+function DefaultRoute() {
+  return <Navigate to={getDefaultPathForRole(getCurrentUserRole() as UserRole | null)} replace />;
+}
+
+function getDefaultPathForRole(role: UserRole | null) {
+  if (role === 'Admin') {
+    return '/admin/korisnici';
+  }
+
+  if (role === 'Farmer') {
+    return '/parcele';
+  }
+
+  return role === null ? '/login' : '/pregled';
 }

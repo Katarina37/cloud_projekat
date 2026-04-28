@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Spraying.CancelSpraying;
 using SmartApiary.Application.Features.Spraying.CompleteSpraying;
@@ -9,6 +10,7 @@ using SmartApiary.Application.Features.Spraying.ScheduleSpraying;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Farmer")]
 public sealed class SprayingController : BaseController
 {
     public SprayingController(IMediator mediator)

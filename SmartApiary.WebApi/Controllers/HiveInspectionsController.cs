@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.HiveInspections.CreateHiveInspection;
 using SmartApiary.Application.Features.HiveInspections.DeleteHiveInspection;
@@ -7,6 +8,7 @@ using SmartApiary.Application.Features.HiveInspections.UpdateHiveInspection;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Beekeeper")]
 [Route("api/hive-inspections")]
 public sealed class HiveInspectionsController : BaseController
 {

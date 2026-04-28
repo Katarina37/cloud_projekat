@@ -1,10 +1,12 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Alerts.GetAlertSettings;
 using SmartApiary.Application.Features.Alerts.UpdateAlertSettings;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Beekeeper")]
 public sealed class AlertsController : BaseController
 {
     public AlertsController(IMediator mediator)

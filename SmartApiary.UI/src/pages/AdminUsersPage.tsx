@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, UserX, Users } from 'lucide-react';
+import { Plus, Trash2, UserX, Users } from 'lucide-react';
 import {
   deactivateAdminUser,
+  deleteAdminUser,
   getAdminUsers,
   getApiErrorMessage,
   type AdminUserDto,
 } from '../api/apiClient';
+import { getCurrentUserId } from '../auth/authStorage';
 import AdminUserFormModal from '../components/AdminUserFormModal';
 import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
@@ -17,6 +19,8 @@ export default function AdminUsersPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deactivatingUserId, setDeactivatingUserId] = useState<string | null>(null);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const currentUserId = getCurrentUserId()?.toLowerCase() ?? null;
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -42,7 +46,7 @@ export default function AdminUsersPage() {
     const refreshed = await fetchUsers();
 
     if (refreshed) {
-      setSuccessMessage('Korisnik je kreiran.');
+      setSuccessMessage('Korisnik je kreiran. Aktivacioni link je poslat emailom ili ispisan u WebApi logu ako SMTP nije podesen.');
     }
   };
 
@@ -68,6 +72,31 @@ export default function AdminUsersPage() {
       setError(getApiErrorMessage(error, 'Deaktivacija korisnika nije uspela.'));
     } finally {
       setDeactivatingUserId(null);
+    }
+  };
+
+  const handleDelete = async (user: AdminUserDto) => {
+    const confirmed = window.confirm(`Obrisati korisnika ${user.firstName} ${user.lastName}?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingUserId(user.id);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await deleteAdminUser(user.id);
+      const refreshed = await fetchUsers();
+
+      if (refreshed) {
+        setSuccessMessage('Korisnik je obrisan.');
+      }
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Brisanje korisnika nije uspelo.'));
+    } finally {
+      setDeletingUserId(null);
     }
   };
 
@@ -124,37 +153,59 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <div className="table-title">
-                        <strong>
-                          {user.firstName} {user.lastName}
-                        </strong>
-                      </div>
-                    </td>
-                    <td>{user.email}</td>
-                    <td>{user.phoneNumber}</td>
-                    <td>{user.role}</td>
-                    <td>
-                      <StatusBadge tone={user.isActive ? 'good' : 'muted'}>
-                        {user.isActive ? 'Aktivan' : 'Neaktivan'}
-                      </StatusBadge>
-                    </td>
-                    <td>{formatDate(user.createdAt)}</td>
-                    <td className="table-actions-cell">
-                      <button
-                        className="danger-action-button"
-                        disabled={!user.isActive || deactivatingUserId === user.id}
-                        onClick={() => void handleDeactivate(user)}
-                        type="button"
-                      >
-                        <UserX size={16} />
-                        {deactivatingUserId === user.id ? 'Deaktivacija...' : 'Deaktiviraj'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user) => {
+                  const isCurrentUser = user.id.toLowerCase() === currentUserId;
+
+                  return (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="table-title">
+                          <strong>
+                            {user.firstName} {user.lastName}
+                          </strong>
+                        </div>
+                      </td>
+                      <td>{user.email}</td>
+                      <td>{user.phoneNumber}</td>
+                      <td>{user.role}</td>
+                      <td>
+                        <StatusBadge tone={user.isActive ? 'good' : 'muted'}>
+                          {user.isActive ? 'Aktivan' : 'Neaktivan'}
+                        </StatusBadge>
+                      </td>
+                      <td>{formatDate(user.createdAt)}</td>
+                      <td className="table-actions-cell">
+                        <div className="row-actions">
+                          <button
+                            className="danger-action-button"
+                            disabled={
+                              isCurrentUser
+                              || !user.isActive
+                              || deactivatingUserId === user.id
+                              || deletingUserId === user.id
+                            }
+                            onClick={() => void handleDeactivate(user)}
+                            title={isCurrentUser ? 'Ne mozete deaktivirati sopstveni nalog.' : undefined}
+                            type="button"
+                          >
+                            <UserX size={16} />
+                            {deactivatingUserId === user.id ? 'Deaktivacija...' : 'Deaktiviraj'}
+                          </button>
+                          <button
+                            className="danger-action-button"
+                            disabled={isCurrentUser || deletingUserId === user.id || deactivatingUserId === user.id}
+                            onClick={() => void handleDelete(user)}
+                            title={isCurrentUser ? 'Ne mozete obrisati sopstveni nalog.' : undefined}
+                            type="button"
+                          >
+                            <Trash2 size={16} />
+                            {deletingUserId === user.id ? 'Brisanje...' : 'Obrisi'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

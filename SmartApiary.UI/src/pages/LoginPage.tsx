@@ -44,6 +44,10 @@ export default function LoginPage() {
             <span>Prijava</span>
           </div>
         </div>
+        <p className="auth-note">
+          Prijava radi nakon aktivacije naloga. Ako prvi put ulazis u sistem, otvori aktivacioni link iz pozivnice i
+          postavi lozinku.
+        </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
@@ -78,7 +82,7 @@ export default function LoginPage() {
 
         <div className="auth-links">
           <Link to="/forgot-password">Zaboravljena lozinka</Link>
-          <Link to="/activate">Aktivacija naloga</Link>
+          <Link to="/activate">Imam aktivacioni token</Link>
         </div>
       </section>
     </main>

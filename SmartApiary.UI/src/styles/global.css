@@ -264,6 +264,14 @@ a {
   padding: 0;
 }
 
+.auth-note {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 .auth-form {
   display: grid;
   gap: 14px;

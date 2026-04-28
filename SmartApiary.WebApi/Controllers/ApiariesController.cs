@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Apiaries.CreateApiary;
 using SmartApiary.Application.Features.Apiaries.DeleteApiary;
@@ -7,6 +8,7 @@ using SmartApiary.Application.Features.Apiaries.UpdateApiary;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Beekeeper")]
 public sealed class ApiariesController : BaseController
 {
     public ApiariesController(IMediator mediator)

@@ -51,4 +51,9 @@ public class UserRepository : IUserRepository
     {
         _context.Users.Update(user);
     }
+
+    public void Delete(User user)
+    {
+        _context.Users.Remove(user);
+    }
 }

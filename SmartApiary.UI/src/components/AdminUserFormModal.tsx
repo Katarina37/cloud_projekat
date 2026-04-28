@@ -13,7 +13,6 @@ type AdminUserFormModalProps = {
 };
 
 const roleOptions: Array<{ value: UserRole; label: string }> = [
-  { value: 'Admin', label: 'Admin' },
   { value: 'Beekeeper', label: 'Beekeeper' },
   { value: 'Farmer', label: 'Farmer' },
 ];
@@ -51,7 +50,7 @@ export default function AdminUserFormModal({ onClose, onSaved }: AdminUserFormMo
         <div className="modal-header">
           <div>
             <h2>Novi korisnik</h2>
-            <p>Osnovni podaci naloga</p>
+            <p>Korisnik aktivira nalog preko linka koji se salje nakon kreiranja.</p>
           </div>
           <button aria-label="Zatvori" className="modal-close-button" onClick={onClose} type="button">
             <X size={18} />

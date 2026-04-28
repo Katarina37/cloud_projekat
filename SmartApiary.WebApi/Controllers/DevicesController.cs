@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Devices.ActivateDevice;
 using SmartApiary.Application.Features.Devices.GetDeviceByHive;
@@ -6,6 +7,7 @@ using SmartApiary.Application.Features.Devices.RegisterDevice;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Beekeeper")]
 public sealed class DevicesController : BaseController
 {
     public DevicesController(IMediator mediator)

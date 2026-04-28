@@ -4,15 +4,15 @@ using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Enums;
 
-namespace SmartApiary.Application.Features.Admin.Users.DeactivateUser;
+namespace SmartApiary.Application.Features.Admin.Users.DeleteUser;
 
-public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUserCommand, Result>
+public sealed class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Result>
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserRepository _userRepository;
 
-    public DeactivateUserCommandHandler(
+    public DeleteUserCommandHandler(
         ICurrentUserService currentUserService,
         IUserRepository userRepository,
         IUnitOfWork unitOfWork)
@@ -22,16 +22,16 @@ public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUse
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
         if (!IsAdmin())
         {
-            return Result.Failure("User is not authorized to deactivate users.");
+            return Result.Failure("User is not authorized to delete users.");
         }
 
         if (_currentUserService.UserId == request.UserId)
         {
-            return Result.Failure("Admins cannot deactivate their own account.");
+            return Result.Failure("Admins cannot delete their own account.");
         }
 
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
@@ -40,8 +40,7 @@ public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUse
             return Result.Failure("User was not found.");
         }
 
-        user.Deactivate();
-        _userRepository.Update(user);
+        _userRepository.Delete(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

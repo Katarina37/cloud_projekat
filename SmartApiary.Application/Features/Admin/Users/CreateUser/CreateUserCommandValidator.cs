@@ -1,4 +1,5 @@
 using FluentValidation;
+using SmartApiary.Domain.Enums;
 
 namespace SmartApiary.Application.Features.Admin.Users.CreateUser;
 
@@ -24,6 +25,8 @@ public sealed class CreateUserCommandValidator : AbstractValidator<CreateUserCom
             .MaximumLength(32);
 
         RuleFor(command => command.Role)
-            .IsInEnum();
+            .IsInEnum()
+            .Must(role => role is UserRole.Beekeeper or UserRole.Farmer)
+            .WithMessage("Admin can create only Beekeeper or Farmer accounts.");
     }
 }

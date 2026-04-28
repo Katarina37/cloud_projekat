@@ -21,11 +21,22 @@ public sealed class TelemetrySender
         TelemetryPayload payload,
         CancellationToken cancellationToken)
     {
-        using var response = await _httpClient.PostAsJsonAsync(
-            _telemetryEndpoint,
-            payload,
-            JsonOptions,
-            cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Post, _telemetryEndpoint)
+        {
+            Content = JsonContent.Create(
+                new
+                {
+                    payload.WeightKg,
+                    payload.HumidityPercent,
+                    payload.TemperatureCelsius,
+                    payload.BatteryPercent,
+                    payload.Timestamp
+                },
+                options: JsonOptions)
+        };
+        request.Headers.Add("X-Device-Token", payload.DeviceAccessToken);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
 
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 

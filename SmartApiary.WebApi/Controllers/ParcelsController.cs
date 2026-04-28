@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Parcels.CreateParcel;
 using SmartApiary.Application.Features.Parcels.DeleteParcel;
@@ -7,6 +8,7 @@ using SmartApiary.Application.Features.Parcels.UpdateParcel;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Farmer")]
 public sealed class ParcelsController : BaseController
 {
     public ParcelsController(IMediator mediator)

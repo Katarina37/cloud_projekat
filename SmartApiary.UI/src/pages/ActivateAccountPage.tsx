@@ -48,11 +48,21 @@ export default function ActivateAccountPage() {
             <span>Smart Apiary</span>
           </div>
         </div>
+        <p className="auth-note">
+          Aktivacioni link popunjava token automatski. Ako imas samo token, unesi ga ovdje i izaberi novu lozinku.
+        </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
-            Token
-            <input onChange={(event) => setToken(event.target.value)} required type="text" value={token} />
+            Aktivacioni token
+            <input
+              autoComplete="one-time-code"
+              onChange={(event) => setToken(event.target.value)}
+              placeholder="Token iz aktivacionog linka"
+              required
+              type="text"
+              value={token}
+            />
           </label>
 
           <label>

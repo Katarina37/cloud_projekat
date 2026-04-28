@@ -349,6 +349,11 @@ export async function deactivateAdminUser(userId: string): Promise<void> {
   unwrapResult(response.data, 'Failed to deactivate user');
 }
 
+export async function deleteAdminUser(userId: string): Promise<void> {
+  const response = await apiClient.delete<ResultResponse<void>>(`/admin/users/${userId}`);
+  unwrapResult(response.data, 'Failed to delete user');
+}
+
 export async function getApiaries(): Promise<ApiaryDto[]> {
   const response = await apiClient.get<ApiaryDto[] | ResultResponse<ApiaryDto[]>>('/apiaries');
   return unwrapResult(response.data, 'Failed to load apiaries') ?? [];

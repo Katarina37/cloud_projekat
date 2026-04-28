@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Crops.AddCrop;
 using SmartApiary.Application.Features.Crops.DeleteCrop;
@@ -7,6 +8,7 @@ using SmartApiary.Application.Features.Crops.UpdateCrop;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Farmer")]
 public sealed class CropsController : BaseController
 {
     public CropsController(IMediator mediator)

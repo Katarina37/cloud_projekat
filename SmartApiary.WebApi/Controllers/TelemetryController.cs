@@ -8,6 +8,7 @@ using SmartApiary.Application.Features.Telemetry.ReceiveTelemetry;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Beekeeper")]
 public sealed class TelemetryController : BaseController
 {
     public TelemetryController(IMediator mediator)
@@ -18,9 +19,18 @@ public sealed class TelemetryController : BaseController
     [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Receive(
-        ReceiveTelemetryCommand command,
+        ReceiveTelemetryRequest request,
+        [FromHeader(Name = "X-Device-Token")] string? deviceAccessToken,
         CancellationToken cancellationToken)
     {
+        var command = new ReceiveTelemetryCommand(
+            string.IsNullOrWhiteSpace(deviceAccessToken) ? request.DeviceAccessToken ?? string.Empty : deviceAccessToken,
+            request.WeightKg,
+            request.HumidityPercent,
+            request.TemperatureCelsius,
+            request.BatteryPercent,
+            request.Timestamp);
+
         var result = await Mediator.Send(command, cancellationToken);
         return HandleCreatedResult(result);
     }
@@ -54,3 +64,11 @@ public sealed class TelemetryController : BaseController
         return HandleResult(result);
     }
 }
+
+public sealed record ReceiveTelemetryRequest(
+    string? DeviceAccessToken,
+    double WeightKg,
+    double HumidityPercent,
+    double TemperatureCelsius,
+    double BatteryPercent,
+    DateTime Timestamp);

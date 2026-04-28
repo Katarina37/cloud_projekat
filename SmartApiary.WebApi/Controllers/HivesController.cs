@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Hives.CreateHive;
 using SmartApiary.Application.Features.Hives.DeleteHive;
@@ -7,6 +8,7 @@ using SmartApiary.Application.Features.Hives.UpdateHive;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Beekeeper")]
 public sealed class HivesController : BaseController
 {
     public HivesController(IMediator mediator)

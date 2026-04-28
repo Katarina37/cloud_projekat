@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Admin.Users.CreateUser;
+using SmartApiary.Application.Features.Admin.Users.DeleteUser;
 using SmartApiary.Application.Features.Admin.Users.DeactivateUser;
 using SmartApiary.Application.Features.Admin.Users.GetUsers;
 
@@ -37,5 +38,12 @@ public sealed class AdminUsersController : BaseController
     {
         var result = await Mediator.Send(new DeactivateUserCommand(id), cancellationToken);
         return HandleResult(result);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await Mediator.Send(new DeleteUserCommand(id), cancellationToken);
+        return HandleDeletedResult(result);
     }
 }

@@ -23,6 +23,13 @@ Authorization: Bearer <jwt-token>
 
 Za rucno testiranje Swagger/API poziva prvo se prijaviti preko `/api/auth/login`, zatim uneti JWT u Swagger Authorize dijalog kao Bearer token.
 
+U development okruzenju WebApi automatski obezbijedi aktivan admin nalog ako u bazi nema aktivnog admina:
+
+- email: `admin@smartapiary.local`
+- lozinka: `Admin123!`
+
+Korisnici se dalje kreiraju iz admin ekrana. Novi korisnik prvo otvara aktivacioni link, postavlja lozinku, pa se tek onda prijavljuje. Email servis salje aktivacione i reset linkove preko SMTP-a kada je podesena `Email:Smtp` konfiguracija; bez SMTP podesavanja u development-u linkovi se ispisuju u WebApi konzoli/logu.
+
 ## Pravilo zavisnosti
 
 Zavisnosti idu ka unutra:

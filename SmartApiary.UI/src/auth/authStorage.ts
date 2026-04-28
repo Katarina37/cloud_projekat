@@ -1,4 +1,5 @@
 const authTokenKey = 'smartapiary.authToken';
+const nameIdentifierClaimType = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
 const roleClaimType = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 
 export function getAuthToken() {
@@ -21,6 +22,12 @@ export function getCurrentUserRole() {
   const payload = getTokenPayload();
 
   return payload?.Role ?? payload?.role ?? payload?.[roleClaimType] ?? null;
+}
+
+export function getCurrentUserId() {
+  const payload = getTokenPayload();
+
+  return payload?.UserId ?? payload?.userId ?? payload?.sub ?? payload?.[nameIdentifierClaimType] ?? null;
 }
 
 function getTokenPayload(): Record<string, string> | null {

@@ -15,18 +15,21 @@ import {
 import { NavLink } from 'react-router-dom';
 import { getCurrentUserRole } from '../auth/authStorage';
 
-const navigation = [
+const beekeeperNavigation = [
   { to: '/pregled', label: 'Pregled', icon: LayoutDashboard },
   { to: '/pcelinjaci', label: 'Pčelinjaci', icon: MapPinned },
   { to: '/kosnice', label: 'Košnice', icon: Hexagon },
   { to: '/uredjaji', label: 'Uređaji', icon: Cpu },
   { to: '/telemetrija', label: 'Telemetrija', icon: Activity },
   { to: '/upozorenja', label: 'Upozorenja', icon: Bell },
+  { to: '/dnevnik', label: 'Pčelarski dnevnik', icon: BookOpenText },
+  { to: '/podesavanja', label: 'Podešavanja', icon: Settings },
+];
+
+const farmerNavigation = [
   { to: '/parcele', label: 'Parcele', icon: Sprout },
   { to: '/kulture', label: 'Kulture', icon: Wheat },
   { to: '/tretiranja', label: 'Tretiranja pesticidima', icon: CalendarClock },
-  { to: '/dnevnik', label: 'Pčelarski dnevnik', icon: BookOpenText },
-  { to: '/podesavanja', label: 'Podešavanja', icon: Settings },
 ];
 
 const adminNavigation = [
@@ -34,9 +37,12 @@ const adminNavigation = [
 ];
 
 export default function Sidebar() {
-  const items = getCurrentUserRole() === 'Admin'
-    ? [...navigation, ...adminNavigation]
-    : navigation;
+  const role = getCurrentUserRole();
+  const items = role === 'Admin'
+    ? adminNavigation
+    : role === 'Farmer'
+      ? farmerNavigation
+      : beekeeperNavigation;
 
   return (
     <aside className="sidebar">

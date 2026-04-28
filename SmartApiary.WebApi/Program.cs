@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using SmartApiary.Application.Behaviors;
 using SmartApiary.Application.Common.Results;
+using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Features.Spraying;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Exceptions;
@@ -14,6 +15,7 @@ using SmartApiary.Infrastructure.Extensions;
 using SmartApiary.Infrastructure.Services;
 using SmartApiary.WebApi.Routing;
 using SmartApiary.WebApi.Services;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -71,10 +73,11 @@ builder.Services.AddMediatR(configuration =>
 });
 
 builder.Services.AddValidatorsFromAssembly(applicationAssembly);
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 builder.Services.AddScoped<ISprayingNotificationService, SprayingNotificationService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RoleAuthorizationBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -100,11 +103,47 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             NameClaimType = ClaimTypes.NameIdentifier,
             RoleClaimType = ClaimTypes.Role
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var principal = context.Principal;
+                var userIdClaim = principal?.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? principal?.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                    ?? principal?.FindFirstValue("UserId")
+                    ?? principal?.FindFirstValue("userId");
+
+                if (!Guid.TryParse(userIdClaim, out var userId) || userId == Guid.Empty)
+                {
+                    context.Fail("JWT token does not contain a valid user id.");
+                    return;
+                }
+
+                var userRepository = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                var user = await userRepository.GetByIdAsync(userId, context.HttpContext.RequestAborted);
+                if (user is null || !user.IsActive)
+                {
+                    context.Fail("User account is not active.");
+                    return;
+                }
+
+                var tokenRole = principal?.FindFirstValue(ClaimTypes.Role)
+                    ?? principal?.FindFirstValue("role")
+                    ?? principal?.FindFirstValue("Role");
+
+                if (!string.Equals(tokenRole, user.Role.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Fail("JWT token role no longer matches the user account.");
+                }
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+await app.SeedDevelopmentAdminAsync();
 
 app.UseExceptionHandler(exceptionApp =>
 {

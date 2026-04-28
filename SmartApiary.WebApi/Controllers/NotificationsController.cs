@@ -1,10 +1,12 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Features.Notifications.GetMyNotifications;
 using SmartApiary.Application.Features.Notifications.MarkNotificationAsRead;
 
 namespace SmartApiary.WebApi.Controllers;
 
+[Authorize(Roles = "Beekeeper")]
 public sealed class NotificationsController : BaseController
 {
     public NotificationsController(IMediator mediator)
