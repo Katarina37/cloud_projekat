@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { getApiErrorMessage, login } from '../api/apiClient';
 import { setAuthToken } from '../auth/authStorage';
+import BrandLogo from '../components/BrandLogo';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -36,9 +37,7 @@ export default function LoginPage() {
     <main className="auth-shell">
       <section className="auth-card">
         <div className="brand auth-brand">
-          <div className="brand-mark" aria-hidden="true">
-            <LogIn size={22} />
-          </div>
+          <BrandLogo />
           <div>
             <strong>Smart Apiary</strong>
             <span>Prijava</span>

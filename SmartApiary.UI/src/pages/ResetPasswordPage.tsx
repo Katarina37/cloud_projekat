@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { KeyRound } from 'lucide-react';
 import { getApiErrorMessage, resetPassword } from '../api/apiClient';
+import BrandLogo from '../components/BrandLogo';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -40,9 +41,7 @@ export default function ResetPasswordPage() {
     <main className="auth-shell">
       <section className="auth-card">
         <div className="brand auth-brand">
-          <div className="brand-mark" aria-hidden="true">
-            <KeyRound size={22} />
-          </div>
+          <BrandLogo />
           <div>
             <strong>Nova lozinka</strong>
             <span>Smart Apiary</span>

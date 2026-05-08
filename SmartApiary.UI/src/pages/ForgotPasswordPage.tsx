@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import { forgotPassword, getApiErrorMessage } from '../api/apiClient';
+import BrandLogo from '../components/BrandLogo';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -29,9 +30,7 @@ export default function ForgotPasswordPage() {
     <main className="auth-shell">
       <section className="auth-card">
         <div className="brand auth-brand">
-          <div className="brand-mark" aria-hidden="true">
-            <Mail size={22} />
-          </div>
+          <BrandLogo />
           <div>
             <strong>Zaboravljena lozinka</strong>
             <span>Smart Apiary</span>

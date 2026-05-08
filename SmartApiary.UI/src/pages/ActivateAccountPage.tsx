@@ -2,6 +2,7 @@ import { type FormEvent, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { KeyRound } from 'lucide-react';
 import { activateAccount, getApiErrorMessage } from '../api/apiClient';
+import BrandLogo from '../components/BrandLogo';
 
 export default function ActivateAccountPage() {
   const [searchParams] = useSearchParams();
@@ -40,9 +41,7 @@ export default function ActivateAccountPage() {
     <main className="auth-shell">
       <section className="auth-card">
         <div className="brand auth-brand">
-          <div className="brand-mark" aria-hidden="true">
-            <KeyRound size={22} />
-          </div>
+          <BrandLogo />
           <div>
             <strong>Aktivacija naloga</strong>
             <span>Smart Apiary</span>

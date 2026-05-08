@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { getCurrentUserRole } from '../auth/authStorage';
+import BrandLogo from './BrandLogo';
 
 const beekeeperNavigation = [
   { to: '/pregled', label: 'Pregled', icon: LayoutDashboard },
@@ -47,9 +48,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark" aria-hidden="true">
-          <Hexagon size={22} />
-        </div>
+        <BrandLogo />
         <div>
           <strong>Smart Apiary</strong>
           <span>Pametno pčelarstvo</span>
