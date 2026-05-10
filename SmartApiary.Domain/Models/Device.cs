@@ -35,6 +35,8 @@ public class Device
 
     public DateTime? PairedAt { get; private set; }
 
+    public bool BatteryAlertSent { get; private set; }
+
     public void Pair(string deviceIdentifier, string accessToken)
     {
         if (Status == DeviceStatus.Paired)
@@ -56,5 +58,15 @@ public class Device
         }
 
         return value;
+    }
+
+    public void MarkBatteryAlertSent()
+    {
+        BatteryAlertSent = true;
+    }
+
+    public void ResetBatteryAlert()
+    {
+        BatteryAlertSent = false;
     }
 }

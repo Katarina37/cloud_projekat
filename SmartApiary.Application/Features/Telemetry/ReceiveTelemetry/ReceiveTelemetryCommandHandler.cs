@@ -93,6 +93,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
             apiary.BeekeeperId,
             hive.Label,
             reading,
+            device,
             cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -136,22 +137,35 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         Guid beekeeperId,
         string hiveLabel,
         TelemetryReading reading,
+        Device device,
         CancellationToken cancellationToken)
     {
-        if (reading.BatteryPercent >= LowBatteryThresholdPercent)
+        if (reading.BatteryPercent < LowBatteryThresholdPercent)
         {
-            return;
-        }
+            if (device.BatteryAlertSent)
+                return;
 
-        var title = "Device battery low";
-        var message = $"Hive '{hiveLabel}' device battery is at {reading.BatteryPercent:0.##}%.";
+            var title = "Device battery low";
+            var message = $"Hive '{hiveLabel}' device battery is at {reading.BatteryPercent:0.##}%";
+            
+            device.MarkBatteryAlertSent();
+            _deviceRepository.Update(device);
 
-        await AddAndSendNotificationAsync(
+            await AddAndSendNotificationAsync(
             beekeeperId,
             NotificationType.BatteryLow,
             title,
             message,
             cancellationToken);
+        }
+        else
+        {
+            if (device.BatteryAlertSent)
+            {
+                device.ResetBatteryAlert();
+                _deviceRepository.Update(device);
+            }
+        }
     }
 
     private async Task AddAndSendNotificationAsync(
