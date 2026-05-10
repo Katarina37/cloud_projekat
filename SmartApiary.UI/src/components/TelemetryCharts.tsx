@@ -13,6 +13,7 @@ import {
 import type { DailyWeightDeltaDto, TelemetryReadingDto } from '../api/apiClient';
 import ChartCard from './ChartCard';
 
+
 type TelemetryChartsProps = {
   telemetryReadings: TelemetryReadingDto[];
   dailyDeltas: DailyWeightDeltaDto[];
@@ -87,6 +88,7 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
               <XAxis dataKey="date" tickLine={false} axisLine={false} />
               <YAxis tickLine={false} axisLine={false} unit=" kg" />
               <Tooltip />
+              //dnevni grafikon prinosa sa zelenim/crvenim stubicima
               <Bar dataKey="deltaKg" name="Promena" radius={[8, 8, 0, 0]} shape={(props: any) => {
                   const {x, y, width, height, value} = props;
                   const fill = value >= 0 ? '#22C55E' : '#EF4444';
