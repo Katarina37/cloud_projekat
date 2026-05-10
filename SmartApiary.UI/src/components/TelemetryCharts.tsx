@@ -87,7 +87,11 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
               <XAxis dataKey="date" tickLine={false} axisLine={false} />
               <YAxis tickLine={false} axisLine={false} unit=" kg" />
               <Tooltip />
-              <Bar dataKey="deltaKg" name="Promena" fill="#F6B800" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="deltaKg" name="Promena" radius={[8, 8, 0, 0]} shape={(props: any) => {
+                  const {x, y, width, height, value} = props;
+                  const fill = value >= 0 ? '#22C55E' : '#EF4444';
+                  return <rect x={x} y={y} width={width} height={height} fill={fill} rx={8} ry={8}/>;
+              }}/>
             </BarChart>
           </ResponsiveContainer>
         ) : (
