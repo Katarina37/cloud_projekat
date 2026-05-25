@@ -12,4 +12,10 @@ public interface IEmailService
         string to,
         string passwordResetToken,
         CancellationToken cancellationToken = default);
+
+    Task SendNotificationEmailAsync(
+        string to,
+        string subject,
+        string body,
+        CancellationToken cancellationToken = default);
 }

@@ -4,6 +4,9 @@
 # Azure Functions localsettings file
 local.settings.json
 
+# Local appsettings overrides
+appsettings.Development.local.json
+
 # User-specific files
 *.suo
 *.user

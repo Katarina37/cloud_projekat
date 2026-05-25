@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 using SmartApiary.Application.Interfaces.Services;
-using System.Net;
-using System.Net.Mail;
 
 namespace SmartApiary.Infrastructure.Services;
 
@@ -11,6 +11,7 @@ public sealed class EmailService : IEmailService
     private readonly ILogger<EmailService> _logger;
     private readonly string _frontendBaseUrl;
     private readonly IConfiguration _configuration;
+    private readonly string? _sendGridApiKey;
 
     public EmailService(
         ILogger<EmailService> logger,
@@ -20,6 +21,7 @@ public sealed class EmailService : IEmailService
         _configuration = configuration;
         _frontendBaseUrl = (configuration["Frontend:BaseUrl"] ?? "http://localhost:5173")
             .TrimEnd('/');
+        _sendGridApiKey = configuration["SendGrid:ApiKey"];
     }
 
     public async Task SendActivationEmailAsync(
@@ -75,12 +77,21 @@ public sealed class EmailService : IEmailService
         return SendAsync(to, "SmartApiary password reset", body, cancellationToken);
     }
 
+    public Task SendNotificationEmailAsync(
+        string to,
+        string subject,
+        string body,
+        CancellationToken cancellationToken = default)
+    {
+        return SendAsync(to, subject, body, cancellationToken);
+    }
+
     private string BuildFrontendUrl(string path, string token)
     {
         return $"{_frontendBaseUrl}/{path}?token={Uri.EscapeDataString(token)}";
     }
 
-    private Task SendAsync(
+    private async Task SendAsync(
         string to,
         string subject,
         string body,
@@ -88,54 +99,36 @@ public sealed class EmailService : IEmailService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var smtpHost = _configuration["Email:Smtp:Host"];
         var fromAddress = _configuration["Email:FromAddress"];
-        if (!string.IsNullOrWhiteSpace(smtpHost) && !string.IsNullOrWhiteSpace(fromAddress))
-        {
-            return SendSmtpAsync(to, subject, body, smtpHost, fromAddress, cancellationToken);
-        }
-
-        _logger.LogInformation(
-            "Email SMTP is not configured. Development placeholder to {To}. Subject: {Subject}. Body: {Body}",
-            to,
-            subject,
-            body);
-
-        return Task.CompletedTask;
-    }
-
-    private async Task SendSmtpAsync(
-        string to,
-        string subject,
-        string body,
-        string smtpHost,
-        string fromAddress,
-        CancellationToken cancellationToken)
-    {
-        var smtpPort = _configuration.GetValue("Email:Smtp:Port", 25);
-        var enableSsl = _configuration.GetValue("Email:Smtp:EnableSsl", false);
-        var username = _configuration["Email:Smtp:Username"];
-        var password = _configuration["Email:Smtp:Password"];
         var fromName = _configuration["Email:FromName"] ?? "SmartApiary";
 
-        using var message = new MailMessage
+        if (string.IsNullOrWhiteSpace(_sendGridApiKey)
+            || string.IsNullOrWhiteSpace(fromAddress))
         {
-            From = new MailAddress(fromAddress, fromName),
-            Subject = subject,
-            Body = body
-        };
-        message.To.Add(to);
-
-        using var client = new SmtpClient(smtpHost, smtpPort)
-        {
-            EnableSsl = enableSsl
-        };
-
-        if (!string.IsNullOrWhiteSpace(username))
-        {
-            client.Credentials = new NetworkCredential(username, password);
+            _logger.LogInformation(
+                "SendGrid is not configured. Placeholder email to {To}. Subject: {Subject}. Body: {Body}",
+                to,
+                subject,
+                body);
+            return;
         }
 
-        await client.SendMailAsync(message, cancellationToken);
+        var client = new SendGridClient(_sendGridApiKey);
+        var message = new SendGridMessage
+        {
+            From = new EmailAddress(fromAddress, fromName),
+            Subject = subject,
+            PlainTextContent = body
+        };
+        message.AddTo(new EmailAddress(to));
+
+        var response = await client.SendEmailAsync(message, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning(
+                "SendGrid returned status {StatusCode} for email to {To}.",
+                response.StatusCode,
+                to);
+        }
     }
 }
