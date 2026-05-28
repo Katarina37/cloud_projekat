@@ -4,20 +4,27 @@ import {
   getApiErrorMessage,
   getCropsByParcel,
   getParcels,
+  getNearbyParcels,
   type CropDto,
   type ParcelDto,
 } from '../api/apiClient';
+import { getCurrentUserRole } from '../auth/authStorage';
 import SectionCard from './SectionCard';
 
 type ParcelCrops = {
   parcel: ParcelDto;
   crops: CropDto[];
+  cropsUnavailable?: boolean;
 };
 
 const loadingMessage = 'Učitavanje kultura po parcelama...';
 const loadErrorMessage = 'Greška pri učitavanju kultura po parcelama.';
 
-export default function ParcelCropsOverview() {
+type Props = {
+  apiaryId?: string;
+};
+
+export default function ParcelCropsOverview({ apiaryId }: Props) {
   const [parcelCrops, setParcelCrops] = useState<ParcelCrops[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,17 +32,47 @@ export default function ParcelCropsOverview() {
   const loadParcelCrops = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
-      const parcels = await getParcels();
-      const cropsByParcel = await Promise.all(
-        parcels.map(async (parcel) => ({
-          parcel,
-          crops: await getCropsByParcel(parcel.id),
-        })),
-      );
+      const role = getCurrentUserRole();
 
-      setParcelCrops(cropsByParcel);
+      if (role === 'Beekeeper') {
+        // For beekeepers, use nearby-parcels for the selected apiary
+        if (!apiaryId) {
+          setParcelCrops([]);
+          setError('Odaberite pčelinjak da bi se prikazale okolne parcele.');
+          setLoading(false);
+          return;
+        }
+
+        const nearby = await getNearbyParcels(apiaryId);
+        const results: ParcelCrops[] = nearby.map((p) => ({
+          parcel: { id: p.parcelId, name: p.parcelName, latitude: p.latitude, longitude: p.longitude, createdAt: '' },
+          crops: p.crops ?? [],
+          cropsUnavailable: false,
+        }));
+
+        setParcelCrops(results);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
+      // Default: Farmer view - load all parcels and their crops
+      const parcels = await getParcels();
+
+      const results: ParcelCrops[] = [];
+      for (const parcel of parcels) {
+        try {
+          const crops = await getCropsByParcel(parcel.id);
+          results.push({ parcel, crops });
+        } catch (parcelError) {
+          // If fetching crops for one parcel fails (e.g. role-based 403),
+          // continue and mark crops as unavailable for that parcel.
+          results.push({ parcel, crops: [], cropsUnavailable: true });
+        }
+      }
+
+      setParcelCrops(results);
     } catch (requestError) {
       setParcelCrops([]);
       setError(getApiErrorMessage(requestError, loadErrorMessage));
@@ -68,18 +105,23 @@ export default function ParcelCropsOverview() {
 
       {!loading && !error && parcelCrops.length > 0 ? (
         <div className="parcel-crops-list">
-          {parcelCrops.map(({ parcel, crops }) => (
+          {parcelCrops.map(({ parcel, crops, cropsUnavailable }) => (
             <div className="parcel-crop-group" key={parcel.id}>
               <div className="parcel-crop-header">
                 <div className="table-title">
                   <strong>{parcel.name}</strong>
                   <span>
-                    {crops.length === 1 ? '1 kultura' : `${crops.length} kultura`}
+                    {cropsUnavailable
+                      ? 'nedostupno'
+                      : crops.length === 1
+                      ? '1 kultura'
+                      : `${crops.length} kultura`}
                   </span>
                 </div>
               </div>
-
-              {crops.length > 0 ? (
+              {cropsUnavailable ? (
+                <p className="muted-text">Kulture nisu dostupne za ovu parcelu.</p>
+              ) : crops.length > 0 ? (
                 <div className="crop-overview-list">
                   {crops.map((crop) => (
                     <div className="crop-overview-row" key={crop.id}>

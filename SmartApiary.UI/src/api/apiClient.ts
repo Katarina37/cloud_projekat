@@ -79,6 +79,16 @@ export type ParcelDto = {
   createdAt: string;
 };
 
+export type MapParcelDto = {
+  parcelId: string;
+  parcelName: string;
+  latitude: number;
+  longitude: number;
+  farmerName?: string | null;
+  farmerPhone?: string | null;
+  crops?: CropDto[];
+};
+
 export type CreateParcelRequest = {
   name: string;
   latitude: number;
@@ -547,6 +557,15 @@ export async function getCropsByParcel(parcelId: string): Promise<CropDto[]> {
   return (unwrapResult(response.data, 'Failed to load crops') ?? []).map(normalizeCrop);
 }
 
+export async function getNearbyParcels(apiaryId: string): Promise<MapParcelDto[]> {
+  // MapController is routed under api/Map, so include the controller segment.
+  const response = await apiClient.get<MapParcelApiDto[] | ResultResponse<MapParcelApiDto[]>>(
+    `/map/apiaries/${apiaryId}/nearby-parcels`,
+  );
+
+  return (unwrapResult(response.data, 'Failed to load nearby parcels') ?? []).map(normalizeMapParcel);
+}
+
 export async function createCrop(payload: CreateCropRequest): Promise<string | undefined> {
   const response = await apiClient.post<string | ResultResponse<string>>('/crops', payload);
   return unwrapResult(response.data, 'Failed to create crop');
@@ -785,6 +804,16 @@ type SprayingAnnouncementApiDto = Partial<SprayingAnnouncementDto> & {
   CancelledAt?: string | null;
 };
 
+type MapParcelApiDto = Partial<MapParcelDto> & {
+  ParcelId?: string;
+  ParcelName?: string;
+  Latitude?: number;
+  Longitude?: number;
+  FarmerName?: string | null;
+  FarmerPhone?: string | null;
+  Crops?: CropApiDto[];
+};
+
 function normalizeLoginResponse(response: LoginResponseApiDto): LoginResponseDto {
   return {
     token: response.token ?? response.Token ?? '',
@@ -894,6 +923,18 @@ function normalizeSprayingAnnouncement(announcement: SprayingAnnouncementApiDto)
     notifiedBeekeepersCount: announcement.notifiedBeekeepersCount ?? announcement.NotifiedBeekeepersCount ?? 0,
     createdAt: announcement.createdAt ?? announcement.CreatedAt ?? '',
     cancelledAt: announcement.cancelledAt ?? announcement.CancelledAt ?? null,
+  };
+}
+
+function normalizeMapParcel(record: MapParcelApiDto): MapParcelDto {
+  return {
+    parcelId: record.parcelId ?? record.ParcelId ?? '',
+    parcelName: record.parcelName ?? record.ParcelName ?? '',
+    latitude: record.latitude ?? record.Latitude ?? 0,
+    longitude: record.longitude ?? record.Longitude ?? 0,
+    farmerName: record.farmerName ?? record.FarmerName ?? null,
+    farmerPhone: record.farmerPhone ?? record.FarmerPhone ?? null,
+    crops: (record.Crops ?? record.crops ?? []).map(normalizeCrop),
   };
 }
 

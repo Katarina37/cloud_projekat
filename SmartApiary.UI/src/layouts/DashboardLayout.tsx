@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Topbar from '../components/Topbar';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function DashboardLayout() {
   return (
@@ -9,7 +10,9 @@ export default function DashboardLayout() {
       <div className="app-main">
         <Topbar />
         <main className="content-shell">
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

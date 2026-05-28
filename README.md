@@ -28,7 +28,7 @@ U development okruzenju WebApi automatski obezbijedi aktivan admin nalog ako u b
 - email: `admin@smartapiary.local`
 - lozinka: `Admin123!`
 
-Korisnici se dalje kreiraju iz admin ekrana. Novi korisnik prvo otvara aktivacioni link, postavlja lozinku, pa se tek onda prijavljuje. Email servis salje aktivacione i reset linkove preko SMTP-a kada je podesena `Email:Smtp` konfiguracija; bez SMTP podesavanja u development-u linkovi se ispisuju u WebApi konzoli/logu.
+Korisnici se dalje kreiraju iz admin ekrana. Novi korisnik prvo otvara aktivacioni link, postavlja lozinku, pa se tek onda prijavljuje. Email servis šalje aktivacione i reset linkove preko SendGrid-a kada je podešen `SendGrid:ApiKey` u konfiguraciji; bez SendGrid podešavanja u development okruženju linkovi se ispisuju u WebApi konzoli/logu.
 
 ## Pravilo zavisnosti
 

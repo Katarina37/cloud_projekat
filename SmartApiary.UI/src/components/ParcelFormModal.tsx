@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import {
   createParcel,
@@ -6,15 +7,17 @@ import {
   updateParcel,
   type ParcelDto,
   type UpdateParcelRequest,
+  type CropDto,
 } from '../api/apiClient';
 
 type ParcelFormModalProps = {
   parcel?: ParcelDto;
   onClose: () => void;
   onSaved: () => Promise<void>;
+  crops?: CropDto[];
 };
 
-export default function ParcelFormModal({ parcel, onClose, onSaved }: ParcelFormModalProps) {
+export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: ParcelFormModalProps) {
   const isEditMode = Boolean(parcel);
   const [name, setName] = useState(parcel?.name ?? '');
   const [latitude, setLatitude] = useState(parcel ? String(parcel.latitude) : '');
@@ -100,7 +103,13 @@ export default function ParcelFormModal({ parcel, onClose, onSaved }: ParcelForm
 
   const title = isEditMode ? 'Izmeni parcelu' : 'Dodaj parcelu';
 
-  return (
+  const portalTarget = typeof document === 'undefined' ? null : document.body;
+
+  if (!portalTarget) {
+    return null;
+  }
+
+  return createPortal(
     <div className="modal-overlay" onClick={handleClose} role="presentation">
       <section
         aria-labelledby="parcel-form-title"
@@ -113,6 +122,11 @@ export default function ParcelFormModal({ parcel, onClose, onSaved }: ParcelForm
           <div>
             <h2 id="parcel-form-title">{title}</h2>
             <p>Unesi naziv i koordinate parcele.</p>
+            {isEditMode ? (
+              <p style={{ marginTop: 6, fontSize: 13, color: '#666' }}>
+                Kreirano: {parcel?.createdAt ? new Date(parcel.createdAt).toLocaleString() : '—'}
+              </p>
+            ) : null}
           </div>
           <button
             aria-label="Zatvori modal"
@@ -136,6 +150,17 @@ export default function ParcelFormModal({ parcel, onClose, onSaved }: ParcelForm
               value={name}
             />
           </label>
+
+          {isEditMode && crops && crops.length > 0 ? (
+            <div style={{ marginTop: 8 }}>
+              <label style={{ display: 'block', marginBottom: 6 }}>Kulture na parceli</label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {crops.map((c) => (
+                  <span key={c.id} className="chip" style={{ padding: '6px 10px' }}>{c.name}</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <label>
             Latitude
@@ -175,5 +200,5 @@ export default function ParcelFormModal({ parcel, onClose, onSaved }: ParcelForm
         </form>
       </section>
     </div>
-  );
+  , portalTarget);
 }

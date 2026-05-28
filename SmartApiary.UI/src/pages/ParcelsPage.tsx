@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Leaf, Pencil, Plus, Trash2 } from 'lucide-react';
-import { deleteParcel, getApiErrorMessage, getParcels, type ParcelDto } from '../api/apiClient';
+import { deleteParcel, getApiErrorMessage, getParcels, getCropsByParcel, type ParcelDto, type CropDto } from '../api/apiClient';
 import PageHeader from '../components/PageHeader';
 import ParcelFormModal from '../components/ParcelFormModal';
+import MapView from '../components/MapView';
 
 export default function ParcelsPage() {
   const [parcels, setParcels] = useState<ParcelDto[]>([]);
+  const [parcelsWithCrops, setParcelsWithCrops] = useState<{ parcel: ParcelDto; crops: CropDto[] }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -21,6 +23,10 @@ export default function ParcelsPage() {
     try {
       const parcels = await getParcels();
       setParcels(parcels);
+
+      // load crops per parcel for map icons
+      const cropsByParcel = await Promise.all(parcels.map((p) => getCropsByParcel(p.id)));
+      setParcelsWithCrops(parcels.map((p, i) => ({ parcel: p, crops: cropsByParcel[i] })));
       return true;
     } catch {
       setParcels([]);
@@ -87,20 +93,74 @@ export default function ParcelsPage() {
         title="Parcele"
         subtitle="Naziv, koordinate i kultura povezani sa okruženjem pčelinjaka"
         action={
-          <button
-            className="primary-button orange-button"
-            onClick={() => {
-              setError(null);
-              setSuccessMessage(null);
-              setCreateModalOpen(true);
-            }}
-            type="button"
-          >
-            <Plus size={18} />
-            Dodaj parcelu
-          </button>
+          <>
+            <button
+              className="primary-button orange-button"
+              onClick={() => {
+                setError(null);
+                setSuccessMessage(null);
+                setCreateModalOpen(true);
+              }}
+              type="button"
+            >
+              <Plus size={18} />
+              Dodaj parcelu
+            </button>
+            <button
+              className="secondary-action-button"
+              onClick={async () => {
+                setError(null);
+                try {
+                  // export map to PDF
+                  const { default: html2canvas } = await import('html2canvas');
+                  const { jsPDF } = await import('jspdf');
+
+                  const el = document.querySelector('.section-card .leaflet-container') as HTMLElement | null;
+                  if (!el) {
+                    window.alert('Mapa nije pronađena za export.');
+                    return;
+                  }
+
+                  const canvas = await html2canvas(el, { useCORS: true, logging: false });
+                  const imgData = canvas.toDataURL('image/png');
+                  const pdf = new jsPDF({ orientation: 'landscape' });
+                  const imgProps = pdf.getImageProperties(imgData);
+                  const pdfWidth = pdf.internal.pageSize.getWidth();
+                  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                  pdf.save('parcels-map.pdf');
+                } catch (err) {
+                  // eslint-disable-next-line no-console
+                  console.error(err);
+                  window.alert('Greška pri generisanju PDF-a.');
+                }
+              }}
+              type="button"
+            >
+              Export map to PDF
+            </button>
+          </>
         }
       />
+
+      <section className="section-card">
+        <MapView
+          items={
+            parcelsWithCrops.length > 0
+              ? parcelsWithCrops.map(({ parcel, crops }) => ({ id: parcel.id, name: parcel.name, latitude: parcel.latitude, longitude: parcel.longitude, type: 'parcel' as const, crops: crops.map((c) => c.name) }))
+              : parcels.map((parcel) => ({ id: parcel.id, name: parcel.name, latitude: parcel.latitude, longitude: parcel.longitude, type: 'parcel' as const }))
+          }
+          height={360}
+          zoom={11}
+          onSelect={(it) => {
+            const found = parcels.find((p) => p.id === it.id) || null;
+            if (found) {
+              setSelectedParcel(found);
+              setEditModalOpen(true);
+            }
+          }}
+        />
+      </section>
 
       {loading ? <section className="section-card">Učitavanje parcela...</section> : null}
 
@@ -176,7 +236,12 @@ export default function ParcelsPage() {
       ) : null}
 
       {editModalOpen && selectedParcel ? (
-        <ParcelFormModal parcel={selectedParcel} onClose={handleEditModalClose} onSaved={handleParcelUpdated} />
+        <ParcelFormModal
+          parcel={selectedParcel}
+          onClose={handleEditModalClose}
+          onSaved={handleParcelUpdated}
+          crops={parcelsWithCrops.find((p) => p.parcel.id === selectedParcel.id)?.crops ?? []}
+        />
       ) : null}
     </div>
   );

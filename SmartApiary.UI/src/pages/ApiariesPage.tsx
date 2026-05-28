@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
-import { deleteApiary, getApiaries, getApiErrorMessage, type ApiaryDto } from '../api/apiClient';
+import { deleteApiary, getApiaries, getApiErrorMessage, getNearbyParcels, type ApiaryDto } from '../api/apiClient';
+import { getCurrentUserId } from '../auth/authStorage';
 import ApiaryFormModal from '../components/ApiaryFormModal';
+import MapView from '../components/MapView';
 import PageHeader from '../components/PageHeader';
 
 export default function ApiariesPage() {
@@ -12,6 +14,9 @@ export default function ApiariesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingApiary, setEditingApiary] = useState<ApiaryDto | null>(null);
   const [deletingApiaryId, setDeletingApiaryId] = useState<string | null>(null);
+  const [mapItems, setMapItems] = useState<any[]>([]);
+  const [nearbyLoadingId, setNearbyLoadingId] = useState<string | null>(null);
+  const currentUserId = getCurrentUserId();
 
   const fetchApiaries = useCallback(async () => {
     setLoading(true);
@@ -74,6 +79,59 @@ export default function ApiariesPage() {
     }
   };
 
+  const handleShowNearbyParcels = async (apiary: ApiaryDto) => {
+    setNearbyLoadingId(apiary.id);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const nearby = await getNearbyParcels(apiary.id);
+
+      const apiaryItem = {
+        id: apiary.id,
+        name: apiary.name,
+        latitude: apiary.latitude,
+        longitude: apiary.longitude,
+        subtitle: apiary.terrainDescription || undefined,
+        type: 'apiary' as const,
+      };
+
+      const nearbyItems = nearby.map((p) => ({
+        id: p.parcelId,
+        name: p.parcelName,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        subtitle: p.farmerName ? `${p.farmerName}${p.farmerPhone ? ' • ' + p.farmerPhone : ''}` : p.crops && p.crops.length > 0 ? p.crops.map((c) => c.name).join(', ') : undefined,
+        type: 'parcel' as const,
+      }));
+
+      setMapItems([apiaryItem, ...nearbyItems]);
+      if (nearbyItems.length === 0) {
+        setSuccessMessage('Nema okolnih parcela u blizini.');
+      } else {
+        setSuccessMessage(`${nearbyItems.length} okolnih parcela učitano.`);
+      }
+    } catch (err) {
+      // Log full error for easier debugging and show server message when available
+      // eslint-disable-next-line no-console
+      console.error('Error loading nearby parcels', err);
+
+      // If axios error, prefer the response body or status text
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const anyErr = err as any;
+      if (anyErr?.response) {
+        const serverData = anyErr.response.data;
+        const serverMessage = typeof serverData === 'string' ? serverData : serverData?.error ?? serverData?.message;
+        setError(getApiErrorMessage(err, serverMessage ?? 'Greška pri učitavanju okolnih parcela.'));
+      } else {
+        setMapItems([]);
+        setError(getApiErrorMessage(err, 'Greška pri učitavanju okolnih parcela.'));
+      }
+    } finally {
+      setNearbyLoadingId(null);
+    }
+  };
+
   return (
     <div className="page-stack">
       <PageHeader
@@ -93,6 +151,19 @@ export default function ApiariesPage() {
           </button>
         }
       />
+
+      <section className="section-card">
+        <MapView
+          items={
+            mapItems.length > 0
+              ? mapItems
+              : apiaries.map((a) => ({ id: a.id, name: a.name, latitude: a.latitude, longitude: a.longitude, subtitle: a.terrainDescription || undefined, type: 'apiary' as const }))
+          }
+          height={360}
+          zoom={10}
+          onSelect={(it) => alert(`${it.name} — ${it.latitude}, ${it.longitude}`)}
+        />
+      </section>
 
       {loading ? <section className="section-card">Učitavanje...</section> : null}
 
@@ -139,6 +210,15 @@ export default function ApiariesPage() {
               </div>
 
               <div className="card-action-row">
+                <button
+                  className="secondary-action-button"
+                  disabled={nearbyLoadingId === apiary.id || Boolean(apiary.beekeeperId && apiary.beekeeperId !== currentUserId)}
+                  onClick={() => void handleShowNearbyParcels(apiary)}
+                  type="button"
+                  title={Boolean(apiary.beekeeperId && apiary.beekeeperId !== currentUserId) ? 'Nemate pravo da vidite okolne parcele za ovaj pčelinjak' : undefined}
+                >
+                  {nearbyLoadingId === apiary.id ? 'Učitavanje...' : 'Okolne parcele'}
+                </button>
                 <button
                   className="secondary-action-button"
                   disabled={deletingApiaryId === apiary.id}

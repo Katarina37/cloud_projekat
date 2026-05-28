@@ -229,7 +229,7 @@ export default function DashboardPage() {
         </>
       ) : null}
 
-      <ParcelCropsOverview />
+      <ParcelCropsOverview apiaryId={selectedApiaryId} />
     </div>
   );
 }

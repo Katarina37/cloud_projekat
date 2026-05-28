@@ -46,7 +46,7 @@ export default function AdminUsersPage() {
     const refreshed = await fetchUsers();
 
     if (refreshed) {
-      setSuccessMessage('Korisnik je kreiran. Aktivacioni link je poslat emailom ili ispisan u WebApi logu ako SMTP nije podesen.');
+      setSuccessMessage('Korisnik je kreiran. Aktivacioni link je poslat emailom preko SendGrid-a.');
     }
   };
 
