@@ -1,16 +1,10 @@
 using System.Globalization;
+using System.Net.Http.Json;
 using SmartApiary.Simulator.Configuration;
 using SmartApiary.Simulator.Models;
 using SmartApiary.Simulator.Services;
 
 var options = SimulatorOptionsLoader.Load();
-
-if (!options.HasDeviceAccessToken)
-{
-    Console.WriteLine("DeviceAccessToken nije podesen.");
-    Console.WriteLine("Prvo registrujte i aktivirajte uredjaj, zatim upisite token u appsettings.json ili SMARTAPIARY_DEVICE_ACCESS_TOKEN.");
-    return;
-}
 
 if (!options.TryGetTelemetryEndpoint(out var telemetryEndpoint))
 {
@@ -18,12 +12,76 @@ if (!options.TryGetTelemetryEndpoint(out var telemetryEndpoint))
     return;
 }
 
+if (!options.TryGetActivationEndpoint(out var activationEndpoint))
+{
+    Console.WriteLine($"ApiBaseUrl nije validan za aktivaciju: {options.ApiBaseUrl}");
+    return;
+}
+
 var mode = SelectMode(args);
 
 using var httpClient = new HttpClient();
+using var cancellationTokenSource = new CancellationTokenSource();
+var deviceAccessToken = options.DeviceAccessToken;
+
+if (string.IsNullOrWhiteSpace(deviceAccessToken))
+{
+    if (!options.HasActivationDetails)
+    {
+        Console.WriteLine("DeviceAccessToken nije podesen.");
+        Console.WriteLine("Unesite DeviceSerialNumber i DeviceIdentifier u appsettings.json ili environment variables za aktivaciju.");
+        return;
+    }
+
+    var activationPayload = new
+    {
+        serialNumber = options.DeviceSerialNumber,
+        deviceIdentifier = options.DeviceIdentifier
+    };
+
+    try
+    {
+        var response = await httpClient.PostAsJsonAsync(activationEndpoint, activationPayload, cancellationTokenSource.Token);
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Neuspesna aktivacija: {(int)response.StatusCode} {response.ReasonPhrase}");
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationTokenSource.Token);
+            if (!string.IsNullOrWhiteSpace(responseBody))
+            {
+                Console.WriteLine(responseBody);
+            }
+
+            return;
+        }
+
+        var activationResponse = await response.Content.ReadFromJsonAsync<DeviceActivationResponse>(cancellationTokenSource.Token);
+        deviceAccessToken = activationResponse?.DeviceAccessToken ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(deviceAccessToken))
+        {
+            Console.WriteLine("Aktivacija nije vratila DeviceAccessToken.");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(activationResponse?.Warning))
+        {
+            Console.WriteLine($"Upozorenje: {activationResponse.Warning}");
+        }
+
+        Console.WriteLine("Uredjaj je aktiviran.");
+    }
+    catch (OperationCanceledException) when (cancellationTokenSource.Token.IsCancellationRequested)
+    {
+        return;
+    }
+    catch (HttpRequestException exception)
+    {
+        Console.WriteLine($"Greska pri aktivaciji: {exception.Message}");
+        return;
+    }
+}
 var generator = new TelemetryGenerator(mode);
 var sender = new TelemetrySender(httpClient, telemetryEndpoint);
-using var cancellationTokenSource = new CancellationTokenSource();
 
 Console.CancelKeyPress += (_, eventArgs) =>
 {
@@ -41,7 +99,7 @@ Console.WriteLine();
 
 while (!cancellationTokenSource.Token.IsCancellationRequested)
 {
-    var payload = generator.Generate(options.DeviceAccessToken, DateTime.UtcNow);
+    var payload = generator.Generate(deviceAccessToken, DateTime.UtcNow);
 
     Console.WriteLine($"Saljem: {FormatPayload(payload)}");
 
@@ -143,3 +201,5 @@ static string FormatPayload(TelemetryPayload payload)
         $"temperatureCelsius={payload.TemperatureCelsius.ToString("F1", CultureInfo.InvariantCulture)}",
         $"batteryPercent={payload.BatteryPercent.ToString("F0", CultureInfo.InvariantCulture)}");
 }
+
+internal sealed record DeviceActivationResponse(string DeviceAccessToken, string? Warning);

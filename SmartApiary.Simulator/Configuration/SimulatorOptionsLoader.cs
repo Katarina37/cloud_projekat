@@ -47,12 +47,16 @@ public static class SimulatorOptionsLoader
     {
         var apiBaseUrl = Environment.GetEnvironmentVariable("SMARTAPIARY_API_BASE_URL");
         var deviceAccessToken = Environment.GetEnvironmentVariable("SMARTAPIARY_DEVICE_ACCESS_TOKEN");
+        var deviceSerialNumber = Environment.GetEnvironmentVariable("SMARTAPIARY_DEVICE_SERIAL_NUMBER");
+        var deviceIdentifier = Environment.GetEnvironmentVariable("SMARTAPIARY_DEVICE_IDENTIFIER");
         var intervalSeconds = Environment.GetEnvironmentVariable("SMARTAPIARY_INTERVAL_SECONDS");
 
         return options with
         {
             ApiBaseUrl = GetStringOverride(apiBaseUrl, options.ApiBaseUrl),
             DeviceAccessToken = GetStringOverride(deviceAccessToken, options.DeviceAccessToken),
+            DeviceSerialNumber = GetStringOverride(deviceSerialNumber, options.DeviceSerialNumber),
+            DeviceIdentifier = GetStringOverride(deviceIdentifier, options.DeviceIdentifier),
             IntervalSeconds = GetPositiveIntOverride(intervalSeconds, options.IntervalSeconds)
         };
     }
