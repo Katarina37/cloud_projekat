@@ -79,7 +79,7 @@ export default function ParcelCropsOverview({ apiaryId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [apiaryId]);
 
   useEffect(() => {
     void loadParcelCrops();

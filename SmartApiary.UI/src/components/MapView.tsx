@@ -34,6 +34,24 @@ function makeIcon(html: string) {
   });
 }
 
+function makeParcelIcon() {
+  return makeIcon(`
+    <div style="
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+      border: 2px solid #b45309;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(180, 83, 9, 0.28);
+      font-size: 16px;
+      line-height: 1;
+    ">🌾</div>
+  `);
+}
+
 function makeImageIcon(url: string) {
   return L.icon({
     iconUrl: url,
@@ -58,10 +76,11 @@ function FitBoundsToItems({ items }: { items: MapItem[] }) {
 
 export default function MapView({ items, height = 380, zoom = 10, onSelect }: Props) {
   const center: [number, number] = items.length > 0 ? [items[0].latitude, items[0].longitude] : [45.2671, 19.8335];
+  const mapKey = items.map((item) => `${item.type ?? 'item'}:${item.id}:${item.latitude}:${item.longitude}`).join('|');
 
   return (
     <div style={{ height }}>
-      <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
+      <MapContainer key={mapKey} center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <FitBoundsToItems items={items} />
         <MarkerClusterGroup>
@@ -70,14 +89,12 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
           if (it.type === 'apiary') {
             icon = makeIcon(`<div style="font-size:20px">🐝</div>`);
           } else {
-            // use Leaflet default marker (red pin) for parcels — no custom icon
-            icon = undefined;
+            icon = makeParcelIcon();
           }
 
             return (
-              <>
+              <React.Fragment key={`${it.type ?? 'item'}-${it.id}`}>
                 <Marker
-                  key={it.id}
                   position={[it.latitude, it.longitude]}
                   icon={icon}
                   eventHandlers={{
@@ -92,7 +109,7 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
                   </Popup>
                 </Marker>
                 {it.radiusMeters ? <Circle center={[it.latitude, it.longitude]} radius={it.radiusMeters} pathOptions={{ color: '#3388ff', fillOpacity: 0.1 }} /> : null}
-              </>
+              </React.Fragment>
             );
           })}
         </MarkerClusterGroup>
