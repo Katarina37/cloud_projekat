@@ -40,7 +40,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IEmailService, EmailService>();
-        services.AddScoped<INotificationSender, NoopNotificationSender>();
+        services.AddScoped<INotificationSender, RealNotificationSender>();
         services.AddHttpClient<IWeatherService, WeatherService>(client =>
         {
             client.BaseAddress = new Uri("https://api.openweathermap.org/");
