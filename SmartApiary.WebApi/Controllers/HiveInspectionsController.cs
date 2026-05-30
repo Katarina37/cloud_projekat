@@ -18,9 +18,10 @@ public sealed class HiveInspectionsController : BaseController
     }
 
     [HttpGet("by-hive/{hiveId:guid}")]
-    public async Task<IActionResult> GetByHive(Guid hiveId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByHive(Guid hiveId, CancellationToken cancellationToken, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var result = await Mediator.Send(new GetHiveInspectionsByHiveIdQuery(hiveId), cancellationToken);
+        var query = new GetHiveInspectionsByHiveIdQuery(hiveId, pageNumber, pageSize);
+        var result = await Mediator.Send(query, cancellationToken);
         return HandleResult(result);
     }
 

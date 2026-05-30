@@ -58,6 +58,8 @@ public sealed class CreateHiveInspectionCommandHandler : IRequestHandler<CreateH
             request.FramesWithHoney,
             request.BroodFrames,
             request.QueenPresent,
+            request.BottomBoardColor,
+            request.HoneyQuantityKg,
             request.Notes);
 
         await _hiveInspectionRepository.AddAsync(record, cancellationToken);

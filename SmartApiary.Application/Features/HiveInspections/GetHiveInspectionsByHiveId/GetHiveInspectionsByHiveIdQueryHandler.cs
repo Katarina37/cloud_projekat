@@ -7,7 +7,7 @@ using SmartApiary.Application.Interfaces.Services;
 namespace SmartApiary.Application.Features.HiveInspections.GetHiveInspectionsByHiveId;
 
 public sealed class GetHiveInspectionsByHiveIdQueryHandler
-    : IRequestHandler<GetHiveInspectionsByHiveIdQuery, Result<IReadOnlyList<HiveInspectionDto>>>
+    : IRequestHandler<GetHiveInspectionsByHiveIdQuery, Result<PagedList<HiveInspectionDto>>>
 {
     private readonly IApiaryRepository _apiaryRepository;
     private readonly ICurrentUserService _currentUserService;
@@ -26,35 +26,40 @@ public sealed class GetHiveInspectionsByHiveIdQueryHandler
         _hiveInspectionRepository = hiveInspectionRepository;
     }
 
-    public async Task<Result<IReadOnlyList<HiveInspectionDto>>> Handle(
+    public async Task<Result<PagedList<HiveInspectionDto>>> Handle(
         GetHiveInspectionsByHiveIdQuery request,
         CancellationToken cancellationToken)
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result<IReadOnlyList<HiveInspectionDto>>.Failure("User is not authenticated.");
+            return Result<PagedList<HiveInspectionDto>>.Failure("User is not authenticated.");
         }
 
         var hive = await _hiveRepository.GetByIdAsync(request.HiveId, cancellationToken);
         if (hive is null)
         {
-            return Result<IReadOnlyList<HiveInspectionDto>>.Failure("Hive was not found.");
+            return Result<PagedList<HiveInspectionDto>>.Failure("Hive was not found.");
         }
 
         var apiary = await _apiaryRepository.GetByIdAsync(hive.ApiaryId, cancellationToken);
         if (apiary is null)
         {
-            return Result<IReadOnlyList<HiveInspectionDto>>.Failure("Apiary was not found.");
+            return Result<PagedList<HiveInspectionDto>>.Failure("Apiary was not found.");
         }
 
         if (apiary.BeekeeperId != beekeeperId)
         {
-            return Result<IReadOnlyList<HiveInspectionDto>>.Failure("Hive does not belong to the current beekeeper.");
+            return Result<PagedList<HiveInspectionDto>>.Failure("Hive does not belong to the current beekeeper.");
         }
 
         var records = await _hiveInspectionRepository.GetByHiveIdAsync(request.HiveId, cancellationToken);
-        var recordDtos = records
-            .OrderByDescending(record => record.Date)
+        var orderedRecords = records.OrderByDescending(r => r.Date).ToList();
+        var totalCount = orderedRecords.Count;
+
+        //Paginacija
+        var pagedRecordDtos = orderedRecords
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .Select(record => new HiveInspectionDto
             {
                 Id = record.Id,
@@ -63,10 +68,14 @@ public sealed class GetHiveInspectionsByHiveIdQueryHandler
                 FramesWithHoney = record.FramesWithHoney,
                 BroodFrames = record.BroodFrames,
                 QueenPresent = record.QueenPresent,
+                BottomBoardColor = record.BottomBoardColor,
+                HoneyQuantityKg = record.HoneyQuantityKg,
                 Notes = record.Notes
             })
             .ToList();
 
-        return Result<IReadOnlyList<HiveInspectionDto>>.Success(recordDtos);
+        var pagedList = new PagedList<HiveInspectionDto>(pagedRecordDtos, totalCount, request.PageNumber, request.PageSize);
+
+        return Result<PagedList<HiveInspectionDto>>.Success(pagedList);
     }
 }

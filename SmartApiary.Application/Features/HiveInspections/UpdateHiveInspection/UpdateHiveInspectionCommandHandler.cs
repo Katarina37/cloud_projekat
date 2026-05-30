@@ -57,6 +57,8 @@ public sealed class UpdateHiveInspectionCommandHandler : IRequestHandler<UpdateH
             request.FramesWithHoney,
             request.BroodFrames,
             request.QueenPresent,
+            request.BottomBoardColor,
+            request.HoneyQuantityKg,
             request.Notes);
 
         _hiveInspectionRepository.Update(record);

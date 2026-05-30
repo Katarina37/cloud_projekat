@@ -10,4 +10,6 @@ public sealed record UpdateHiveInspectionCommand(
     int FramesWithHoney,
     int BroodFrames,
     bool QueenPresent,
+    string BottomBoardColor,
+    decimal HoneyQuantityKg,
     string? Notes) : IRequest<Result>;

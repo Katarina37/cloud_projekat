@@ -9,4 +9,6 @@ public sealed record CreateHiveInspectionCommand(
     int FramesWithHoney,
     int BroodFrames,
     bool QueenPresent,
+    string BottomBoardColor,
+    decimal HoneyQuantityKg,
     string? Notes) : IRequest<Result<Guid>>;
