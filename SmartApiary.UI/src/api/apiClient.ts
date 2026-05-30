@@ -57,6 +57,8 @@ export type HiveInspectionDto = {
   framesWithHoney: number;
   broodFrames: number;
   queenPresent: boolean;
+  bottomBoardColor: string;
+  honeyQuantityKg: number;
   notes?: string | null;
 };
 
@@ -66,10 +68,19 @@ export type CreateHiveInspectionRequest = {
   framesWithHoney: number;
   broodFrames: number;
   queenPresent: boolean;
+  bottomBoardColor: string;
+  honeyQuantityKg: number;
   notes?: string | null;
 };
 
 export type UpdateHiveInspectionRequest = CreateHiveInspectionRequest;
+
+export type PagedResult<T> = {
+  items: T[];
+  pageNumber: number;
+  totalPages: number;
+  totalCount: number;
+};
 
 export type ParcelDto = {
   id: string;
@@ -404,12 +415,17 @@ export async function deleteHive(hiveId: string): Promise<void> {
   unwrapResult(response.data, 'Failed to delete hive');
 }
 
-export async function getHiveInspectionsByHive(hiveId: string): Promise<HiveInspectionDto[]> {
-  const response = await apiClient.get<HiveInspectionApiDto[] | ResultResponse<HiveInspectionApiDto[]>>(
+export async function getHiveInspectionsByHive(
+  hiveId: string,
+  pageNumber = 1,
+  pageSize = 10,
+): Promise<PagedResult<HiveInspectionDto>> {
+  const response = await apiClient.get<HiveInspectionPagedApiDto | ResultResponse<HiveInspectionPagedApiDto>>(
     `/hive-inspections/by-hive/${hiveId}`,
+    { params: { pageNumber, pageSize } },
   );
 
-  return (unwrapResult(response.data, 'Failed to load hive inspections') ?? []).map(normalizeHiveInspection);
+  return normalizePagedHiveInspections(unwrapResult(response.data, 'Failed to load hive inspections'));
 }
 
 export async function createHiveInspection(
@@ -762,7 +778,16 @@ type HiveInspectionApiDto = Partial<HiveInspectionDto> & {
   FramesWithHoney?: number;
   BroodFrames?: number;
   QueenPresent?: boolean;
+  BottomBoardColor?: string;
+  HoneyQuantityKg?: number;
   Notes?: string | null;
+};
+
+type HiveInspectionPagedApiDto = Partial<PagedResult<HiveInspectionApiDto>> & {
+  Items?: HiveInspectionApiDto[];
+  PageNumber?: number;
+  TotalPages?: number;
+  TotalCount?: number;
 };
 
 type NotificationApiDto = Partial<NotificationDto> & {
@@ -875,7 +900,20 @@ function normalizeHiveInspection(record: HiveInspectionApiDto): HiveInspectionDt
     framesWithHoney: record.framesWithHoney ?? record.FramesWithHoney ?? 0,
     broodFrames: record.broodFrames ?? record.BroodFrames ?? 0,
     queenPresent: record.queenPresent ?? record.QueenPresent ?? false,
+    bottomBoardColor: record.bottomBoardColor ?? record.BottomBoardColor ?? '',
+    honeyQuantityKg: record.honeyQuantityKg ?? record.HoneyQuantityKg ?? 0,
     notes: record.notes ?? record.Notes ?? null,
+  };
+}
+
+function normalizePagedHiveInspections(response: HiveInspectionPagedApiDto): PagedResult<HiveInspectionDto> {
+  const items = response.items ?? response.Items ?? [];
+
+  return {
+    items: items.map(normalizeHiveInspection),
+    pageNumber: response.pageNumber ?? response.PageNumber ?? 1,
+    totalPages: response.totalPages ?? response.TotalPages ?? 1,
+    totalCount: response.totalCount ?? response.TotalCount ?? items.length,
   };
 }
 

@@ -9,6 +9,7 @@ import {
   type ApiaryDto,
   type HiveDto,
   type HiveInspectionDto,
+  type PagedResult,
 } from '../api/apiClient';
 import DataTable, { type DataTableColumn } from '../components/DataTable';
 import HiveInspectionFormModal from '../components/HiveInspectionFormModal';
@@ -20,6 +21,10 @@ export default function BeekeepingDiaryPage() {
   const [hives, setHives] = useState<HiveDto[]>([]);
   const [selectedHiveId, setSelectedHiveId] = useState('');
   const [inspections, setInspections] = useState<HiveInspectionDto[]>([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -27,9 +32,15 @@ export default function BeekeepingDiaryPage() {
   const [editingInspection, setEditingInspection] = useState<HiveInspectionDto | null>(null);
   const [deletingInspectionId, setDeletingInspectionId] = useState<string | null>(null);
 
-  const loadInspections = useCallback(async (hiveId: string) => {
-    const inspections = await getHiveInspectionsByHive(hiveId);
-    setInspections(inspections);
+  const loadInspections = useCallback(async (hiveId: string, nextPageNumber: number, nextPageSize: number) => {
+    const response = await getHiveInspectionsByHive(hiveId, nextPageNumber, nextPageSize);
+    setInspections(response.items);
+    setPageNumber(response.pageNumber);
+    setPageSize(nextPageSize);
+    setTotalPages(response.totalPages);
+    setTotalCount(response.totalCount);
+
+    return response;
   }, []);
 
   const loadHivesAndInspections = useCallback(
@@ -39,9 +50,12 @@ export default function BeekeepingDiaryPage() {
 
       setHives(hives);
       setSelectedHiveId(nextHiveId);
+      setPageNumber(1);
+      setTotalPages(1);
+      setTotalCount(0);
 
       if (nextHiveId) {
-        await loadInspections(nextHiveId);
+        await loadInspections(nextHiveId, 1, 10);
       } else {
         setInspections([]);
       }
@@ -50,17 +64,19 @@ export default function BeekeepingDiaryPage() {
   );
 
   const fetchInspectionsForHive = useCallback(
-    async (hiveId: string) => {
+    async (hiveId: string, nextPageNumber: number, nextPageSize: number) => {
       setLoading(true);
       setError(null);
 
       try {
-        await loadInspections(hiveId);
-        return true;
+        return await loadInspections(hiveId, nextPageNumber, nextPageSize);
       } catch {
         setInspections([]);
+        setPageNumber(1);
+        setTotalPages(1);
+        setTotalCount(0);
         setError('Greška pri učitavanju');
-        return false;
+        return null;
       } finally {
         setLoading(false);
       }
@@ -143,17 +159,20 @@ export default function BeekeepingDiaryPage() {
 
     setSuccessMessage(null);
     setSelectedHiveId(nextHiveId);
+    setPageNumber(1);
 
     if (nextHiveId) {
-      void fetchInspectionsForHive(nextHiveId);
+      void fetchInspectionsForHive(nextHiveId, 1, pageSize);
     } else {
       setInspections([]);
+      setTotalPages(1);
+      setTotalCount(0);
     }
   };
 
   const handleInspectionCreated = async () => {
     if (selectedHiveId) {
-      const refreshed = await fetchInspectionsForHive(selectedHiveId);
+      const refreshed = await fetchInspectionsForHive(selectedHiveId, pageNumber, pageSize);
 
       if (refreshed) {
         setSuccessMessage('Zapis je uspešno dodat.');
@@ -163,11 +182,123 @@ export default function BeekeepingDiaryPage() {
 
   const handleInspectionUpdated = async () => {
     if (selectedHiveId) {
-      const refreshed = await fetchInspectionsForHive(selectedHiveId);
+      const refreshed = await fetchInspectionsForHive(selectedHiveId, pageNumber, pageSize);
 
       if (refreshed) {
         setSuccessMessage('Zapis je uspešno izmenjen.');
       }
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!selectedHiveId) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const allInspections = await getHiveInspectionsByHive(selectedHiveId, 1, Math.max(totalCount, 1));
+      const selectedApiary = apiaries.find((apiary) => apiary.id === selectedApiaryId);
+      const selectedHive = hives.find((hive) => hive.id === selectedHiveId);
+
+      const { jsPDF } = await import('jspdf');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 12;
+      const contentWidth = pageWidth - margin * 2;
+      const lineHeight = 6;
+      let cursorY = margin;
+
+      const addLine = (text: string, fontSize = 10, bold = false) => {
+        pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+        pdf.setFontSize(fontSize);
+        const wrappedLines = pdf.splitTextToSize(text, contentWidth);
+
+        if (cursorY + wrappedLines.length * lineHeight > pageHeight - margin) {
+          pdf.addPage();
+          cursorY = margin;
+        }
+
+        pdf.text(wrappedLines, margin, cursorY);
+        cursorY += wrappedLines.length * lineHeight;
+      };
+
+      const addSpace = (size = 4) => {
+        cursorY += size;
+      };
+
+      addLine('Karton košnice', 16, true);
+      addSpace(2);
+      addLine(`Pčelinjak: ${selectedApiary?.name ?? '-'}`);
+      addLine(`Košnica: ${selectedHive?.label ?? '-'}`);
+      addLine(`Ukupno zapisa: ${allInspections.totalCount}`);
+      addSpace(4);
+
+      const header = [
+        'Datum',
+        'Ramovi med',
+        'Ramovi leglo',
+        'Boja podnjače',
+        'Med (kg)',
+        'Matica',
+        'Napomena',
+      ];
+      const columnWidths = [28, 20, 20, 28, 18, 16, 60];
+
+      const drawRow = (values: string[], isHeader = false) => {
+        const rowHeight = isHeader ? 8 : 10;
+
+        if (cursorY + rowHeight > pageHeight - margin) {
+          pdf.addPage();
+          cursorY = margin;
+        }
+
+        let cursorX = margin;
+        pdf.setFontSize(isHeader ? 9 : 8);
+        pdf.setFont('helvetica', isHeader ? 'bold' : 'normal');
+
+        values.forEach((value, index) => {
+          const cellWidth = columnWidths[index];
+          const wrapped = pdf.splitTextToSize(value, cellWidth - 2);
+          const cellHeight = Math.max(rowHeight, wrapped.length * 4 + 2);
+
+          if (cursorY + cellHeight > pageHeight - margin) {
+            pdf.addPage();
+            cursorY = margin;
+            cursorX = margin;
+          }
+
+          pdf.rect(cursorX, cursorY, cellWidth, cellHeight);
+          pdf.text(wrapped, cursorX + 1, cursorY + 4);
+          cursorX += cellWidth;
+        });
+
+        cursorY += rowHeight + 2;
+      };
+
+      drawRow(header, true);
+
+      allInspections.items.forEach((inspection) => {
+        drawRow([
+          formatDate(inspection.date),
+          String(inspection.framesWithHoney),
+          String(inspection.broodFrames),
+          inspection.bottomBoardColor?.trim() ? inspection.bottomBoardColor : '-',
+          formatWeightValue(inspection.honeyQuantityKg),
+          inspection.queenPresent ? 'Da' : 'Ne',
+          inspection.notes?.trim() ? inspection.notes.trim() : '-',
+        ]);
+      });
+
+      pdf.save(`karton-kosnice-${selectedHive?.label ?? 'koznica'}.pdf`);
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Greška pri generisanju PDF kartona košnice.'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -186,9 +317,13 @@ export default function BeekeepingDiaryPage() {
       await deleteHiveInspection(inspection.id);
 
       if (selectedHiveId) {
-        const refreshed = await fetchInspectionsForHive(selectedHiveId);
+        const refreshed = await fetchInspectionsForHive(selectedHiveId, pageNumber, pageSize);
 
         if (refreshed) {
+          if (refreshed.items.length === 0 && refreshed.pageNumber > 1) {
+            await fetchInspectionsForHive(selectedHiveId, refreshed.pageNumber - 1, pageSize);
+          }
+
           setSuccessMessage('Zapis je uspešno obrisan.');
         }
       }
@@ -210,6 +345,8 @@ export default function BeekeepingDiaryPage() {
     },
     { header: 'Ramovi sa medom', render: (inspection) => inspection.framesWithHoney },
     { header: 'Ramovi legla', render: (inspection) => inspection.broodFrames },
+    { header: 'Boja podnjače', render: (inspection) => formatTextValue(inspection.bottomBoardColor) },
+    { header: 'Količina meda (kg)', render: (inspection) => formatWeight(inspection.honeyQuantityKg) },
     {
       header: 'Matica',
       render: (inspection) => (
@@ -256,24 +393,52 @@ export default function BeekeepingDiaryPage() {
     },
   ];
 
+  const handlePageChange = async (nextPageNumber: number) => {
+    if (!selectedHiveId || nextPageNumber < 1 || nextPageNumber === pageNumber || nextPageNumber > totalPages) {
+      return;
+    }
+
+    await fetchInspectionsForHive(selectedHiveId, nextPageNumber, pageSize);
+  };
+
+  const handlePageSizeChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextPageSize = Number(event.target.value);
+
+    if (!selectedHiveId || !Number.isFinite(nextPageSize) || nextPageSize <= 0) {
+      return;
+    }
+
+    await fetchInspectionsForHive(selectedHiveId, 1, nextPageSize);
+  };
+
   return (
     <div className="page-stack">
       <PageHeader
         title="Pčelarski dnevnik"
         subtitle="Zapisi pregleda košnica i zapažanja sa terena"
         action={
-          <button
-            className="primary-button apiary-add-button"
-            disabled={!selectedHiveId}
-            onClick={() => {
-              setSuccessMessage(null);
-              setIsCreateModalOpen(true);
-            }}
-            type="button"
-          >
-            <Plus size={18} />
-            Dodaj zapis
-          </button>
+          <div className="row-actions">
+            <button
+              className="secondary-action-button"
+              disabled={!selectedHiveId || totalCount === 0}
+              onClick={() => void handleExportPdf()}
+              type="button"
+            >
+              PDF karton
+            </button>
+            <button
+              className="primary-button apiary-add-button"
+              disabled={!selectedHiveId}
+              onClick={() => {
+                setSuccessMessage(null);
+                setIsCreateModalOpen(true);
+              }}
+              type="button"
+            >
+              <Plus size={18} />
+              Dodaj zapis
+            </button>
+          </div>
         }
       />
 
@@ -329,7 +494,43 @@ export default function BeekeepingDiaryPage() {
 
       {!loading && !error && selectedHiveId && inspections.length > 0 ? (
         <section className="section-card table-card">
-          <DataTable columns={columns} rows={inspections} getRowKey={(inspection) => inspection.id} minWidth={980} />
+          <div className="filter-row">
+            <label>
+              Broj zapisa po strani
+              <select disabled={loading} onChange={handlePageSizeChange} value={pageSize}>
+                {[5, 10, 20, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="muted-text">
+              Strana {pageNumber} od {totalPages} · Ukupno zapisa: {totalCount}
+            </div>
+
+            <div className="row-actions">
+              <button
+                className="secondary-action-button"
+                disabled={pageNumber <= 1 || loading}
+                onClick={() => void handlePageChange(pageNumber - 1)}
+                type="button"
+              >
+                Prethodna
+              </button>
+              <button
+                className="secondary-action-button"
+                disabled={pageNumber >= totalPages || loading}
+                onClick={() => void handlePageChange(pageNumber + 1)}
+                type="button"
+              >
+                Sledeća
+              </button>
+            </div>
+          </div>
+
+          <DataTable columns={columns} rows={inspections} getRowKey={(inspection) => inspection.id} minWidth={1180} />
         </section>
       ) : null}
 
@@ -357,4 +558,18 @@ function formatDate(value: string) {
   const date = new Date(value);
 
   return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
+}
+
+function formatWeight(value: number) {
+  return Number.isFinite(value) ? `${value.toFixed(2)} kg` : '-';
+}
+
+function formatWeightValue(value: number) {
+  return Number.isFinite(value) ? value.toFixed(2) : '-';
+}
+
+function formatTextValue(value: string | null | undefined) {
+  const trimmed = value?.trim();
+
+  return trimmed ? trimmed : <span className="muted-text">-</span>;
 }

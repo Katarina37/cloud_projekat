@@ -33,6 +33,12 @@ export default function HiveInspectionFormModal({
   );
   const [broodFrames, setBroodFrames] = useState(inspection ? String(inspection.broodFrames) : '0');
   const [queenPresent, setQueenPresent] = useState(inspection?.queenPresent ?? true);
+  const [bottomBoardColor, setBottomBoardColor] = useState(inspection?.bottomBoardColor ?? '');
+  const [honeyQuantityKg, setHoneyQuantityKg] = useState(
+    inspection?.honeyQuantityKg !== undefined && inspection?.honeyQuantityKg !== null
+      ? String(inspection.honeyQuantityKg)
+      : '',
+  );
   const [notes, setNotes] = useState(inspection?.notes ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +46,9 @@ export default function HiveInspectionFormModal({
   const validateForm = (): ValidatedHiveInspectionForm | null => {
     const parsedFramesWithHoney = Number(framesWithHoney);
     const parsedBroodFrames = Number(broodFrames);
+    const parsedHoneyQuantityKg = Number(honeyQuantityKg);
     const hiveId = selectedHiveId || inspection?.hiveId || '';
+    const trimmedBottomBoardColor = bottomBoardColor.trim();
     const trimmedNotes = notes.trim();
 
     if (!hiveId) {
@@ -67,12 +75,28 @@ export default function HiveInspectionFormModal({
       return null;
     }
 
+    if (
+      honeyQuantityKg.trim() === ''
+      || !Number.isFinite(parsedHoneyQuantityKg)
+      || parsedHoneyQuantityKg < 0
+    ) {
+      setError('Količina meda ne sme biti negativna.');
+      return null;
+    }
+
+    if (!trimmedBottomBoardColor) {
+      setError('Boja podnjače je obavezna.');
+      return null;
+    }
+
     const payload = {
       hiveId,
       date,
       framesWithHoney: parsedFramesWithHoney,
       broodFrames: parsedBroodFrames,
       queenPresent,
+      bottomBoardColor: trimmedBottomBoardColor,
+      honeyQuantityKg: parsedHoneyQuantityKg,
       notes: trimmedNotes.length > 0 ? trimmedNotes : null,
     };
 
@@ -136,12 +160,12 @@ export default function HiveInspectionFormModal({
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            Date
+            Datum
             <input autoFocus onChange={(event) => setDate(event.target.value)} type="date" value={date} />
           </label>
 
           <label>
-            FramesWithHoney
+            Broj ramova sa medom
             <input
               min="0"
               onChange={(event) => setFramesWithHoney(event.target.value)}
@@ -152,7 +176,7 @@ export default function HiveInspectionFormModal({
           </label>
 
           <label>
-            BroodFrames
+            Broj ramova sa leglom
             <input
               min="0"
               onChange={(event) => setBroodFrames(event.target.value)}
@@ -168,11 +192,33 @@ export default function HiveInspectionFormModal({
               onChange={(event) => setQueenPresent(event.target.checked)}
               type="checkbox"
             />
-            QueenPresent
+            Prisutna matica
           </label>
 
           <label>
-            Notes
+            Boja podnjače
+            <input
+              onChange={(event) => setBottomBoardColor(event.target.value)}
+              placeholder="Plava"
+              type="text"
+              value={bottomBoardColor}
+            />
+          </label>
+
+          <label>
+            Količina meda (kg)
+            <input
+              min="0"
+              onChange={(event) => setHoneyQuantityKg(event.target.value)}
+              placeholder="0.00"
+              step="0.01"
+              type="number"
+              value={honeyQuantityKg}
+            />
+          </label>
+
+          <label>
+            Napomena
             <textarea
               onChange={(event) => setNotes(event.target.value)}
               placeholder="Napomena"
