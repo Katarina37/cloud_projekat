@@ -23,5 +23,11 @@ public class SprayingAnnouncementConfiguration : IEntityTypeConfiguration<Sprayi
         builder.HasIndex(announcement => announcement.ParcelId);
 
         builder.HasIndex(announcement => announcement.StartTime);
+
+        builder.Property(announcement => announcement.EndTime)
+            .HasColumnType("datetime2");
+
+        builder.Property(announcement => announcement.WeatherSnapshotJson)
+            .HasColumnType("nvarchar(max)");
     }
 }

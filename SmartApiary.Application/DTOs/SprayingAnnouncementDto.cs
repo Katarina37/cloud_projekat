@@ -19,4 +19,8 @@ public class SprayingAnnouncementDto
     public DateTime CreatedAt { get; set; }
 
     public DateTime? CancelledAt { get; set; }
+
+    public DateTime? EndTime { get; set; }
+
+    public WeatherInfoDto? WeatherSnapshot { get; set; }
 }

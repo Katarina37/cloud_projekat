@@ -1,5 +1,6 @@
 using SmartApiary.Domain.Enums;
 using SmartApiary.Domain.Exceptions;
+using System.Data;
 
 namespace SmartApiary.Domain.Models;
 
@@ -44,6 +45,9 @@ public class SprayingAnnouncement
 
     public DateTime? CancelledAt { get; private set; }
 
+    public DateTime? EndTime { get; private set; }
+    public string? WeatherSnapshotJson { get; private set; }
+
     public void Reschedule(DateTime startTime, int durationHours)
     {
         EnsureCanChangeLifecycle();
@@ -60,10 +64,11 @@ public class SprayingAnnouncement
         CancelledAt = DateTime.UtcNow;
     }
 
-    public void Complete()
+    public void Complete(string? weatherSnapshotJson = null)
     {
         EnsureCanChangeLifecycle();
-
+        EndTime = DateTime.UtcNow;
+        WeatherSnapshotJson = weatherSnapshotJson;
         Status = SprayingStatus.Completed;
     }
 
