@@ -17,5 +17,13 @@ public sealed class CreateHiveInspectionCommandValidator : AbstractValidator<Cre
 
         RuleFor(command => command.BroodFrames)
             .GreaterThanOrEqualTo(0);
+
+        RuleFor(command => command.BottomBoardColor)
+            .NotEmpty()
+            .MaximumLength(50);
+
+        RuleFor(command => command.HoneyQuantityKg)
+            .GreaterThanOrEqualTo(0);
+
     }
 }

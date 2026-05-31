@@ -9,5 +9,12 @@ public sealed class GetHiveInspectionsByHiveIdQueryValidator
     {
         RuleFor(query => query.HiveId)
             .NotEmpty();
+
+        RuleFor(query => query.PageNumber)
+            .GreaterThanOrEqualTo(1);
+
+        RuleFor(query => query.PageSize)
+            .GreaterThan(0)
+            .LessThanOrEqualTo(50);
     }
 }
