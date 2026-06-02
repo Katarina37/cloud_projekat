@@ -52,9 +52,10 @@ public sealed class SprayingController : BaseController
     }
 
     [HttpGet("by-parcel/{parcelId:guid}")]
-    public async Task<IActionResult> GetByParcel(Guid parcelId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByParcel(Guid parcelId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        var result = await Mediator.Send(new GetSprayingByParcelQuery(parcelId), cancellationToken);
+        var query = new GetSprayingByParcelQuery(parcelId, fromDate, toDate, pageNumber, pageSize);
+        var result = await Mediator.Send(query, cancellationToken);
         return HandleResult(result);
     }
 
