@@ -8,7 +8,12 @@ public interface ISprayingAnnouncementRepository
 
     Task<IReadOnlyList<SprayingAnnouncement>> GetByParcelIdAsync(Guid parcelId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<SprayingAnnouncement>> GetExpiredScheduledSprayingsAsync(CancellationToken cancellationToken = default);
+
     Task AddAsync(SprayingAnnouncement announcement, CancellationToken cancellationToken = default);
 
     void Update(SprayingAnnouncement announcement);
+
+    Task<(IReadOnlyList<SprayingAnnouncement> Items, int TotalCount)> GetFilteredSprayingsAsync(
+        Guid parcelId, DateTime? fromDate, DateTime? toDate, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
 }

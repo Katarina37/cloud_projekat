@@ -3,65 +3,81 @@ using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
+using System.Text.Json;
 
 namespace SmartApiary.Application.Features.Spraying.GetSprayingByParcel;
 
 public sealed class GetSprayingByParcelQueryHandler
-    : IRequestHandler<GetSprayingByParcelQuery, Result<IReadOnlyList<SprayingAnnouncementDto>>>
+    : IRequestHandler<GetSprayingByParcelQuery, Result<PagedList<SprayingAnnouncementDto>>>
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
-    private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
+    private readonly ISprayingAnnouncementRepository _sprayingRepository;
 
     public GetSprayingByParcelQueryHandler(
         ICurrentUserService currentUserService,
         IParcelRepository parcelRepository,
-        ISprayingAnnouncementRepository sprayingAnnouncementRepository)
+        ISprayingAnnouncementRepository sprayingRepository)
     {
         _currentUserService = currentUserService;
         _parcelRepository = parcelRepository;
-        _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
+        _sprayingRepository = sprayingRepository;
     }
 
-    public async Task<Result<IReadOnlyList<SprayingAnnouncementDto>>> Handle(
+    public async Task<Result<PagedList<SprayingAnnouncementDto>>> Handle(
         GetSprayingByParcelQuery request,
         CancellationToken cancellationToken)
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
-            return Result<IReadOnlyList<SprayingAnnouncementDto>>.Failure("User is not authenticated.");
+            return Result<PagedList<SprayingAnnouncementDto>>.Failure("User is not authenticated.");
         }
 
         var parcel = await _parcelRepository.GetByIdAsync(request.ParcelId, cancellationToken);
         if (parcel is null)
         {
-            return Result<IReadOnlyList<SprayingAnnouncementDto>>.Failure("Parcel was not found.");
+            return Result<PagedList<SprayingAnnouncementDto>>.Failure("Parcel was not found.");
         }
 
         if (parcel.FarmerId != farmerId)
         {
-            return Result<IReadOnlyList<SprayingAnnouncementDto>>.Failure("Parcel does not belong to the current farmer.");
+            return Result<PagedList<SprayingAnnouncementDto>>.Failure("Parcel does not belong to current farmer.");
         }
 
-        var announcements = await _sprayingAnnouncementRepository.GetByParcelIdAsync(
-            request.ParcelId,
-            cancellationToken);
+        var (items, totalCount) = await _sprayingRepository.GetFilteredSprayingsAsync(
+            request.ParcelId, request.FromDate, request.ToDate, request.PageNumber, request.PageSize, cancellationToken);
 
-        var announcementDtos = announcements
-            .Select(announcement => new SprayingAnnouncementDto
+        var mappedDtos = items.Select(s => {
+            WeatherInfoDto? weatherObject = null;
+            if (!string.IsNullOrEmpty(s.WeatherSnapshotJson) && s.WeatherSnapshotJson != "No weather data")
             {
-                Id = announcement.Id,
-                ParcelId = announcement.ParcelId,
-                StartTime = announcement.StartTime,
-                DurationHours = announcement.DurationHours,
-                PreparationType = announcement.PreparationType,
-                Status = announcement.Status.ToString(),
-                NotifiedBeekeepersCount = announcement.NotifiedBeekeepersCount,
-                CreatedAt = announcement.CreatedAt,
-                CancelledAt = announcement.CancelledAt
-            })
-            .ToList();
+                try
+                {
+                    weatherObject = JsonSerializer.Deserialize<WeatherInfoDto>(s.WeatherSnapshotJson);
+                }
+                catch
+                {
+                    
+                }
+            }
 
-        return Result<IReadOnlyList<SprayingAnnouncementDto>>.Success(announcementDtos);
+            return new SprayingAnnouncementDto
+            {
+                Id = s.Id,
+                ParcelId = s.ParcelId,
+                StartTime = s.StartTime,
+                DurationHours = s.DurationHours,
+                PreparationType = s.PreparationType,
+                Status = s.Status.ToString(),
+                NotifiedBeekeepersCount = s.NotifiedBeekeepersCount,
+                CreatedAt = s.CreatedAt,
+                CancelledAt = s.CancelledAt,
+                EndTime = s.EndTime,
+                WeatherSnapshot = weatherObject 
+            };
+        }).ToList();
+
+        var pagedList = new PagedList<SprayingAnnouncementDto>(mappedDtos, totalCount, request.PageNumber, request.PageSize);
+        return Result<PagedList<SprayingAnnouncementDto>>.Success(pagedList);
     }
 }

@@ -10,17 +10,20 @@ public sealed class CompleteSprayingCommandHandler : IRequestHandler<CompleteSpr
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
+    private readonly IWeatherService _weatherService; 
     private readonly IUnitOfWork _unitOfWork;
 
     public CompleteSprayingCommandHandler(
         ICurrentUserService currentUserService,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IParcelRepository parcelRepository,
+        IWeatherService weatherService, 
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _parcelRepository = parcelRepository;
+        _weatherService = weatherService; 
         _unitOfWork = unitOfWork;
     }
 
@@ -34,6 +37,7 @@ public sealed class CompleteSprayingCommandHandler : IRequestHandler<CompleteSpr
         var announcement = await _sprayingAnnouncementRepository.GetByIdAsync(
             request.SprayingAnnouncementId,
             cancellationToken);
+
         if (announcement is null)
         {
             return Result.Failure("Spraying announcement was not found.");
@@ -50,7 +54,13 @@ public sealed class CompleteSprayingCommandHandler : IRequestHandler<CompleteSpr
             return Result.Failure("Spraying announcement does not belong to the current farmer.");
         }
 
-        announcement.Complete();
+
+        string? weatherSnapshotJson = null;
+
+        var endTime = DateTime.UtcNow;
+        var weatherDto = await _weatherService.GetWeatherAsync(parcel.Location.Latitude, parcel.Location.Longitude, endTime, cancellationToken);
+
+        announcement.Complete(weatherSnapshotJson);
 
         _sprayingAnnouncementRepository.Update(announcement);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
