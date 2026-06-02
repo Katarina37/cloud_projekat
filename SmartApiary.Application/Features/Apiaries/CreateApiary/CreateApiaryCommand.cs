@@ -8,5 +8,6 @@ public sealed record CreateApiaryCommand(
     double Latitude,
     double Longitude,
     string? TerrainDescription,
-    string? ImageUrl,
-    string? ThumbnailUrl) : IRequest<Result<Guid>>;
+    Stream? ImageStream,
+    string? ImageFileName,
+    string? ImageContentType) : IRequest<Result<Guid>>;

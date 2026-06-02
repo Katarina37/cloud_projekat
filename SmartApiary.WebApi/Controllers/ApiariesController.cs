@@ -17,10 +17,21 @@ public sealed class ApiariesController : BaseController
     }
 
     [HttpPost]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> Create(
-        CreateApiaryCommand command,
-        CancellationToken cancellationToken)
+    [FromForm] string name,
+    [FromForm] double latitude,
+    [FromForm] double longitude,
+    [FromForm] string? terrainDescription,
+    IFormFile? image,
+    CancellationToken cancellationToken)
     {
+        var command = new CreateApiaryCommand(
+            name, latitude, longitude, terrainDescription,
+            image?.OpenReadStream(),
+            image?.FileName,
+            image?.ContentType);
+
         var result = await Mediator.Send(command, cancellationToken);
         return HandleCreatedResult(result, nameof(GetMy));
     }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SmartApiary.Application.Features.Spraying;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Infrastructure.Persistence;
@@ -40,7 +41,9 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IEmailService, EmailService>();
+        services.AddSingleton<IFileStorageService, BlobStorageService>();
         services.AddScoped<INotificationSender, RealNotificationSender>();
+        services.AddScoped<ISprayingNotificationService, SprayingNotificationService>();
         services.AddHttpClient<IWeatherService, WeatherService>(client =>
         {
             client.BaseAddress = new Uri("https://api.openweathermap.org/");
