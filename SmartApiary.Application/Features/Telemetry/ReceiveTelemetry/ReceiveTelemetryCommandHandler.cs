@@ -4,6 +4,7 @@ using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Enums;
 using SmartApiary.Domain.Models;
+using Microsoft.Extensions.Logging;
 
 namespace SmartApiary.Application.Features.Telemetry.ReceiveTelemetry;
 
@@ -20,6 +21,8 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
     private readonly ITelemetryRepository _telemetryRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserAlertSettingsRepository _userAlertSettingsRepository;
+    private readonly ITelemetryTableService _telemetryTableService;
+    private readonly ILogger<ReceiveTelemetryCommandHandler> _logger;
 
     public ReceiveTelemetryCommandHandler(
         IDeviceRepository deviceRepository,
@@ -29,7 +32,9 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         IUserAlertSettingsRepository userAlertSettingsRepository,
         INotificationRepository notificationRepository,
         INotificationSender notificationSender,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ITelemetryTableService telemetryTableService,
+        ILogger<ReceiveTelemetryCommandHandler> logger)
     {
         _deviceRepository = deviceRepository;
         _hiveRepository = hiveRepository;
@@ -39,6 +44,8 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         _notificationRepository = notificationRepository;
         _notificationSender = notificationSender;
         _unitOfWork = unitOfWork;
+        _telemetryTableService = telemetryTableService;
+        _logger = logger;
     }
 
     public async Task<Result> Handle(ReceiveTelemetryCommand request, CancellationToken cancellationToken)
@@ -97,6 +104,15 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
             cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _telemetryTableService.InsertAsync(reading, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to insert telemetry reading {ReadingId} into Table Storage.", reading.Id);
+        }
 
         return Result.Success();
     }

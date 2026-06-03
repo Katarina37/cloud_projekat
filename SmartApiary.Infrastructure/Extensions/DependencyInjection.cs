@@ -7,6 +7,7 @@ using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Infrastructure.Persistence;
 using SmartApiary.Infrastructure.Repositories;
 using SmartApiary.Infrastructure.Services;
+using SmartApiary.Infrastructure.TableStorage;
 
 namespace SmartApiary.Infrastructure.Extensions;
 
@@ -42,6 +43,7 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IEmailService, EmailService>();
         services.AddSingleton<IFileStorageService, BlobStorageService>();
+        services.AddSingleton<ITelemetryTableService, TelemetryTableService>();
         services.AddScoped<INotificationSender, RealNotificationSender>();
         services.AddScoped<ISprayingNotificationService, SprayingNotificationService>();
         services.AddHttpClient<IWeatherService, WeatherService>(client =>
