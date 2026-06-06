@@ -11,7 +11,7 @@ public sealed class CancelSprayingCommandHandler : IRequestHandler<CancelSprayin
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
-    private readonly ISprayingNotificationService _sprayingNotificationService;
+    private readonly ISprayingQueueService _sprayingQueueService;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -19,13 +19,13 @@ public sealed class CancelSprayingCommandHandler : IRequestHandler<CancelSprayin
         ICurrentUserService currentUserService,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IParcelRepository parcelRepository,
-        ISprayingNotificationService sprayingNotificationService,
+        ISprayingQueueService sprayingQueueService,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _parcelRepository = parcelRepository;
-        _sprayingNotificationService = sprayingNotificationService;
+        _sprayingQueueService = sprayingQueueService;
         _unitOfWork = unitOfWork;
     }
 
@@ -57,14 +57,17 @@ public sealed class CancelSprayingCommandHandler : IRequestHandler<CancelSprayin
 
         announcement.Cancel();
 
-        var title = "Pesticide spraying cancelled";
-        var message = $"Spraying on parcel '{parcel.Name}' scheduled for {announcement.StartTime:u} was cancelled.";
-        await _sprayingNotificationService.NotifyNearbyBeekeepersAsync(
-            parcel.Location,
-            title,
-            message,
-            NotificationType.SprayingCancelled,
-            cancellationToken);
+        await _sprayingQueueService.EnqueueAsync(new SprayingNotificationMessage(
+            announcement.Id,
+            parcel.Name,
+            announcement.StartTime,
+            announcement.DurationHours,
+            announcement.PreparationType,
+            parcel.Location.Latitude,
+            parcel.Location.Longitude,
+            "Pesticide spraying cancelled",
+            $"Spraying on parcel '{parcel.Name}' scheduled for {announcement.StartTime:u} was cancelled.",
+            NotificationType.SprayingCancelled), cancellationToken);
 
         _sprayingAnnouncementRepository.Update(announcement);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

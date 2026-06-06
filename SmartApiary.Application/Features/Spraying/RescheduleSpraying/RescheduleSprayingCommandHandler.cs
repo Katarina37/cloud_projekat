@@ -13,7 +13,7 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
     private readonly IWeatherService _weatherService;
-    private readonly ISprayingNotificationService _sprayingNotificationService;
+    private readonly ISprayingQueueService _sprayingQueueService;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -22,14 +22,14 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IParcelRepository parcelRepository,
         IWeatherService weatherService,
-        ISprayingNotificationService sprayingNotificationService,
+        ISprayingQueueService sprayingQueueService,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _parcelRepository = parcelRepository;
         _weatherService = weatherService;
-        _sprayingNotificationService = sprayingNotificationService;
+        _sprayingQueueService = sprayingQueueService;
         _unitOfWork = unitOfWork;
     }
 
@@ -63,14 +63,17 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
 
         announcement.Reschedule(request.NewStartTime, request.NewDurationHours);
 
-        var title = "Pesticide spraying changed";
-        var message = $"Spraying on parcel '{parcel.Name}' was rescheduled to {announcement.StartTime:u} and will last {announcement.DurationHours} hour(s).";
-        await _sprayingNotificationService.NotifyNearbyBeekeepersAsync(
-            parcel.Location,
-            title,
-            message,
-            NotificationType.SprayingChanged,
-            cancellationToken);
+        await _sprayingQueueService.EnqueueAsync(new SprayingNotificationMessage(
+            announcement.Id,
+            parcel.Name,
+            announcement.StartTime,
+            announcement.DurationHours,
+            announcement.PreparationType,
+            parcel.Location.Latitude,
+            parcel.Location.Longitude,
+            "Pesticide spraying changed",
+            $"Spraying on parcel '{parcel.Name}' was rescheduled to {announcement.StartTime:u} and will last {announcement.DurationHours} hour(s).",
+            NotificationType.SprayingChanged), cancellationToken);
 
         _sprayingAnnouncementRepository.Update(announcement);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

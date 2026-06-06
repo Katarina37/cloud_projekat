@@ -10,10 +10,13 @@ namespace SmartApiary.Application.Features.Spraying.ScheduleSpraying;
 
 public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSprayingCommand, Result<Guid>>
 {
+    private const double NotificationRadiusKm = 5d;
+
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
     private readonly IWeatherService _weatherService;
-    private readonly ISprayingNotificationService _sprayingNotificationService;
+    private readonly ISprayingQueueService _sprayingQueueService;
+    private readonly IApiaryRepository _apiaryRepository;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -21,14 +24,16 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
         ICurrentUserService currentUserService,
         IParcelRepository parcelRepository,
         IWeatherService weatherService,
-        ISprayingNotificationService sprayingNotificationService,
+        ISprayingQueueService sprayingQueueService,
+        IApiaryRepository apiaryRepository,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _parcelRepository = parcelRepository;
         _weatherService = weatherService;
-        _sprayingNotificationService = sprayingNotificationService;
+        _sprayingQueueService = sprayingQueueService;
+        _apiaryRepository = apiaryRepository;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _unitOfWork = unitOfWork;
     }
@@ -59,16 +64,26 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
             request.DurationHours,
             request.PreparationType);
 
-        var title = "Pesticide spraying scheduled";
-        var message = BuildScheduledMessage(parcel.Name, announcement.StartTime, announcement.DurationHours, announcement.PreparationType);
-        var notifiedBeekeepersCount = await _sprayingNotificationService.NotifyNearbyBeekeepersAsync(
-            parcel.Location,
-            title,
-            message,
-            NotificationType.PesticideWarning,
-            cancellationToken);
+        var nearbyApiaries = await _apiaryRepository.FindWithinRadiusAsync(
+            parcel.Location, NotificationRadiusKm, cancellationToken);
+        var notifiedBeekeepersCount = nearbyApiaries.Select(a => a.BeekeeperId).Distinct().Count();
 
         announcement.SetNotifiedBeekeepersCount(notifiedBeekeepersCount);
+
+        var title = "Pesticide spraying scheduled";
+        var message = BuildScheduledMessage(parcel.Name, announcement.StartTime, announcement.DurationHours, announcement.PreparationType);
+
+        await _sprayingQueueService.EnqueueAsync(new SprayingNotificationMessage(
+            announcement.Id,
+            parcel.Name,
+            announcement.StartTime,
+            announcement.DurationHours,
+            announcement.PreparationType,
+            parcel.Location.Latitude,
+            parcel.Location.Longitude,
+            title,
+            message,
+            NotificationType.PesticideWarning), cancellationToken);
 
         await _sprayingAnnouncementRepository.AddAsync(announcement, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

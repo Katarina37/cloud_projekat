@@ -381,7 +381,14 @@ export async function getApiaries(): Promise<ApiaryDto[]> {
 }
 
 export async function createApiary(payload: CreateApiaryRequest): Promise<string | undefined> {
-  const response = await apiClient.post<string | ResultResponse<string>>('/apiaries', payload);
+  const formData = new FormData();
+  formData.append('name', payload.name);
+  formData.append('latitude', String(payload.latitude));
+  formData.append('longitude', String(payload.longitude));
+  if (payload.terrainDescription) {
+    formData.append('terrainDescription', payload.terrainDescription);
+  }
+  const response = await apiClient.post<string | ResultResponse<string>>('/apiaries', formData);
   return unwrapResult(response.data, 'Failed to create apiary');
 }
 
