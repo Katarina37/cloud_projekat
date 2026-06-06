@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   getApiaries,
   getApiErrorMessage,
@@ -18,6 +18,8 @@ import TelemetryFilters from '../components/TelemetryFilters';
 import TelemetryStatusCards from '../components/TelemetryStatusCards';
 
 const telemetryLoadErrorMessage = 'Greška pri učitavanju telemetrije.';
+const telemetryToDate = formatApiDateTime(new Date());
+const telemetryFromDate = formatApiDateTime(addDays(new Date(), -7));
 
 export default function TelemetryPage() {
   const [apiaries, setApiaries] = useState<ApiaryDto[]>([]);
@@ -27,8 +29,6 @@ export default function TelemetryPage() {
   const [telemetryReadings, setTelemetryReadings] = useState<TelemetryReadingDto[]>([]);
   const [latestStatus, setLatestStatus] = useState<LatestHiveStatusDto | null>(null);
   const [dailyDeltas, setDailyDeltas] = useState<DailyWeightDeltaDto[]>([]);
-  const [fromDate] = useState(() => formatApiDateTime(addDays(new Date(), -7)));
-  const [toDate] = useState(() => formatApiDateTime(new Date()));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasTelemetryForSelectedPeriod = telemetryReadings.length > 0;
@@ -40,44 +40,44 @@ export default function TelemetryPage() {
     setDailyDeltas([]);
   };
 
-  const loadTelemetryForHive = useCallback(
-    async (hiveId: string) => {
-      const [telemetryReadings, latestStatus, dailyDeltas] = await Promise.all([
-        getTelemetryForHive(hiveId, fromDate, toDate),
-        getLatestHiveStatus(hiveId),
-        getDailyWeightDeltas(hiveId, fromDate, toDate),
-      ]);
+  async function loadTelemetryForHive(hiveId: string) {
+    const telemetryReadings = await getTelemetryForHive(
+      hiveId,
+      telemetryFromDate,
+      telemetryToDate,
+    );
+    const latestStatus = await getLatestHiveStatus(hiveId);
+    const dailyDeltas = await getDailyWeightDeltas(
+      hiveId,
+      telemetryFromDate,
+      telemetryToDate,
+    );
 
-      setTelemetryReadings(telemetryReadings);
-      setLatestStatus(latestStatus);
-      setDailyDeltas(dailyDeltas);
-    },
-    [fromDate, toDate],
-  );
+    setTelemetryReadings(telemetryReadings);
+    setLatestStatus(latestStatus);
+    setDailyDeltas(dailyDeltas);
+  }
 
-  const loadHivesForApiary = useCallback(
-    async (apiaryId: string) => {
-      const hives = await getHivesByApiary(apiaryId);
-      const nextHiveId = hives[0]?.id ?? '';
+  async function loadHivesForApiary(apiaryId: string) {
+    const hives = await getHivesByApiary(apiaryId);
+    const nextHiveId = hives.length > 0 ? hives[0].id : '';
 
-      setHives(hives);
-      setSelectedHiveId(nextHiveId);
-      clearHiveTelemetry();
+    setHives(hives);
+    setSelectedHiveId(nextHiveId);
+    clearHiveTelemetry();
 
-      if (nextHiveId) {
-        await loadTelemetryForHive(nextHiveId);
-      }
-    },
-    [loadTelemetryForHive],
-  );
+    if (nextHiveId) {
+      await loadTelemetryForHive(nextHiveId);
+    }
+  }
 
-  const loadInitialData = useCallback(async () => {
+  async function loadInitialData() {
     setLoading(true);
     setError(null);
 
     try {
       const apiaries = await getApiaries();
-      const nextApiaryId = apiaries[0]?.id ?? '';
+      const nextApiaryId = apiaries.length > 0 ? apiaries[0].id : '';
 
       setApiaries(apiaries);
       setSelectedApiaryId(nextApiaryId);
@@ -99,11 +99,12 @@ export default function TelemetryPage() {
     } finally {
       setLoading(false);
     }
-  }, [loadHivesForApiary]);
+  }
 
   useEffect(() => {
-    void loadInitialData();
-  }, [loadInitialData]);
+    // Ucitavanje telemetrije pri prvom otvaranju stranice.
+    loadInitialData();
+  }, []);
 
   const handleApiaryChange = async (apiaryId: string) => {
     setSelectedApiaryId(apiaryId);
@@ -163,8 +164,8 @@ export default function TelemetryPage() {
           apiaries={apiaries}
           disabled={loading}
           hives={hives}
-          onApiaryChange={(apiaryId) => void handleApiaryChange(apiaryId)}
-          onHiveChange={(hiveId) => void handleHiveChange(hiveId)}
+          onApiaryChange={handleApiaryChange}
+          onHiveChange={handleHiveChange}
           selectedApiaryId={selectedApiaryId}
           selectedHiveId={selectedHiveId}
         />

@@ -3,28 +3,26 @@ import { X } from 'lucide-react';
 import {
   createAdminUser,
   getApiErrorMessage,
-  type CreateAdminUserRequest,
   type UserRole,
 } from '../api/apiClient';
 
 type AdminUserFormModalProps = {
   onClose: () => void;
-  onSaved: () => void | Promise<void>;
+  onSaved: () => Promise<void>;
 };
 
-const roleOptions: Array<{ value: UserRole; label: string }> = [
+const roleOptions: { value: UserRole; label: string }[] = [
   { value: 'Beekeeper', label: 'Beekeeper' },
   { value: 'Farmer', label: 'Farmer' },
 ];
 
 export default function AdminUserFormModal({ onClose, onSaved }: AdminUserFormModalProps) {
-  const [form, setForm] = useState<CreateAdminUserRequest>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    role: 'Beekeeper',
-  });
+  // Postavljanje pocetnih vrednosti forme.
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [role, setRole] = useState<UserRole>('Beekeeper');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,7 +32,13 @@ export default function AdminUserFormModal({ onClose, onSaved }: AdminUserFormMo
     setIsSubmitting(true);
 
     try {
-      await createAdminUser(form);
+      await createAdminUser({
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        role,
+      });
       await onSaved();
       onClose();
     } catch (error) {
@@ -61,20 +65,20 @@ export default function AdminUserFormModal({ onClose, onSaved }: AdminUserFormMo
           <label>
             Ime
             <input
-              onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))}
+              onChange={(event) => setFirstName(event.target.value)}
               required
               type="text"
-              value={form.firstName}
+              value={firstName}
             />
           </label>
 
           <label>
             Prezime
             <input
-              onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))}
+              onChange={(event) => setLastName(event.target.value)}
               required
               type="text"
-              value={form.lastName}
+              value={lastName}
             />
           </label>
 
@@ -82,28 +86,31 @@ export default function AdminUserFormModal({ onClose, onSaved }: AdminUserFormMo
             Email
             <input
               autoComplete="email"
-              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+              onChange={(event) => setEmail(event.target.value)}
               required
               type="email"
-              value={form.email}
+              value={email}
             />
           </label>
 
           <label>
             Telefon
             <input
-              onChange={(event) => setForm((current) => ({ ...current, phoneNumber: event.target.value }))}
+              onChange={(event) => setPhoneNumber(event.target.value)}
               required
               type="tel"
-              value={form.phoneNumber}
+              value={phoneNumber}
             />
           </label>
 
           <label>
             Uloga
             <select
-              onChange={(event) => setForm((current) => ({ ...current, role: event.target.value as UserRole }))}
-              value={form.role}
+              onChange={(event) => {
+                const selectedRole = event.target.value;
+                setRole(selectedRole === 'Farmer' ? 'Farmer' : 'Beekeeper');
+              }}
+              value={role}
             >
               {roleOptions.map((role) => (
                 <option key={role.value} value={role.value}>

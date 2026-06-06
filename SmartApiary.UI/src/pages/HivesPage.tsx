@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   deleteHive,
@@ -14,13 +14,6 @@ import DataTable, { type DataTableColumn } from '../components/DataTable';
 import HiveFormModal from '../components/HiveFormModal';
 import PageHeader from '../components/PageHeader';
 
-const HIVE_TYPE_LABELS: Record<HiveTypeValue, string> = {
-  0: 'LR',
-  1: 'DB',
-  2: 'Poloska',
-  3: 'Other',
-};
-
 export default function HivesPage() {
   const [apiaries, setApiaries] = useState<ApiaryDto[]>([]);
   const [selectedApiaryId, setSelectedApiaryId] = useState('');
@@ -32,37 +25,34 @@ export default function HivesPage() {
   const [editingHive, setEditingHive] = useState<HiveDto | null>(null);
   const [deletingHiveId, setDeletingHiveId] = useState<string | null>(null);
 
-  const loadHives = useCallback(async (apiaryId: string) => {
+  async function loadHives(apiaryId: string) {
     const hives = await getHivesByApiary(apiaryId);
     setHives(hives);
-  }, []);
+  }
 
-  const fetchHivesForApiary = useCallback(
-    async (apiaryId: string) => {
-      setLoading(true);
-      setError(null);
+  async function fetchHivesForApiary(apiaryId: string) {
+    setLoading(true);
+    setError(null);
 
-      try {
-        await loadHives(apiaryId);
-        return true;
-      } catch (error) {
-        setHives([]);
-        setError(getApiErrorMessage(error, 'Greška pri učitavanju košnica.'));
-        return false;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [loadHives],
-  );
+    try {
+      await loadHives(apiaryId);
+      return true;
+    } catch (error) {
+      setHives([]);
+      setError(getApiErrorMessage(error, 'Greška pri učitavanju košnica.'));
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const fetchInitialData = useCallback(async () => {
+  async function fetchInitialData() {
     setLoading(true);
     setError(null);
 
     try {
       const apiaries = await getApiaries();
-      const nextSelectedApiaryId = apiaries[0]?.id ?? '';
+      const nextSelectedApiaryId = apiaries.length > 0 ? apiaries[0].id : '';
 
       setApiaries(apiaries);
       setSelectedApiaryId(nextSelectedApiaryId);
@@ -80,11 +70,11 @@ export default function HivesPage() {
     } finally {
       setLoading(false);
     }
-  }, [loadHives]);
+  }
 
   useEffect(() => {
-    void fetchInitialData();
-  }, [fetchInitialData]);
+    fetchInitialData();
+  }, []);
 
   const handleApiaryChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const nextApiaryId = event.target.value;
@@ -93,7 +83,7 @@ export default function HivesPage() {
     setSelectedApiaryId(nextApiaryId);
 
     if (nextApiaryId) {
-      void fetchHivesForApiary(nextApiaryId);
+      fetchHivesForApiary(nextApiaryId);
     } else {
       setHives([]);
     }
@@ -162,7 +152,7 @@ export default function HivesPage() {
     {
       header: 'Notes',
       render: (hive) => {
-        const notes = hive.notes?.trim();
+        const notes = hive.notes ? hive.notes.trim() : '';
         return notes ? notes : <span className="muted-text">-</span>;
       },
     },
@@ -187,7 +177,7 @@ export default function HivesPage() {
           <button
             className="danger-action-button"
             disabled={deletingHiveId === hive.id}
-            onClick={() => void handleDeleteHive(hive)}
+            onClick={() => handleDeleteHive(hive)}
             type="button"
           >
             <Trash2 size={16} />
@@ -285,7 +275,19 @@ function formatHiveType(type: HiveType) {
     return type;
   }
 
-  return HIVE_TYPE_LABELS[type] ?? String(type);
+  if (type === 0) {
+    return 'LR';
+  }
+
+  if (type === 1) {
+    return 'DB';
+  }
+
+  if (type === 2) {
+    return 'Poloska';
+  }
+
+  return 'Other';
 }
 
 function formatDate(value: string) {

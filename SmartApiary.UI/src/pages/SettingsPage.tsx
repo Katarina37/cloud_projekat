@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { getAlertSettings, type AlertSettingsDto } from '../api/apiClient';
 import PageHeader from '../components/PageHeader';
@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-  const loadSettings = useCallback(async (clearSuccessMessage = true) => {
+  async function loadSettings(clearSuccessMessage = true) {
     setLoading(true);
     setError(null);
 
@@ -36,11 +36,11 @@ export default function SettingsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    void loadSettings();
-  }, [loadSettings]);
+    loadSettings();
+  }, []);
 
   const handleSettingsSaved = async () => {
     setIsSettingsModalOpen(false);
@@ -53,7 +53,9 @@ export default function SettingsPage() {
   };
 
   const hasLoadError = error === loadErrorMessage;
-  const weightDropThresholdKg = settings?.weightDropThresholdKg ?? defaultWeightDropThresholdKg;
+  const weightDropThresholdKg = settings
+    ? settings.weightDropThresholdKg
+    : defaultWeightDropThresholdKg;
 
   return (
     <div className="page-stack">
@@ -105,7 +107,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <span>Poslednja izmena</span>
-                <strong>{settings?.updatedAt ? formatDateTime(settings.updatedAt) : '-'}</strong>
+                <strong>{settings && settings.updatedAt ? formatDateTime(settings.updatedAt) : '-'}</strong>
               </div>
             </div>
           </SectionCard>

@@ -1,6 +1,11 @@
 const authTokenKey = 'smartapiary.authToken';
-const nameIdentifierClaimType = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
-const roleClaimType = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+
+export type UserRole = 'Admin' | 'Beekeeper' | 'Farmer';
+
+type TokenPayload = {
+  Role: UserRole;
+  UserId: string;
+};
 
 export function getAuthToken() {
   return window.localStorage.getItem(authTokenKey);
@@ -15,37 +20,38 @@ export function clearAuthToken() {
 }
 
 export function hasAuthToken() {
-  return Boolean(getAuthToken());
+  return getAuthToken() !== null;
 }
 
-export function getCurrentUserRole() {
+export function getCurrentUserRole(): UserRole | null {
   const payload = getTokenPayload();
 
-  return payload?.Role ?? payload?.role ?? payload?.[roleClaimType] ?? null;
+  return payload ? payload.Role : null;
 }
 
 export function getCurrentUserId() {
   const payload = getTokenPayload();
 
-  return payload?.UserId ?? payload?.userId ?? payload?.sub ?? payload?.[nameIdentifierClaimType] ?? null;
+  return payload ? payload.UserId : null;
 }
 
-function getTokenPayload(): Record<string, string> | null {
+function getTokenPayload(): TokenPayload | null {
   const token = getAuthToken();
-  const payload = token?.split('.')[1];
 
-  if (!payload) {
+  if (!token) {
     return null;
   }
 
   try {
+    // JWT token ima tri dela, a nama su potrebni podaci iz srednjeg dela.
+    const payload = token.split('.')[1];
     const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
     const paddedPayload = normalizedPayload.padEnd(
       normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
       '=',
     );
 
-    return JSON.parse(window.atob(paddedPayload)) as Record<string, string>;
+    return JSON.parse(window.atob(paddedPayload)) as TokenPayload;
   } catch {
     return null;
   }

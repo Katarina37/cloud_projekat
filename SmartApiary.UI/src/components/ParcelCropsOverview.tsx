@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Wheat } from 'lucide-react';
 import {
   getApiErrorMessage,
@@ -29,14 +29,14 @@ export default function ParcelCropsOverview({ apiaryId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadParcelCrops = useCallback(async () => {
+  async function loadParcelCrops() {
     setLoading(true);
     setError(null);
     try {
       const role = getCurrentUserRole();
 
       if (role === 'Beekeeper') {
-        // For beekeepers, use nearby-parcels for the selected apiary
+        // Pcelar vidi parcele koje se nalaze u blizini izabranog pcelinjaka.
         if (!apiaryId) {
           setParcelCrops([]);
           setError('Odaberite pčelinjak da bi se prikazale okolne parcele.');
@@ -47,7 +47,7 @@ export default function ParcelCropsOverview({ apiaryId }: Props) {
         const nearby = await getNearbyParcels(apiaryId);
         const results: ParcelCrops[] = nearby.map((p) => ({
           parcel: { id: p.parcelId, name: p.parcelName, latitude: p.latitude, longitude: p.longitude, createdAt: '' },
-          crops: p.crops ?? [],
+          crops: p.crops || [],
           cropsUnavailable: false,
         }));
 
@@ -57,7 +57,7 @@ export default function ParcelCropsOverview({ apiaryId }: Props) {
         return;
       }
 
-      // Default: Farmer view - load all parcels and their crops
+      // Farmer vidi svoje parcele i kulture koje je uneo.
       const parcels = await getParcels();
 
       const results: ParcelCrops[] = [];
@@ -65,9 +65,8 @@ export default function ParcelCropsOverview({ apiaryId }: Props) {
         try {
           const crops = await getCropsByParcel(parcel.id);
           results.push({ parcel, crops });
-        } catch (parcelError) {
-          // If fetching crops for one parcel fails (e.g. role-based 403),
-          // continue and mark crops as unavailable for that parcel.
+        } catch {
+          // Jedna greska ne treba da zaustavi prikaz svih ostalih parcela.
           results.push({ parcel, crops: [], cropsUnavailable: true });
         }
       }
@@ -79,11 +78,11 @@ export default function ParcelCropsOverview({ apiaryId }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [apiaryId]);
+  }
 
   useEffect(() => {
-    void loadParcelCrops();
-  }, [loadParcelCrops]);
+    loadParcelCrops();
+  }, [apiaryId]);
 
   return (
     <SectionCard

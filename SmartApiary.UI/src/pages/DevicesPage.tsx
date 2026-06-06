@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import { Cpu, Plus, Power } from 'lucide-react';
 import {
   getApiaries,
@@ -29,7 +29,7 @@ export default function DevicesPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const loadDeviceForHive = useCallback(async (hiveId: string) => {
+  async function loadDeviceForHive(hiveId: string) {
     setLoading(true);
     setError(null);
     setDevice(null);
@@ -42,38 +42,35 @@ export default function DevicesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
-  const loadHivesForApiary = useCallback(
-    async (apiaryId: string) => {
-      setHivesLoading(true);
-      setError(null);
-      setHives([]);
-      setSelectedHiveId('');
-      setDevice(null);
+  async function loadHivesForApiary(apiaryId: string) {
+    setHivesLoading(true);
+    setError(null);
+    setHives([]);
+    setSelectedHiveId('');
+    setDevice(null);
 
-      let nextHiveId = '';
+    let nextHiveId = '';
 
-      try {
-        const hives = await getHivesByApiary(apiaryId);
-        nextHiveId = hives[0]?.id ?? '';
+    try {
+      const hives = await getHivesByApiary(apiaryId);
+      nextHiveId = hives.length > 0 ? hives[0].id : '';
 
-        setHives(hives);
-        setSelectedHiveId(nextHiveId);
-      } catch (error) {
-        setError(getApiErrorMessage(error, 'Greška pri učitavanju košnica.'));
-      } finally {
-        setHivesLoading(false);
-      }
+      setHives(hives);
+      setSelectedHiveId(nextHiveId);
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Greška pri učitavanju košnica.'));
+    } finally {
+      setHivesLoading(false);
+    }
 
-      if (nextHiveId) {
-        await loadDeviceForHive(nextHiveId);
-      }
-    },
-    [loadDeviceForHive],
-  );
+    if (nextHiveId) {
+      await loadDeviceForHive(nextHiveId);
+    }
+  }
 
-  const fetchInitialData = useCallback(async () => {
+  async function fetchInitialData() {
     setApiariesLoading(true);
     setError(null);
 
@@ -81,7 +78,7 @@ export default function DevicesPage() {
 
     try {
       const apiaries = await getApiaries();
-      nextApiaryId = apiaries[0]?.id ?? '';
+      nextApiaryId = apiaries.length > 0 ? apiaries[0].id : '';
 
       setApiaries(apiaries);
       setSelectedApiaryId(nextApiaryId);
@@ -99,11 +96,11 @@ export default function DevicesPage() {
     if (nextApiaryId) {
       await loadHivesForApiary(nextApiaryId);
     }
-  }, [loadHivesForApiary]);
+  }
 
   useEffect(() => {
-    void fetchInitialData();
-  }, [fetchInitialData]);
+    fetchInitialData();
+  }, []);
 
   const clearFeedback = () => {
     setSuccessMessage(null);
@@ -117,7 +114,7 @@ export default function DevicesPage() {
     setSelectedApiaryId(nextApiaryId);
 
     if (nextApiaryId) {
-      void loadHivesForApiary(nextApiaryId);
+      loadHivesForApiary(nextApiaryId);
     } else {
       setHives([]);
       setSelectedHiveId('');
@@ -132,17 +129,17 @@ export default function DevicesPage() {
     setSelectedHiveId(nextHiveId);
 
     if (nextHiveId) {
-      void loadDeviceForHive(nextHiveId);
+      loadDeviceForHive(nextHiveId);
     } else {
       setDevice(null);
     }
   };
 
-  const reloadSelectedDevice = useCallback(async () => {
+  async function reloadSelectedDevice() {
     if (selectedHiveId) {
       await loadDeviceForHive(selectedHiveId);
     }
-  }, [loadDeviceForHive, selectedHiveId]);
+  }
 
   const handleDeviceRegistered = async () => {
     setSuccessMessage('Uređaj je uspešno registrovan.');
@@ -152,7 +149,7 @@ export default function DevicesPage() {
 
   const handleDeviceActivated = async (token?: string) => {
     setSuccessMessage('Uređaj je uspešno aktiviran.');
-    setAccessToken(token ?? null);
+    setAccessToken(token ? token : null);
     await reloadSelectedDevice();
   };
 

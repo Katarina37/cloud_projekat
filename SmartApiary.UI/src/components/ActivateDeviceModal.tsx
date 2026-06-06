@@ -67,10 +67,10 @@ export default function ActivateDeviceModal({
       const accessToken = await activateDevice(payload);
       await onDeviceActivated(accessToken);
       resetForm();
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(getApiErrorMessage(error, 'Greška pri aktivaciji uređaja.'));
+    } finally {
       setLoading(false);
     }
   };

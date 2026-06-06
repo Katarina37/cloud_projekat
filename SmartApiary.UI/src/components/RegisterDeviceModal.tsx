@@ -64,10 +64,10 @@ export default function RegisterDeviceModal({
       await registerDevice(payload);
       await onDeviceRegistered();
       resetForm();
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(getApiErrorMessage(error, 'Greška pri registraciji uređaja.'));
+    } finally {
       setLoading(false);
     }
   };

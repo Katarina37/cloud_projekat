@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Trash2, UserX, Users } from 'lucide-react';
 import {
   deactivateAdminUser,
@@ -20,9 +20,10 @@ export default function AdminUsersPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deactivatingUserId, setDeactivatingUserId] = useState<string | null>(null);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
-  const currentUserId = getCurrentUserId()?.toLowerCase() ?? null;
+  const userId = getCurrentUserId();
+  const currentUserId = userId ? userId.toLowerCase() : null;
 
-  const fetchUsers = useCallback(async () => {
+  async function fetchUsers() {
     setLoading(true);
     setError(null);
 
@@ -36,11 +37,11 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    void fetchUsers();
-  }, [fetchUsers]);
+    fetchUsers();
+  }, []);
 
   const handleUserCreated = async () => {
     const refreshed = await fetchUsers();
@@ -184,7 +185,7 @@ export default function AdminUsersPage() {
                               || deactivatingUserId === user.id
                               || deletingUserId === user.id
                             }
-                            onClick={() => void handleDeactivate(user)}
+                            onClick={() => handleDeactivate(user)}
                             title={isCurrentUser ? 'Ne mozete deaktivirati sopstveni nalog.' : undefined}
                             type="button"
                           >
@@ -194,7 +195,7 @@ export default function AdminUsersPage() {
                           <button
                             className="danger-action-button"
                             disabled={isCurrentUser || deletingUserId === user.id || deactivatingUserId === user.id}
-                            onClick={() => void handleDelete(user)}
+                            onClick={() => handleDelete(user)}
                             title={isCurrentUser ? 'Ne mozete obrisati sopstveni nalog.' : undefined}
                             type="button"
                           >

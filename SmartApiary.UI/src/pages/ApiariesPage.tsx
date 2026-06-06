@@ -1,9 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
-import { deleteApiary, getApiaries, getApiErrorMessage, getNearbyParcels, type ApiaryDto } from '../api/apiClient';
+import {
+  deleteApiary,
+  getApiaries,
+  getApiErrorMessage,
+  getNearbyParcels,
+  type ApiaryDto,
+  type MapParcelDto,
+} from '../api/apiClient';
 import { getCurrentUserId } from '../auth/authStorage';
 import ApiaryFormModal from '../components/ApiaryFormModal';
-import MapView from '../components/MapView';
+import MapView, { type MapItem } from '../components/MapView';
 import PageHeader from '../components/PageHeader';
 
 export default function ApiariesPage() {
@@ -14,11 +21,11 @@ export default function ApiariesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingApiary, setEditingApiary] = useState<ApiaryDto | null>(null);
   const [deletingApiaryId, setDeletingApiaryId] = useState<string | null>(null);
-  const [mapItems, setMapItems] = useState<any[]>([]);
+  const [mapItems, setMapItems] = useState<MapItem[]>([]);
   const [nearbyLoadingId, setNearbyLoadingId] = useState<string | null>(null);
   const currentUserId = getCurrentUserId();
 
-  const fetchApiaries = useCallback(async () => {
+  async function fetchApiaries() {
     setLoading(true);
     setError(null);
 
@@ -32,11 +39,11 @@ export default function ApiariesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    void fetchApiaries();
-  }, [fetchApiaries]);
+    fetchApiaries();
+  }, []);
 
   const handleApiaryCreated = async () => {
     const refreshed = await fetchApiaries();
@@ -87,22 +94,22 @@ export default function ApiariesPage() {
     try {
       const nearby = await getNearbyParcels(apiary.id);
 
-      const apiaryItem = {
+      const apiaryItem: MapItem = {
         id: apiary.id,
         name: apiary.name,
         latitude: apiary.latitude,
         longitude: apiary.longitude,
         subtitle: apiary.terrainDescription || undefined,
-        type: 'apiary' as const,
+        type: 'apiary',
       };
 
-      const nearbyItems = nearby.map((p) => ({
-        id: p.parcelId,
-        name: p.parcelName,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        subtitle: p.farmerName ? `${p.farmerName}${p.farmerPhone ? ' • ' + p.farmerPhone : ''}` : p.crops && p.crops.length > 0 ? p.crops.map((c) => c.name).join(', ') : undefined,
-        type: 'parcel' as const,
+      const nearbyItems: MapItem[] = nearby.map((parcel) => ({
+        id: parcel.parcelId,
+        name: parcel.parcelName,
+        latitude: parcel.latitude,
+        longitude: parcel.longitude,
+        subtitle: getNearbyParcelSubtitle(parcel),
+        type: 'parcel',
       }));
 
       setMapItems([apiaryItem, ...nearbyItems]);
@@ -112,25 +119,24 @@ export default function ApiariesPage() {
         setSuccessMessage(`${nearbyItems.length} okolnih parcela učitano.`);
       }
     } catch (err) {
-      // Log full error for easier debugging and show server message when available
-      // eslint-disable-next-line no-console
-      console.error('Error loading nearby parcels', err);
-
-      // If axios error, prefer the response body or status text
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const anyErr = err as any;
-      if (anyErr?.response) {
-        const serverData = anyErr.response.data;
-        const serverMessage = typeof serverData === 'string' ? serverData : serverData?.error ?? serverData?.message;
-        setError(getApiErrorMessage(err, serverMessage ?? 'Greška pri učitavanju okolnih parcela.'));
-      } else {
-        setMapItems([]);
-        setError(getApiErrorMessage(err, 'Greška pri učitavanju okolnih parcela.'));
-      }
+      setError(getApiErrorMessage(err, 'Greška pri učitavanju okolnih parcela.'));
     } finally {
       setNearbyLoadingId(null);
     }
   };
+
+  let displayedMapItems = mapItems;
+
+  if (displayedMapItems.length === 0) {
+    displayedMapItems = apiaries.map((apiary) => ({
+      id: apiary.id,
+      name: apiary.name,
+      latitude: apiary.latitude,
+      longitude: apiary.longitude,
+      subtitle: apiary.terrainDescription || undefined,
+      type: 'apiary',
+    }));
+  }
 
   return (
     <div className="page-stack">
@@ -154,11 +160,7 @@ export default function ApiariesPage() {
 
       <section className="section-card">
         <MapView
-          items={
-            mapItems.length > 0
-              ? mapItems
-              : apiaries.map((a) => ({ id: a.id, name: a.name, latitude: a.latitude, longitude: a.longitude, subtitle: a.terrainDescription || undefined, type: 'apiary' as const }))
-          }
+          items={displayedMapItems}
           height={360}
           zoom={10}
           onSelect={(it) => alert(`${it.name} — ${it.latitude}, ${it.longitude}`)}
@@ -212,10 +214,10 @@ export default function ApiariesPage() {
               <div className="card-action-row">
                 <button
                   className="secondary-action-button"
-                  disabled={nearbyLoadingId === apiary.id || Boolean(apiary.beekeeperId && apiary.beekeeperId !== currentUserId)}
-                  onClick={() => void handleShowNearbyParcels(apiary)}
+                  disabled={nearbyLoadingId === apiary.id || isApiaryOwnedByAnotherUser(apiary, currentUserId)}
+                  onClick={() => handleShowNearbyParcels(apiary)}
                   type="button"
-                  title={Boolean(apiary.beekeeperId && apiary.beekeeperId !== currentUserId) ? 'Nemate pravo da vidite okolne parcele za ovaj pčelinjak' : undefined}
+                  title={isApiaryOwnedByAnotherUser(apiary, currentUserId) ? 'Nemate pravo da vidite okolne parcele za ovaj pčelinjak' : undefined}
                 >
                   {nearbyLoadingId === apiary.id ? 'Učitavanje...' : 'Okolne parcele'}
                 </button>
@@ -234,7 +236,7 @@ export default function ApiariesPage() {
                 <button
                   className="danger-action-button"
                   disabled={deletingApiaryId === apiary.id}
-                  onClick={() => void handleDeleteApiary(apiary)}
+                  onClick={() => handleDeleteApiary(apiary)}
                   type="button"
                 >
                   <Trash2 size={16} />
@@ -265,4 +267,28 @@ function formatDate(value: string) {
   const date = new Date(value);
 
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
+function isApiaryOwnedByAnotherUser(apiary: ApiaryDto, currentUserId: string | null) {
+  if (!apiary.beekeeperId) {
+    return false;
+  }
+
+  return apiary.beekeeperId !== currentUserId;
+}
+
+function getNearbyParcelSubtitle(parcel: MapParcelDto) {
+  if (parcel.farmerName && parcel.farmerPhone) {
+    return `${parcel.farmerName} • ${parcel.farmerPhone}`;
+  }
+
+  if (parcel.farmerName) {
+    return parcel.farmerName;
+  }
+
+  if (parcel.crops && parcel.crops.length > 0) {
+    return parcel.crops.map((crop) => crop.name).join(', ');
+  }
+
+  return undefined;
 }

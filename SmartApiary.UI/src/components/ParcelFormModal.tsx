@@ -1,5 +1,4 @@
 import { type FormEvent, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import {
   createParcel,
@@ -18,8 +17,8 @@ type ParcelFormModalProps = {
 };
 
 export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: ParcelFormModalProps) {
-  const isEditMode = Boolean(parcel);
-  const [name, setName] = useState(parcel?.name ?? '');
+  const isEditMode = parcel !== undefined;
+  const [name, setName] = useState(parcel ? parcel.name : '');
   const [latitude, setLatitude] = useState(parcel ? String(parcel.latitude) : '');
   const [longitude, setLongitude] = useState(parcel ? String(parcel.longitude) : '');
   const [loading, setLoading] = useState(false);
@@ -91,25 +90,19 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
       }
 
       await onSaved();
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(
         getApiErrorMessage(error, isEditMode ? 'Greška pri izmeni parcele.' : 'Greška pri dodavanju parcele.'),
       );
+    } finally {
       setLoading(false);
     }
   };
 
   const title = isEditMode ? 'Izmeni parcelu' : 'Dodaj parcelu';
 
-  const portalTarget = typeof document === 'undefined' ? null : document.body;
-
-  if (!portalTarget) {
-    return null;
-  }
-
-  return createPortal(
+  return (
     <div className="modal-overlay" onClick={handleClose} role="presentation">
       <section
         aria-labelledby="parcel-form-title"
@@ -124,7 +117,7 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
             <p>Unesi naziv i koordinate parcele.</p>
             {isEditMode ? (
               <p style={{ marginTop: 6, fontSize: 13, color: '#666' }}>
-                Kreirano: {parcel?.createdAt ? new Date(parcel.createdAt).toLocaleString() : '—'}
+                Kreirano: {parcel && parcel.createdAt ? new Date(parcel.createdAt).toLocaleString() : '—'}
               </p>
             ) : null}
           </div>
@@ -200,5 +193,5 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
         </form>
       </section>
     </div>
-  , portalTarget);
+  );
 }

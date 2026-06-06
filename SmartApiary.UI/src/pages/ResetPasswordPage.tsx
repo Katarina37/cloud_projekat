@@ -6,7 +6,7 @@ import BrandLogo from '../components/BrandLogo';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
-  const [token, setToken] = useState(searchParams.get('token') ?? '');
+  const [token, setToken] = useState(searchParams.get('token') || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);

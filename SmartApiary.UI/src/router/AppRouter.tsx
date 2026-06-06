@@ -17,9 +17,11 @@ import ResetPasswordPage from '../pages/ResetPasswordPage';
 import SettingsPage from '../pages/SettingsPage';
 import SprayingPage from '../pages/SprayingPage';
 import TelemetryPage from '../pages/TelemetryPage';
-import { getCurrentUserRole, hasAuthToken } from '../auth/authStorage';
-
-type UserRole = 'Admin' | 'Beekeeper' | 'Farmer';
+import {
+  getCurrentUserRole,
+  hasAuthToken,
+  type UserRole,
+} from '../auth/authStorage';
 
 export default function AppRouter() {
   return (
@@ -80,29 +82,37 @@ export default function AppRouter() {
 }
 
 function ProtectedLayout() {
-  return hasValidSession() ? <DashboardLayout /> : <Navigate to="/login" replace />;
+  if (hasValidSession()) {
+    return <DashboardLayout />;
+  }
+
+  return <Navigate to="/login" replace />;
 }
 
 function PublicRoute({ children }: { children: ReactElement }) {
-  return hasValidSession()
-    ? <Navigate to={getDefaultPathForRole(getCurrentUserRole() as UserRole | null)} replace />
-    : children;
+  if (hasValidSession()) {
+    return <Navigate to={getDefaultPathForRole(getCurrentUserRole())} replace />;
+  }
+
+  return children;
 }
 
 function hasValidSession() {
-  return hasAuthToken() && Boolean(getCurrentUserRole());
+  return hasAuthToken() && getCurrentUserRole() !== null;
 }
 
 function RoleRoute({ children, roles }: { children: ReactElement; roles: UserRole[] }) {
-  const role = getCurrentUserRole() as UserRole | null;
+  const role = getCurrentUserRole();
 
-  return role && roles.includes(role)
-    ? children
-    : <Navigate to={getDefaultPathForRole(role)} replace />;
+  if (role && roles.includes(role)) {
+    return children;
+  }
+
+  return <Navigate to={getDefaultPathForRole(role)} replace />;
 }
 
 function DefaultRoute() {
-  return <Navigate to={getDefaultPathForRole(getCurrentUserRole() as UserRole | null)} replace />;
+  return <Navigate to={getDefaultPathForRole(getCurrentUserRole())} replace />;
 }
 
 function getDefaultPathForRole(role: UserRole | null) {
@@ -114,5 +124,9 @@ function getDefaultPathForRole(role: UserRole | null) {
     return '/parcele';
   }
 
-  return role === null ? '/login' : '/pregled';
+  if (role === null) {
+    return '/login';
+  }
+
+  return '/pregled';
 }

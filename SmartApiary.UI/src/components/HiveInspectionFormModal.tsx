@@ -4,9 +4,7 @@ import {
   createHiveInspection,
   getApiErrorMessage,
   updateHiveInspection,
-  type CreateHiveInspectionRequest,
   type HiveInspectionDto,
-  type UpdateHiveInspectionRequest,
 } from '../api/apiClient';
 
 type HiveInspectionFormModalProps = {
@@ -16,49 +14,55 @@ type HiveInspectionFormModalProps = {
   onSaved: () => Promise<void>;
 };
 
-type ValidatedHiveInspectionForm =
-  | { operation: 'create'; payload: CreateHiveInspectionRequest }
-  | { operation: 'edit'; payload: UpdateHiveInspectionRequest };
-
 export default function HiveInspectionFormModal({
   selectedHiveId,
   inspection,
   onClose,
   onSaved,
 }: HiveInspectionFormModalProps) {
-  const isEditMode = Boolean(inspection);
-  const [date, setDate] = useState(toInputDate(inspection?.date));
+  const isEditMode = inspection !== undefined;
+  const [date, setDate] = useState(
+    toInputDate(inspection ? inspection.date : undefined),
+  );
   const [framesWithHoney, setFramesWithHoney] = useState(
     inspection ? String(inspection.framesWithHoney) : '0',
   );
   const [broodFrames, setBroodFrames] = useState(inspection ? String(inspection.broodFrames) : '0');
-  const [queenPresent, setQueenPresent] = useState(inspection?.queenPresent ?? true);
-  const [bottomBoardColor, setBottomBoardColor] = useState(inspection?.bottomBoardColor ?? '');
+  const [queenPresent, setQueenPresent] = useState(
+    inspection ? inspection.queenPresent : true,
+  );
+  const [bottomBoardColor, setBottomBoardColor] = useState(
+    inspection ? inspection.bottomBoardColor : '',
+  );
   const [honeyQuantityKg, setHoneyQuantityKg] = useState(
-    inspection?.honeyQuantityKg !== undefined && inspection?.honeyQuantityKg !== null
+    inspection
       ? String(inspection.honeyQuantityKg)
       : '',
   );
-  const [notes, setNotes] = useState(inspection?.notes ?? '');
+  const [notes, setNotes] = useState(
+    inspection && inspection.notes ? inspection.notes : '',
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validateForm = (): ValidatedHiveInspectionForm | null => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     const parsedFramesWithHoney = Number(framesWithHoney);
     const parsedBroodFrames = Number(broodFrames);
     const parsedHoneyQuantityKg = Number(honeyQuantityKg);
-    const hiveId = selectedHiveId || inspection?.hiveId || '';
+    const hiveId = selectedHiveId || (inspection ? inspection.hiveId : '');
     const trimmedBottomBoardColor = bottomBoardColor.trim();
     const trimmedNotes = notes.trim();
 
     if (!hiveId) {
       setError('Izaberite košnicu.');
-      return null;
+      return;
     }
 
     if (!date) {
       setError('Datum je obavezan.');
-      return null;
+      return;
     }
 
     if (
@@ -67,12 +71,12 @@ export default function HiveInspectionFormModal({
       || parsedFramesWithHoney < 0
     ) {
       setError('Broj ramova sa medom ne sme biti negativan.');
-      return null;
+      return;
     }
 
     if (broodFrames.trim() === '' || !Number.isFinite(parsedBroodFrames) || parsedBroodFrames < 0) {
       setError('Broj ramova legla ne sme biti negativan.');
-      return null;
+      return;
     }
 
     if (
@@ -81,12 +85,12 @@ export default function HiveInspectionFormModal({
       || parsedHoneyQuantityKg < 0
     ) {
       setError('Količina meda ne sme biti negativna.');
-      return null;
+      return;
     }
 
     if (!trimmedBottomBoardColor) {
       setError('Boja podnjače je obavezna.');
-      return null;
+      return;
     }
 
     const payload = {
@@ -101,30 +105,16 @@ export default function HiveInspectionFormModal({
     };
 
     setError(null);
-
-    return isEditMode ? { operation: 'edit', payload } : { operation: 'create', payload };
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const result = validateForm();
-
-    if (!result) {
-      return;
-    }
-
     setLoading(true);
 
     try {
-      if (result.operation === 'edit' && inspection) {
-        await updateHiveInspection(inspection.id, result.payload);
-      } else if (result.operation === 'create') {
-        await createHiveInspection(result.payload);
+      if (inspection) {
+        await updateHiveInspection(inspection.id, payload);
+      } else {
+        await createHiveInspection(payload);
       }
 
       await onSaved();
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(
@@ -133,6 +123,7 @@ export default function HiveInspectionFormModal({
           isEditMode ? 'Greška pri izmeni zapisa.' : 'Greška pri dodavanju zapisa.',
         ),
       );
+    } finally {
       setLoading(false);
     }
   };

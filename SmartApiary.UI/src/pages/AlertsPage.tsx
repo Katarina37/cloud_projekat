@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import {
   getApiErrorMessage,
@@ -15,22 +15,6 @@ const loadErrorMessage = 'Greška pri učitavanju obaveštenja.';
 const markAsReadErrorMessage = 'Greška pri označavanju obaveštenja.';
 const emptyMessage = 'Nema obaveštenja.';
 const markAsReadSuccessMessage = 'Obaveštenje je označeno kao pročitano.';
-
-const notificationTypeLabels: Record<string, string> = {
-  PesticideWarning: 'Upozorenje o pesticidima',
-  BatteryLow: 'Slaba baterija',
-  WeightDrop: 'Nagli pad težine',
-  SprayingChanged: 'Promena termina tretiranja',
-  SprayingCancelled: 'Otkazano tretiranje',
-};
-
-const notificationTypeTones: Record<string, StatusTone> = {
-  PesticideWarning: 'critical',
-  BatteryLow: 'warning',
-  WeightDrop: 'warning',
-  SprayingChanged: 'info',
-  SprayingCancelled: 'critical',
-};
 
 export default function AlertsPage() {
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
@@ -56,17 +40,21 @@ export default function AlertsPage() {
       }
     };
 
-    void fetchNotifications();
+    fetchNotifications();
   }, []);
 
-  const unreadCount = useMemo(
-    () => notifications.filter((notification) => !notification.isRead).length,
-    [notifications],
-  );
-  const typeCount = useMemo(
-    () => new Set(notifications.map((notification) => String(notification.type))).size,
-    [notifications],
-  );
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+  const notificationTypes: string[] = [];
+
+  for (const notification of notifications) {
+    const type = String(notification.type);
+
+    if (!notificationTypes.includes(type)) {
+      notificationTypes.push(type);
+    }
+  }
+
+  const typeCount = notificationTypes.length;
 
   const handleMarkAsRead = async (notificationId: string) => {
     setMarkingNotificationId(notificationId);
@@ -158,7 +146,7 @@ export default function AlertsPage() {
                           <button
                             className="secondary-action-button"
                             disabled={markingNotificationId === notification.id}
-                            onClick={() => void handleMarkAsRead(notification.id)}
+                            onClick={() => handleMarkAsRead(notification.id)}
                             type="button"
                           >
                             <CheckCircle2 size={16} />
@@ -179,7 +167,29 @@ export default function AlertsPage() {
 }
 
 function getNotificationTypeLabel(type: string | number) {
-  return notificationTypeLabels[String(type)] ?? String(type);
+  const typeName = String(type);
+
+  if (typeName === 'PesticideWarning') {
+    return 'Upozorenje o pesticidima';
+  }
+
+  if (typeName === 'BatteryLow') {
+    return 'Slaba baterija';
+  }
+
+  if (typeName === 'WeightDrop') {
+    return 'Nagli pad težine';
+  }
+
+  if (typeName === 'SprayingChanged') {
+    return 'Promena termina tretiranja';
+  }
+
+  if (typeName === 'SprayingCancelled') {
+    return 'Otkazano tretiranje';
+  }
+
+  return typeName;
 }
 
 function getNotificationTone(notification: NotificationDto): StatusTone {
@@ -187,7 +197,17 @@ function getNotificationTone(notification: NotificationDto): StatusTone {
     return 'muted';
   }
 
-  return notificationTypeTones[String(notification.type)] ?? 'info';
+  const typeName = String(notification.type);
+
+  if (typeName === 'PesticideWarning' || typeName === 'SprayingCancelled') {
+    return 'critical';
+  }
+
+  if (typeName === 'BatteryLow' || typeName === 'WeightDrop') {
+    return 'warning';
+  }
+
+  return 'info';
 }
 
 function formatDate(value: string) {

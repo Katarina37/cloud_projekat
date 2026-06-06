@@ -4,11 +4,9 @@ import {
   createHive,
   getApiErrorMessage,
   updateHive,
-  type CreateHiveRequest,
   type HiveDto,
   type HiveType,
   type HiveTypeValue,
-  type UpdateHiveRequest,
 } from '../api/apiClient';
 
 type HiveFormModalProps = {
@@ -18,28 +16,36 @@ type HiveFormModalProps = {
   onSaved: () => Promise<void>;
 };
 
-type ValidatedHiveForm =
-  | { operation: 'create'; payload: CreateHiveRequest }
-  | { operation: 'edit'; payload: UpdateHiveRequest };
-
-const HIVE_TYPE_OPTIONS = [
+const HIVE_TYPE_OPTIONS: { label: string; value: HiveTypeValue }[] = [
   { label: 'LR', value: 0 },
   { label: 'DB', value: 1 },
   { label: 'Poloska', value: 2 },
   { label: 'Other', value: 3 },
-] as const satisfies readonly { label: string; value: HiveTypeValue }[];
+];
 
 export default function HiveFormModal({ selectedApiaryId, hive, onClose, onSaved }: HiveFormModalProps) {
-  const isEditMode = Boolean(hive);
-  const [label, setLabel] = useState(hive?.label ?? '');
-  const [type, setType] = useState<HiveTypeValue>(getHiveTypeValue(hive?.type));
-  const [boxColor, setBoxColor] = useState(hive?.boxColor ?? '');
+  const isEditMode = hive !== undefined;
+  const [label, setLabel] = useState(hive ? hive.label : '');
+  const [type, setType] = useState<HiveTypeValue>(
+    getHiveTypeValue(hive ? hive.type : undefined),
+  );
+  const [boxColor, setBoxColor] = useState(hive ? hive.boxColor : '');
   const [queenAgeYears, setQueenAgeYears] = useState(hive ? String(hive.queenAgeYears) : '0');
-  const [notes, setNotes] = useState(hive?.notes ?? '');
+  const [notes, setNotes] = useState(hive && hive.notes ? hive.notes : '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validateForm = (): ValidatedHiveForm | null => {
+  const handleTypeChange = (value: string) => {
+    const selectedType = Number(value);
+
+    if (selectedType === 0 || selectedType === 1 || selectedType === 2 || selectedType === 3) {
+      setType(selectedType);
+    }
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     const trimmedLabel = label.trim();
     const trimmedBoxColor = boxColor.trim();
     const trimmedNotes = notes.trim();
@@ -47,22 +53,22 @@ export default function HiveFormModal({ selectedApiaryId, hive, onClose, onSaved
 
     if (!isEditMode && !selectedApiaryId) {
       setError('Izaberite pčelinjak.');
-      return null;
+      return;
     }
 
     if (!trimmedLabel) {
       setError('Label ne sme biti prazan.');
-      return null;
+      return;
     }
 
     if (!trimmedBoxColor) {
       setError('BoxColor ne sme biti prazan.');
-      return null;
+      return;
     }
 
     if (queenAgeYears.trim() === '' || !Number.isFinite(parsedQueenAgeYears) || parsedQueenAgeYears < 0) {
       setError('QueenAgeYears ne sme biti negativan.');
-      return null;
+      return;
     }
 
     const payload = {
@@ -74,45 +80,25 @@ export default function HiveFormModal({ selectedApiaryId, hive, onClose, onSaved
     };
 
     setError(null);
-
-    if (hive) {
-      return { operation: 'edit', payload };
-    }
-
-    return {
-      operation: 'create',
-      payload: {
-        apiaryId: selectedApiaryId,
-        ...payload,
-      },
-    };
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const result = validateForm();
-
-    if (!result) {
-      return;
-    }
-
     setLoading(true);
 
     try {
-      if (result.operation === 'edit' && hive) {
-        await updateHive(hive.id, result.payload);
-      } else if (result.operation === 'create') {
-        await createHive(result.payload);
+      if (hive) {
+        await updateHive(hive.id, payload);
+      } else {
+        await createHive({
+          apiaryId: selectedApiaryId,
+          ...payload,
+        });
       }
 
       await onSaved();
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(
         getApiErrorMessage(error, isEditMode ? 'Greška pri izmeni košnice.' : 'Greška pri dodavanju košnice.'),
       );
+    } finally {
       setLoading(false);
     }
   };
@@ -152,7 +138,7 @@ export default function HiveFormModal({ selectedApiaryId, hive, onClose, onSaved
 
           <label>
             Type
-            <select onChange={(event) => setType(Number(event.target.value) as HiveTypeValue)} value={type}>
+            <select onChange={(event) => handleTypeChange(event.target.value)} value={type}>
               {HIVE_TYPE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}

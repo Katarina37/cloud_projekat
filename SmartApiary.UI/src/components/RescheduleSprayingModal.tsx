@@ -69,10 +69,10 @@ export default function RescheduleSprayingModal({
     try {
       const result = await rescheduleSpraying(spraying.id, payload);
       await onSaved(result.weatherWarning);
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(getApiErrorMessage(error, 'Greška pri pomeranju tretiranja.'));
+    } finally {
       setLoading(false);
     }
   };

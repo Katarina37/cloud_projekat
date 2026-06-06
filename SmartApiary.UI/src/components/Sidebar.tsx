@@ -39,11 +39,15 @@ const adminNavigation = [
 
 export default function Sidebar() {
   const role = getCurrentUserRole();
-  const items = role === 'Admin'
-    ? adminNavigation
-    : role === 'Farmer'
-      ? farmerNavigation
-      : beekeeperNavigation;
+  let items = beekeeperNavigation;
+
+  if (role === 'Admin') {
+    items = adminNavigation;
+  }
+
+  if (role === 'Farmer') {
+    items = farmerNavigation;
+  }
 
   return (
     <aside className="sidebar">

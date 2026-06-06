@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Leaf, Pencil, Plus, Trash2 } from 'lucide-react';
 import { deleteParcel, getApiErrorMessage, getParcels, getCropsByParcel, type ParcelDto, type CropDto } from '../api/apiClient';
 import PageHeader from '../components/PageHeader';
 import ParcelFormModal from '../components/ParcelFormModal';
-import MapView from '../components/MapView';
+import MapView, { type MapItem } from '../components/MapView';
+import { exportMapPdf } from '../utils/exportMapPdf';
 
 export default function ParcelsPage() {
   const [parcels, setParcels] = useState<ParcelDto[]>([]);
@@ -16,7 +17,7 @@ export default function ParcelsPage() {
   const [selectedParcel, setSelectedParcel] = useState<ParcelDto | null>(null);
   const [deletingParcelId, setDeletingParcelId] = useState<string | null>(null);
 
-  const fetchParcels = useCallback(async () => {
+  async function fetchParcels() {
     setLoading(true);
     setError(null);
 
@@ -24,9 +25,15 @@ export default function ParcelsPage() {
       const parcels = await getParcels();
       setParcels(parcels);
 
-      // load crops per parcel for map icons
-      const cropsByParcel = await Promise.all(parcels.map((p) => getCropsByParcel(p.id)));
-      setParcelsWithCrops(parcels.map((p, i) => ({ parcel: p, crops: cropsByParcel[i] })));
+      // Ucitavanje kultura koje se prikazuju uz svaku parcelu na mapi.
+      const loadedParcelsWithCrops: { parcel: ParcelDto; crops: CropDto[] }[] = [];
+
+      for (const parcel of parcels) {
+        const crops = await getCropsByParcel(parcel.id);
+        loadedParcelsWithCrops.push({ parcel, crops });
+      }
+
+      setParcelsWithCrops(loadedParcelsWithCrops);
       return true;
     } catch {
       setParcels([]);
@@ -35,11 +42,12 @@ export default function ParcelsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    void fetchParcels();
-  }, [fetchParcels]);
+    // Ucitavanje podataka pri prvom otvaranju stranice.
+    fetchParcels();
+  }, []);
 
   const handleParcelCreated = async () => {
     const refreshed = await fetchParcels();
@@ -87,6 +95,50 @@ export default function ParcelsPage() {
     }
   };
 
+  const handleExportMap = async () => {
+    setError(null);
+
+    try {
+      await exportMapPdf();
+    } catch (error) {
+      setError(getApiErrorMessage(error, 'Greska pri generisanju PDF-a.'));
+    }
+  };
+
+  // Priprema podataka u obliku koji komponenta mape ocekuje.
+  let mapItems: MapItem[];
+
+  if (parcelsWithCrops.length > 0) {
+    mapItems = parcelsWithCrops.map(({ parcel, crops }) => ({
+      id: parcel.id,
+      name: parcel.name,
+      latitude: parcel.latitude,
+      longitude: parcel.longitude,
+      type: 'parcel',
+      crops: crops.map((crop) => crop.name),
+    }));
+  } else {
+    mapItems = parcels.map((parcel) => ({
+      id: parcel.id,
+      name: parcel.name,
+      latitude: parcel.latitude,
+      longitude: parcel.longitude,
+      type: 'parcel',
+    }));
+  }
+
+  let selectedParcelCrops: CropDto[] = [];
+
+  if (selectedParcel) {
+    const parcelWithCrops = parcelsWithCrops.find(
+      (item) => item.parcel.id === selectedParcel.id,
+    );
+
+    if (parcelWithCrops) {
+      selectedParcelCrops = parcelWithCrops.crops;
+    }
+  }
+
   return (
     <div className="page-stack">
       <PageHeader
@@ -108,33 +160,7 @@ export default function ParcelsPage() {
             </button>
             <button
               className="secondary-action-button"
-              onClick={async () => {
-                setError(null);
-                try {
-                  // export map to PDF
-                  const { default: html2canvas } = await import('html2canvas');
-                  const { jsPDF } = await import('jspdf');
-
-                  const el = document.querySelector('.section-card .leaflet-container') as HTMLElement | null;
-                  if (!el) {
-                    window.alert('Mapa nije pronađena za export.');
-                    return;
-                  }
-
-                  const canvas = await html2canvas(el, { useCORS: true, logging: false });
-                  const imgData = canvas.toDataURL('image/png');
-                  const pdf = new jsPDF({ orientation: 'landscape' });
-                  const imgProps = pdf.getImageProperties(imgData);
-                  const pdfWidth = pdf.internal.pageSize.getWidth();
-                  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                  pdf.save('parcels-map.pdf');
-                } catch (err) {
-                  // eslint-disable-next-line no-console
-                  console.error(err);
-                  window.alert('Greška pri generisanju PDF-a.');
-                }
-              }}
+              onClick={handleExportMap}
               type="button"
             >
               Export map to PDF
@@ -145,11 +171,7 @@ export default function ParcelsPage() {
 
       <section className="section-card">
         <MapView
-          items={
-            parcelsWithCrops.length > 0
-              ? parcelsWithCrops.map(({ parcel, crops }) => ({ id: parcel.id, name: parcel.name, latitude: parcel.latitude, longitude: parcel.longitude, type: 'parcel' as const, crops: crops.map((c) => c.name) }))
-              : parcels.map((parcel) => ({ id: parcel.id, name: parcel.name, latitude: parcel.latitude, longitude: parcel.longitude, type: 'parcel' as const }))
-          }
+          items={mapItems}
           height={360}
           zoom={11}
           onSelect={(it) => {
@@ -219,7 +241,7 @@ export default function ParcelsPage() {
                 <button
                   className="danger-action-button"
                   disabled={deletingParcelId === parcel.id}
-                  onClick={() => void handleDeleteParcel(parcel)}
+                  onClick={() => handleDeleteParcel(parcel)}
                   type="button"
                 >
                   <Trash2 size={16} />
@@ -240,7 +262,7 @@ export default function ParcelsPage() {
           parcel={selectedParcel}
           onClose={handleEditModalClose}
           onSaved={handleParcelUpdated}
-          crops={parcelsWithCrops.find((p) => p.parcel.id === selectedParcel.id)?.crops ?? []}
+          crops={selectedParcelCrops}
         />
       ) : null}
     </div>

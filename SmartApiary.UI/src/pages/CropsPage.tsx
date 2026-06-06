@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2, Wheat } from 'lucide-react';
 import {
   deleteCrop,
@@ -27,37 +27,34 @@ export default function CropsPage() {
   const [editingCrop, setEditingCrop] = useState<CropDto | null>(null);
   const [deletingCropId, setDeletingCropId] = useState<string | null>(null);
 
-  const loadCropsForParcel = useCallback(async (parcelId: string) => {
+  async function loadCropsForParcel(parcelId: string) {
     const crops = await getCropsByParcel(parcelId);
     setCrops(crops);
-  }, []);
+  }
 
-  const fetchCropsForParcel = useCallback(
-    async (parcelId: string) => {
-      setLoading(true);
-      setError(null);
+  async function fetchCropsForParcel(parcelId: string) {
+    setLoading(true);
+    setError(null);
 
-      try {
-        await loadCropsForParcel(parcelId);
-        return true;
-      } catch {
-        setCrops([]);
-        setError(loadErrorMessage);
-        return false;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [loadCropsForParcel],
-  );
+    try {
+      await loadCropsForParcel(parcelId);
+      return true;
+    } catch {
+      setCrops([]);
+      setError(loadErrorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const loadInitialData = useCallback(async () => {
+  async function loadInitialData() {
     setLoading(true);
     setError(null);
 
     try {
       const parcels = await getParcels();
-      const nextParcelId = parcels[0]?.id ?? '';
+      const nextParcelId = parcels.length > 0 ? parcels[0].id : '';
 
       setParcels(parcels);
       setSelectedParcelId(nextParcelId);
@@ -75,11 +72,11 @@ export default function CropsPage() {
     } finally {
       setLoading(false);
     }
-  }, [loadCropsForParcel]);
+  }
 
   useEffect(() => {
-    void loadInitialData();
-  }, [loadInitialData]);
+    loadInitialData();
+  }, []);
 
   const handleParcelChange = async (event: ChangeEvent<HTMLSelectElement>) => {
     const nextParcelId = event.target.value;
@@ -247,7 +244,7 @@ export default function CropsPage() {
                 <button
                   className="danger-action-button"
                   disabled={deletingCropId === crop.id}
-                  onClick={() => void handleDeleteCrop(crop)}
+                  onClick={() => handleDeleteCrop(crop)}
                   type="button"
                 >
                   <Trash2 size={16} />

@@ -11,14 +11,6 @@ type AlertCardProps = {
   read?: boolean;
 };
 
-const severityLabel: Record<StatusTone, string> = {
-  critical: 'Kritično',
-  warning: 'Upozorenje',
-  good: 'Dobro',
-  muted: 'Info',
-  info: 'Info',
-};
-
 export default function AlertCard({
   title,
   description,
@@ -29,6 +21,15 @@ export default function AlertCard({
   read,
 }: AlertCardProps) {
   const Icon = severity === 'good' ? CheckCircle2 : AlertTriangle;
+  let readStatus = null;
+
+  if (read !== undefined) {
+    readStatus = (
+      <StatusBadge tone={read ? 'muted' : 'info'}>
+        {read ? 'Pročitano' : 'Nepročitano'}
+      </StatusBadge>
+    );
+  }
 
   return (
     <article className={`alert-card ${severity}`}>
@@ -41,14 +42,32 @@ export default function AlertCard({
             <strong>{title}</strong>
             {type ? <span>{type}</span> : null}
           </div>
-          <StatusBadge tone={severity}>{priority ?? severityLabel[severity]}</StatusBadge>
+          <StatusBadge tone={severity}>
+            {priority !== undefined ? priority : getSeverityLabel(severity)}
+          </StatusBadge>
         </div>
         <p>{description}</p>
         <div className="alert-meta">
           <small>{time}</small>
-          {read === undefined ? null : <StatusBadge tone={read ? 'muted' : 'info'}>{read ? 'Pročitano' : 'Nepročitano'}</StatusBadge>}
+          {readStatus}
         </div>
       </div>
     </article>
   );
+}
+
+function getSeverityLabel(severity: StatusTone) {
+  if (severity === 'critical') {
+    return 'Kritično';
+  }
+
+  if (severity === 'warning') {
+    return 'Upozorenje';
+  }
+
+  if (severity === 'good') {
+    return 'Dobro';
+  }
+
+  return 'Info';
 }

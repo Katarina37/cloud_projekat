@@ -15,11 +15,13 @@ type ApiaryFormModalProps = {
 };
 
 export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryFormModalProps) {
-  const isEditMode = Boolean(apiary);
-  const [name, setName] = useState(apiary?.name ?? '');
+  const isEditMode = apiary !== undefined;
+  const [name, setName] = useState(apiary ? apiary.name : '');
   const [latitude, setLatitude] = useState(apiary ? String(apiary.latitude) : '');
   const [longitude, setLongitude] = useState(apiary ? String(apiary.longitude) : '');
-  const [terrainDescription, setTerrainDescription] = useState(apiary?.terrainDescription ?? '');
+  const [terrainDescription, setTerrainDescription] = useState(
+    apiary && apiary.terrainDescription ? apiary.terrainDescription : '',
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,7 +74,6 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
       }
 
       await onSaved();
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(
@@ -81,6 +82,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
           isEditMode ? 'Greška pri izmeni pčelinjaka.' : 'Greška pri dodavanju pčelinjaka.',
         ),
       );
+    } finally {
       setLoading(false);
     }
   };

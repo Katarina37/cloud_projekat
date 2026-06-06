@@ -80,7 +80,7 @@ export default function SettingsModal({
           <label>
             weightDropThreshold (kg)
             <input
-              aria-invalid={Boolean(error)}
+              aria-invalid={error !== null}
               autoFocus
               min="0.1"
               onChange={(event) => {

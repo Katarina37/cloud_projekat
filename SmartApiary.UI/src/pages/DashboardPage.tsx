@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import {
   getAlerts,
   getApiaries,
@@ -40,42 +40,37 @@ export default function DashboardPage() {
     setDevices([]);
   };
 
-  const loadHiveData = useCallback(async (hiveId: string) => {
+  async function loadHiveData(hiveId: string) {
     const { from, to } = getDashboardDateRange();
-    const [latestStatus, dailyDeltas, device] = await Promise.all([
-      getLatestHiveStatus(hiveId),
-      getDailyWeightDeltas(hiveId, from, to),
-      getDeviceByHive(hiveId),
-    ]);
+    const latestStatus = await getLatestHiveStatus(hiveId);
+    const dailyDeltas = await getDailyWeightDeltas(hiveId, from, to);
+    const device = await getDeviceByHive(hiveId);
 
     setLatestStatus(latestStatus);
     setDailyDeltas(dailyDeltas);
     setDevices(device ? [device] : []);
-  }, []);
+  }
 
-  const loadHivesForApiary = useCallback(
-    async (apiaryId: string) => {
-      const hives = await getHivesByApiary(apiaryId);
-      const nextHiveId = hives[0]?.id ?? '';
+  async function loadHivesForApiary(apiaryId: string) {
+    const hives = await getHivesByApiary(apiaryId);
+    const nextHiveId = hives.length > 0 ? hives[0].id : '';
 
-      setHives(hives);
-      setSelectedHiveId(nextHiveId);
-      clearHiveData();
+    setHives(hives);
+    setSelectedHiveId(nextHiveId);
+    clearHiveData();
 
-      if (nextHiveId) {
-        await loadHiveData(nextHiveId);
-      }
-    },
-    [loadHiveData],
-  );
+    if (nextHiveId) {
+      await loadHiveData(nextHiveId);
+    }
+  }
 
-  const loadDashboard = useCallback(async () => {
+  async function loadDashboard() {
     setLoading(true);
     setError(null);
 
     try {
       const apiaries = await getApiaries();
-      const nextApiaryId = apiaries[0]?.id ?? '';
+      const nextApiaryId = apiaries.length > 0 ? apiaries[0].id : '';
 
       setApiaries(apiaries);
       setSelectedApiaryId(nextApiaryId);
@@ -101,11 +96,12 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [loadHivesForApiary]);
+  }
 
   useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
+    // Pocetno ucitavanje podataka za pregled sistema.
+    loadDashboard();
+  }, []);
 
   const handleApiaryChange = async (event: ChangeEvent<HTMLSelectElement>) => {
     const nextApiaryId = event.target.value;
@@ -158,7 +154,7 @@ export default function DashboardPage() {
   };
 
   const hasApiaryData = apiaries.length > 0;
-  const hasHiveData = Boolean(selectedApiaryId) && hives.length > 0;
+  const hasHiveData = selectedApiaryId !== '' && hives.length > 0;
   const hasDashboardData = hasApiaryData || hasHiveData || latestStatus !== null || dailyDeltas.length > 0 || alerts.length > 0;
 
   return (

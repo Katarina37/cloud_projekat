@@ -1,19 +1,25 @@
 import type { ReactNode } from 'react';
 
-export type DataTableColumn<T> = {
+// RowData predstavlja tip jednog reda koji tabela prikazuje.
+export type DataTableColumn<RowData> = {
   header: string;
-  render: (row: T) => ReactNode;
+  render: (row: RowData) => ReactNode;
   className?: string;
 };
 
-type DataTableProps<T> = {
-  columns: DataTableColumn<T>[];
-  rows: T[];
-  getRowKey: (row: T) => string;
+type DataTableProps<RowData> = {
+  columns: DataTableColumn<RowData>[];
+  rows: RowData[];
+  getRowKey: (row: RowData) => string;
   minWidth?: number;
 };
 
-export default function DataTable<T>({ columns, rows, getRowKey, minWidth = 760 }: DataTableProps<T>) {
+export default function DataTable<RowData>({
+  columns,
+  rows,
+  getRowKey,
+  minWidth = 760,
+}: DataTableProps<RowData>) {
   return (
     <div className="table-scroll">
       <table className="data-table" style={{ minWidth }}>

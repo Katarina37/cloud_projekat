@@ -5,8 +5,13 @@ type State = {
   error?: Error | null;
 };
 
-export default class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, State> {
-  constructor(props: React.PropsWithChildren<{}>) {
+type Props = {
+  children: React.ReactNode;
+};
+
+// React za hvatanje gresaka u prikazu i dalje zahteva klasnu komponentu.
+export default class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -16,8 +21,7 @@ export default class ErrorBoundary extends React.Component<React.PropsWithChildr
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    // Log to console for developer to inspect
-    // eslint-disable-next-line no-console
+    // Detalji greske ostaju u konzoli da bi se lakse pronasao problem.
     console.error('Unhandled error in UI:', error, info);
   }
 
@@ -32,6 +36,6 @@ export default class ErrorBoundary extends React.Component<React.PropsWithChildr
       );
     }
 
-    return this.props.children as React.ReactElement;
+    return this.props.children;
   }
 }

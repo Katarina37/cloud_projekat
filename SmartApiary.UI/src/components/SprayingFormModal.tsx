@@ -76,10 +76,10 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
       const result = await createSpraying(payload);
       resetForm();
       await onSaved(result.weatherWarning);
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(getApiErrorMessage(error, 'Greška pri zakazivanju tretiranja.'));
+    } finally {
       setLoading(false);
     }
   };

@@ -1,13 +1,9 @@
-import React, { useEffect } from 'react';
+import { Fragment, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import sunflowerIcon from '../assets/crops/sunflower.svg';
-import rapeseedIcon from '../assets/crops/rapeseed.svg';
-import lavenderIcon from '../assets/crops/lavender.svg';
-import defaultCropIcon from '../assets/crops/default.svg';
 
-type MapItem = {
+export type MapItem = {
   id: string;
   name: string;
   latitude: number;
@@ -52,22 +48,22 @@ function makeParcelIcon() {
   `);
 }
 
-function makeImageIcon(url: string) {
-  return L.icon({
-    iconUrl: url,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  });
-}
-
 function FitBoundsToItems({ items }: { items: MapItem[] }) {
   const map = useMap();
 
   useEffect(() => {
-    if (!map || items.length === 0) return;
+    if (items.length === 0) {
+      return;
+    }
 
-    const bounds = L.latLngBounds(items.map((i) => [i.latitude, i.longitude] as [number, number]));
+    const points: [number, number][] = [];
+
+    for (const item of items) {
+      points.push([item.latitude, item.longitude]);
+    }
+
+    // Mapa se prilagodjava tako da svi markeri budu vidljivi.
+    const bounds = L.latLngBounds(points);
     map.fitBounds(bounds, { padding: [40, 40] });
   }, [map, items]);
 
@@ -76,7 +72,8 @@ function FitBoundsToItems({ items }: { items: MapItem[] }) {
 
 export default function MapView({ items, height = 380, zoom = 10, onSelect }: Props) {
   const center: [number, number] = items.length > 0 ? [items[0].latitude, items[0].longitude] : [45.2671, 19.8335];
-  const mapKey = items.map((item) => `${item.type ?? 'item'}:${item.id}:${item.latitude}:${item.longitude}`).join('|');
+  // Promena kljuca ponovo iscrta mapu kada se promene markeri.
+  const mapKey = items.map((item) => `${item.type || 'item'}:${item.id}:${item.latitude}:${item.longitude}`).join('|');
 
   return (
     <div style={{ height }}>
@@ -85,20 +82,25 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
         <FitBoundsToItems items={items} />
         <MarkerClusterGroup>
           {items.map((it) => {
-          let icon;
-          if (it.type === 'apiary') {
-            icon = makeIcon(`<div style="font-size:20px">🐝</div>`);
-          } else {
-            icon = makeParcelIcon();
-          }
+            let icon;
+
+            if (it.type === 'apiary') {
+              icon = makeIcon(`<div style="font-size:20px">🐝</div>`);
+            } else {
+              icon = makeParcelIcon();
+            }
 
             return (
-              <React.Fragment key={`${it.type ?? 'item'}-${it.id}`}>
+              <Fragment key={`${it.type || 'item'}-${it.id}`}>
                 <Marker
                   position={[it.latitude, it.longitude]}
                   icon={icon}
                   eventHandlers={{
-                    click: () => onSelect?.(it),
+                    click: () => {
+                      if (onSelect) {
+                        onSelect(it);
+                      }
+                    },
                   }}
                 >
                   <Popup>
@@ -109,23 +111,11 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
                   </Popup>
                 </Marker>
                 {it.radiusMeters ? <Circle center={[it.latitude, it.longitude]} radius={it.radiusMeters} pathOptions={{ color: '#3388ff', fillOpacity: 0.1 }} /> : null}
-              </React.Fragment>
+              </Fragment>
             );
           })}
         </MarkerClusterGroup>
       </MapContainer>
     </div>
   );
-}
-
-function cropEmoji(name?: string) {
-  if (!name) return '🌾';
-  const n = name.toLowerCase();
-
-  if (n.includes('sun') || n.includes('suncokret') || n.includes('sunflower')) return '🌻';
-  if (n.includes('rap') || n.includes('repica') || n.includes('rapeseed')) return '🌼';
-  if (n.includes('lav') || n.includes('lavanda') || n.includes('lavender')) return '🌸';
-  if (n.includes('wheat') || n.includes('pšen') || n.includes('psen')) return '🌾';
-
-  return '🌱';
 }

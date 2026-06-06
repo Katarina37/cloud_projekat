@@ -4,9 +4,7 @@ import {
   createCrop,
   getApiErrorMessage,
   updateCrop,
-  type CreateCropRequest,
   type CropDto,
-  type UpdateCropRequest,
 } from '../api/apiClient';
 
 type CropFormModalProps = {
@@ -16,23 +14,27 @@ type CropFormModalProps = {
   onSaved: () => Promise<void>;
 };
 
-type ValidatedCropForm =
-  | { operation: 'create'; payload: CreateCropRequest }
-  | { operation: 'edit'; payload: UpdateCropRequest };
-
 export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved }: CropFormModalProps) {
-  const isEditMode = Boolean(crop);
-  const [name, setName] = useState(crop?.name ?? '');
+  const isEditMode = crop !== undefined;
+  const [name, setName] = useState(crop ? crop.name : '');
   const [expectedBloomingStart, setExpectedBloomingStart] = useState(
-    toInputDate(crop?.expectedBloomingStart),
+    toInputDate(crop ? crop.expectedBloomingStart : undefined),
   );
-  const [expectedBloomingEnd, setExpectedBloomingEnd] = useState(toInputDate(crop?.expectedBloomingEnd));
-  const [area, setArea] = useState(crop?.area !== null && crop?.area !== undefined ? String(crop.area) : '');
-  const [notes, setNotes] = useState(crop?.notes ?? '');
+  const [expectedBloomingEnd, setExpectedBloomingEnd] = useState(
+    toInputDate(crop ? crop.expectedBloomingEnd : undefined),
+  );
+  const [area, setArea] = useState(
+    crop && crop.area !== null && crop.area !== undefined
+      ? String(crop.area)
+      : '',
+  );
+  const [notes, setNotes] = useState(crop && crop.notes ? crop.notes : '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validateForm = (): ValidatedCropForm | null => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
     const trimmedName = name.trim();
     const trimmedArea = area.trim();
     const trimmedNotes = notes.trim();
@@ -40,32 +42,32 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
 
     if (!selectedParcelId) {
       setError('Izaberite parcelu.');
-      return null;
+      return;
     }
 
     if (!trimmedName) {
       setError('Name ne sme biti prazan.');
-      return null;
+      return;
     }
 
     if (!expectedBloomingStart) {
       setError('ExpectedBloomingStart je obavezan.');
-      return null;
+      return;
     }
 
     if (!expectedBloomingEnd) {
       setError('ExpectedBloomingEnd je obavezan.');
-      return null;
+      return;
     }
 
     if (expectedBloomingEnd < expectedBloomingStart) {
       setError('ExpectedBloomingEnd ne sme biti pre ExpectedBloomingStart.');
-      return null;
+      return;
     }
 
     if (parsedArea !== null && (!Number.isFinite(parsedArea) || parsedArea < 0)) {
       setError('Area ne sme biti negativna.');
-      return null;
+      return;
     }
 
     const payload = {
@@ -77,61 +79,32 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
     };
 
     setError(null);
-
-    if (isEditMode) {
-      return { operation: 'edit', payload };
-    }
-
-    return {
-      operation: 'create',
-      payload: {
-        parcelId: selectedParcelId,
-        ...payload,
-      },
-    };
-  };
-
-  const resetForm = () => {
-    setName('');
-    setExpectedBloomingStart('');
-    setExpectedBloomingEnd('');
-    setArea('');
-    setNotes('');
-  };
-
-  const handleClose = () => {
-    if (!loading) {
-      onClose();
-    }
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const result = validateForm();
-
-    if (!result) {
-      return;
-    }
-
     setLoading(true);
 
     try {
-      if (result.operation === 'edit' && crop) {
-        await updateCrop(crop.id, result.payload);
-      } else if (result.operation === 'create') {
-        await createCrop(result.payload);
-        resetForm();
+      if (crop) {
+        await updateCrop(crop.id, payload);
+      } else {
+        await createCrop({
+          parcelId: selectedParcelId,
+          ...payload,
+        });
       }
 
       await onSaved();
-      setLoading(false);
       onClose();
     } catch (error) {
       setError(
         getApiErrorMessage(error, isEditMode ? 'Greška pri izmeni kulture.' : 'Greška pri dodavanju kulture.'),
       );
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!loading) {
+      onClose();
     }
   };
 

@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import { AlertTriangle, Bell, CalendarClock, CheckCircle2, Plus, RotateCw, UsersRound, XCircle } from 'lucide-react';
 import {
   cancelSpraying,
@@ -34,33 +34,30 @@ export default function SprayingPage() {
   const [reschedulingAnnouncement, setReschedulingAnnouncement] = useState<SprayingAnnouncementDto | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [notificationLoadingId, setNotificationLoadingId] = useState<string | null>(null);
-  const [notificationCounts, setNotificationCounts] = useState<Record<string, number>>({});
+  const [notificationCounts, setNotificationCounts] = useState<{ [id: string]: number }>({});
 
-  const loadSprayingForParcel = useCallback(async (parcelId: string) => {
+  async function loadSprayingForParcel(parcelId: string) {
     const announcements = await getSprayingByParcel(parcelId);
     setAnnouncements(announcements);
-  }, []);
+  }
 
-  const fetchSprayingForParcel = useCallback(
-    async (parcelId: string) => {
-      setLoading(true);
-      setError(null);
+  async function fetchSprayingForParcel(parcelId: string) {
+    setLoading(true);
+    setError(null);
 
-      try {
-        await loadSprayingForParcel(parcelId);
-        return true;
-      } catch {
-        setAnnouncements([]);
-        setError(loadErrorMessage);
-        return false;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [loadSprayingForParcel],
-  );
+    try {
+      await loadSprayingForParcel(parcelId);
+      return true;
+    } catch {
+      setAnnouncements([]);
+      setError(loadErrorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  const loadInitialData = useCallback(async () => {
+  async function loadInitialData() {
     setLoading(true);
     setError(null);
     setActionError(null);
@@ -69,7 +66,7 @@ export default function SprayingPage() {
 
     try {
       const parcels = await getParcels();
-      const nextParcelId = parcels[0]?.id ?? '';
+      const nextParcelId = parcels.length > 0 ? parcels[0].id : '';
 
       setParcels(parcels);
       setSelectedParcelId(nextParcelId);
@@ -89,20 +86,21 @@ export default function SprayingPage() {
     } finally {
       setLoading(false);
     }
-  }, [loadSprayingForParcel]);
+  }
 
   useEffect(() => {
-    void loadInitialData();
-  }, [loadInitialData]);
+    // Ucitavanje parcela i tretiranja za prvu izabranu parcelu.
+    loadInitialData();
+  }, []);
 
-  const refreshSelectedSpraying = useCallback(async () => {
+  async function refreshSelectedSpraying() {
     if (!selectedParcelId) {
       return false;
     }
 
     setNotificationCounts({});
     return fetchSprayingForParcel(selectedParcelId);
-  }, [fetchSprayingForParcel, selectedParcelId]);
+  }
 
   const handleParcelChange = async (event: ChangeEvent<HTMLSelectElement>) => {
     const nextParcelId = event.target.value;
@@ -247,8 +245,8 @@ export default function SprayingPage() {
       render: (item) => {
         const notificationCount = notificationCounts[item.id];
         const notificationLoaded = notificationCount !== undefined;
-        const actionsDisabled = Boolean(actionLoadingId);
-        const notificationDisabled = Boolean(notificationLoadingId);
+        const actionsDisabled = actionLoadingId !== null;
+        const notificationDisabled = notificationLoadingId !== null;
 
         return (
           <div className="row-actions">
@@ -272,7 +270,7 @@ export default function SprayingPage() {
                 <button
                   className="danger-action-button"
                   disabled={actionsDisabled}
-                  onClick={() => void handleCancelSpraying(item)}
+                  onClick={() => handleCancelSpraying(item)}
                   type="button"
                 >
                   <XCircle size={16} />
@@ -285,7 +283,7 @@ export default function SprayingPage() {
               <button
                 className="secondary-action-button"
                 disabled={actionsDisabled}
-                onClick={() => void handleCompleteSpraying(item)}
+                onClick={() => handleCompleteSpraying(item)}
                 type="button"
               >
                 <CheckCircle2 size={16} />
@@ -296,7 +294,7 @@ export default function SprayingPage() {
             <button
               className="secondary-action-button"
               disabled={notificationDisabled}
-              onClick={() => void handleNotificationStatus(item)}
+              onClick={() => handleNotificationStatus(item)}
               type="button"
             >
               <Bell size={16} />
