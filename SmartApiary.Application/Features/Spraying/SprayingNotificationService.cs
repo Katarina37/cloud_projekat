@@ -49,10 +49,18 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
             var notification = new Notification(beekeeperId, notificationType, title, message);
 
             await _notificationRepository.AddAsync(notification, cancellationToken);
-            await _notificationSender.SendToUserAsync(beekeeperId, title, message, cancellationToken);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        foreach (var beekeeperId in beekeeperIds)
+        {
+            await _notificationSender.SendToUserAsync(
+                beekeeperId,
+                title,
+                message,
+                cancellationToken);
+        }
 
         return beekeeperIds.Count;
     }

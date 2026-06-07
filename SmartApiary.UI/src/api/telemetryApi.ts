@@ -26,6 +26,17 @@ export type DailyWeightDeltaDto = {
   deltaKg: number;
 };
 
+export type TelemetryUpdateDto = {
+  apiaryId: string;
+  hiveId: string;
+  deviceId: string;
+  timestamp: string;
+  weight: number;
+  temperature: number;
+  humidity: number;
+  batteryLevel: number;
+};
+
 export async function getTelemetryForHive(
   hiveId: string,
   from: string,

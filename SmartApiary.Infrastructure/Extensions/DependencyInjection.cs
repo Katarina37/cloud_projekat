@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddSingleton<IEmailService, EmailService>();
         services.AddSingleton<IFileStorageService, BlobStorageService>();
         services.AddSingleton<ITelemetryTableService, TelemetryTableService>();
+        services.AddSingleton<ITelemetryQueueService, TelemetryQueueService>();
         services.AddSingleton<ISprayingQueueService, SprayingQueueService>();
         services.AddScoped<INotificationSender, RealNotificationSender>();
         services.AddScoped<ISprayingNotificationService, SprayingNotificationService>();

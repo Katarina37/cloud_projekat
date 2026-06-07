@@ -1,3 +1,4 @@
+import { HubConnectionBuilder, HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import { useEffect, useState } from 'react';
 import {
   getApiaries,
@@ -11,6 +12,7 @@ import {
   type HiveDto,
   type LatestHiveStatusDto,
   type TelemetryReadingDto,
+  type TelemetryUpdateDto,
 } from '../api/apiClient';
 import PageHeader from '../components/PageHeader';
 import TelemetryCharts from '../components/TelemetryCharts';
@@ -18,6 +20,8 @@ import TelemetryFilters from '../components/TelemetryFilters';
 import TelemetryStatusCards from '../components/TelemetryStatusCards';
 
 const telemetryLoadErrorMessage = 'Greška pri učitavanju telemetrije.';
+const telemetryHubUrl = 'https://localhost:7035/hubs/telemetry';
+const telemetryUpdateEvent = 'ReceiveTelemetryUpdate';
 const telemetryToDate = formatApiDateTime(new Date());
 const telemetryFromDate = formatApiDateTime(addDays(new Date(), -7));
 
@@ -31,6 +35,8 @@ export default function TelemetryPage() {
   const [dailyDeltas, setDailyDeltas] = useState<DailyWeightDeltaDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [signalRConnection, setSignalRConnection] = useState<HubConnection | null>(null);
+  const [signalRConnected, setSignalRConnected] = useState(false);
   const hasTelemetryForSelectedPeriod = telemetryReadings.length > 0;
   const hasAnyTelemetry = hasTelemetryForSelectedPeriod || latestStatus !== null || dailyDeltas.length > 0;
 
@@ -105,6 +111,121 @@ export default function TelemetryPage() {
     // Ucitavanje telemetrije pri prvom otvaranju stranice.
     loadInitialData();
   }, []);
+
+  useEffect(() => {
+    const connection = new HubConnectionBuilder()
+      .withUrl(telemetryHubUrl)
+      .withAutomaticReconnect()
+      .build();
+    let isActive = true;
+
+    connection.onreconnecting(() => {
+      if (isActive) {
+        setSignalRConnected(false);
+      }
+    });
+
+    connection.onreconnected(() => {
+      if (isActive) {
+        setSignalRConnected(true);
+      }
+    });
+
+    connection.onclose(() => {
+      if (isActive) {
+        setSignalRConnected(false);
+      }
+    });
+
+    async function startConnection() {
+      try {
+        await connection.start();
+
+        if (isActive) {
+          setSignalRConnection(connection);
+          setSignalRConnected(true);
+        }
+      } catch (connectionError) {
+        console.error('SignalR connection failed.', connectionError);
+      }
+    }
+
+    startConnection();
+
+    return () => {
+      isActive = false;
+      connection.stop();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!signalRConnection || !signalRConnected || !selectedApiaryId) {
+      return;
+    }
+
+    signalRConnection
+      .invoke('JoinApiaryGroup', selectedApiaryId)
+      .catch((connectionError) => {
+        console.error('Failed to join apiary SignalR group.', connectionError);
+      });
+
+    return () => {
+      if (signalRConnection.state === HubConnectionState.Connected) {
+        signalRConnection
+          .invoke('LeaveApiaryGroup', selectedApiaryId)
+          .catch((connectionError) => {
+            console.error('Failed to leave apiary SignalR group.', connectionError);
+          });
+      }
+    };
+  }, [signalRConnection, signalRConnected, selectedApiaryId]);
+
+  useEffect(() => {
+    if (!signalRConnection) {
+      return;
+    }
+
+    const receiveTelemetryUpdate = (update: TelemetryUpdateDto) => {
+      if (update.apiaryId !== selectedApiaryId || update.hiveId !== selectedHiveId) {
+        return;
+      }
+
+      setLatestStatus({
+        hiveId: update.hiveId,
+        timestamp: update.timestamp,
+        weightKg: update.weight,
+        temperatureCelsius: update.temperature,
+        humidityPercent: update.humidity,
+        batteryPercent: update.batteryLevel,
+      });
+
+      setTelemetryReadings((currentReadings) => {
+        const nextReading: TelemetryReadingDto = {
+          id: `${update.deviceId}-${update.timestamp}`,
+          hiveId: update.hiveId,
+          deviceId: update.deviceId,
+          timestamp: update.timestamp,
+          weightKg: update.weight,
+          temperatureCelsius: update.temperature,
+          humidityPercent: update.humidity,
+          batteryPercent: update.batteryLevel,
+        };
+
+        return currentReadings
+          .filter((reading) => reading.id !== nextReading.id)
+          .concat(nextReading)
+          .sort((left, right) => (
+            new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime()
+          ));
+      });
+    };
+
+    signalRConnection.on(telemetryUpdateEvent, receiveTelemetryUpdate);
+
+    return () => {
+      signalRConnection.off(telemetryUpdateEvent, receiveTelemetryUpdate);
+    };
+  }, [signalRConnection, selectedApiaryId, selectedHiveId]);
 
   const handleApiaryChange = async (apiaryId: string) => {
     setSelectedApiaryId(apiaryId);

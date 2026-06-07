@@ -13,6 +13,8 @@ using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Exceptions;
 using SmartApiary.Infrastructure.Extensions;
 using SmartApiary.Infrastructure.Services;
+using SmartApiary.WebApi.BackgroundServices;
+using SmartApiary.WebApi.Hubs;
 using SmartApiary.WebApi.Routing;
 using SmartApiary.WebApi.Services;
 using System.IdentityModel.Tokens.Jwt;
@@ -63,9 +65,11 @@ builder.Services.AddCors(options =>
                 "http://localhost:5174",
                 "http://127.0.0.1:5174")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
+builder.Services.AddSignalR();
 
 builder.Services.AddMediatR(configuration =>
 {
@@ -80,6 +84,7 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RoleAuthoriza
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHostedService<TelemetryWorker>();
 
 var jwtOptions = builder.Configuration
     .GetSection(JwtOptions.SectionName)
@@ -182,6 +187,7 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHub<TelemetryHub>("/hubs/telemetry");
 app.MapControllers();
 
 app.Run();

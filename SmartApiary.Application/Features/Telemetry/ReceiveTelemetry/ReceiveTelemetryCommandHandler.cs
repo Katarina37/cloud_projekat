@@ -1,5 +1,6 @@
 using MediatR;
 using SmartApiary.Application.Common.Results;
+using SmartApiary.Application.Features.Telemetry;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Enums;
@@ -19,6 +20,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationSender _notificationSender;
     private readonly ITelemetryRepository _telemetryRepository;
+    private readonly ITelemetryQueueService _telemetryQueueService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserAlertSettingsRepository _userAlertSettingsRepository;
     private readonly ITelemetryTableService _telemetryTableService;
@@ -34,6 +36,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         INotificationSender notificationSender,
         IUnitOfWork unitOfWork,
         ITelemetryTableService telemetryTableService,
+        ITelemetryQueueService telemetryQueueService,
         ILogger<ReceiveTelemetryCommandHandler> logger)
     {
         _deviceRepository = deviceRepository;
@@ -45,6 +48,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         _notificationSender = notificationSender;
         _unitOfWork = unitOfWork;
         _telemetryTableService = telemetryTableService;
+        _telemetryQueueService = telemetryQueueService;
         _logger = logger;
     }
 
@@ -112,6 +116,25 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to insert telemetry reading {ReadingId} into Table Storage.", reading.Id);
+        }
+
+        try
+        {
+            await _telemetryQueueService.EnqueueAsync(
+                new TelemetryQueueMessage(
+                    apiary.Id,
+                    reading.HiveId,
+                    reading.DeviceId,
+                    reading.Timestamp,
+                    reading.WeightKg,
+                    reading.TemperatureCelsius,
+                    reading.HumidityPercent,
+                    reading.BatteryPercent),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to enqueue telemetry reading {ReadingId}.", reading.Id);
         }
 
         return Result.Success();

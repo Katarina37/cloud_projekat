@@ -32,13 +32,4 @@ public sealed class NoopNotificationSender : INotificationSender
             message,
             cancellationToken);
     }
-
-    public Task SendToApiaryGroupAsync(
-        Guid apiaryId,
-        string eventName,
-        object payload,
-        CancellationToken cancellationToken = default)
-    {
-        return Task.CompletedTask;
-    }
 }
