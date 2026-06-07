@@ -26,7 +26,7 @@ public sealed class TelemetryGenerator
             : NextDouble(80, 96);
     }
 
-    public TelemetryPayload Generate(string deviceAccessToken, DateTime timestamp)
+    public TelemetryPayload Generate(DateTime timestamp)
     {
         _readingNumber++;
 
@@ -36,7 +36,6 @@ public sealed class TelemetryGenerator
         MoveBattery();
 
         return new TelemetryPayload(
-            deviceAccessToken,
             Round(_weightKg, 1),
             Round(_humidityPercent, 0),
             Round(_temperatureCelsius, 1),

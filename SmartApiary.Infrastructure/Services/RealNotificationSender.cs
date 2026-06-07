@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
-using SmartApiary.Domain.Enums;
-using SmartApiary.Domain.Models;
 
 namespace SmartApiary.Infrastructure.Services;
 
@@ -16,20 +14,17 @@ public sealed class RealNotificationSender : INotificationSender
 
     private readonly IUserRepository _userRepository;
     private readonly IApiaryRepository _apiaryRepository;
-    private readonly INotificationRepository _notificationRepository;
     private readonly IEmailService _emailService;
     private readonly ILogger<RealNotificationSender> _logger;
 
     public RealNotificationSender(
         IUserRepository userRepository,
         IApiaryRepository apiaryRepository,
-        INotificationRepository notificationRepository,
         IEmailService emailService,
         ILogger<RealNotificationSender> logger)
     {
         _userRepository = userRepository;
         _apiaryRepository = apiaryRepository;
-        _notificationRepository = notificationRepository;
         _emailService = emailService;
         _logger = logger;
     }
@@ -45,9 +40,6 @@ public sealed class RealNotificationSender : INotificationSender
 
         try
         {
-            var notification = new Notification(userId, MapEventToType(title), title, message);
-            await _notificationRepository.AddAsync(notification, cancellationToken);
-
             await _emailService.SendNotificationEmailAsync(user.Email, title, message, cancellationToken);
         }
         catch (Exception ex)
@@ -82,9 +74,6 @@ public sealed class RealNotificationSender : INotificationSender
                     continue;
                 }
 
-                var notification = new Notification(user.Id, MapEventToType(eventName), title, message);
-                await _notificationRepository.AddAsync(notification, cancellationToken);
-
                 await _emailService.SendNotificationEmailAsync(user.Email, title, message, cancellationToken);
             }
             catch (Exception ex)
@@ -92,37 +81,6 @@ public sealed class RealNotificationSender : INotificationSender
                 _logger.LogError(ex, "Failed to send group notification to beekeeper {BeekeeperId}", beekeeperId);
             }
         }
-    }
-
-    private static NotificationType MapEventToType(string eventName)
-    {
-        if (string.IsNullOrWhiteSpace(eventName))
-        {
-            return NotificationType.PesticideWarning;
-        }
-
-        var lowered = eventName.ToLowerInvariant();
-        if (lowered.Contains("spray") || lowered.Contains("spraying"))
-        {
-            return NotificationType.SprayingChanged;
-        }
-
-        if (lowered.Contains("pesticide"))
-        {
-            return NotificationType.PesticideWarning;
-        }
-
-        if (lowered.Contains("battery"))
-        {
-            return NotificationType.BatteryLow;
-        }
-
-        if (lowered.Contains("weight") || lowered.Contains("drop"))
-        {
-            return NotificationType.WeightDrop;
-        }
-
-        return NotificationType.PesticideWarning;
     }
 
     private static string BuildTitleFromEvent(Domain.Models.Apiary apiary, string eventName)

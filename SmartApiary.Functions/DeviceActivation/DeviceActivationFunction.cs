@@ -19,7 +19,7 @@ public sealed class DeviceActivationFunction
 
     [Function("DeviceActivation")]
     public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "devices/activate")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "devices/activate")] HttpRequestData req,
         CancellationToken cancellationToken)
     {
         var request = await JsonSerializer.DeserializeAsync<DeviceActivationRequest>(

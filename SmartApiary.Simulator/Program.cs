@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Net.Http.Json;
 using SmartApiary.Simulator.Configuration;
 using SmartApiary.Simulator.Models;
 using SmartApiary.Simulator.Services;
@@ -8,13 +7,13 @@ var options = SimulatorOptionsLoader.Load();
 
 if (!options.TryGetTelemetryEndpoint(out var telemetryEndpoint))
 {
-    Console.WriteLine($"ApiBaseUrl nije validan: {options.ApiBaseUrl}");
+    Console.WriteLine($"FunctionsBaseUrl nije validan za telemetriju: {options.FunctionsBaseUrl}");
     return;
 }
 
 if (!options.TryGetActivationEndpoint(out var activationEndpoint))
 {
-    Console.WriteLine($"ApiBaseUrl nije validan za aktivaciju: {options.ApiBaseUrl}");
+    Console.WriteLine($"FunctionsBaseUrl nije validan za aktivaciju: {options.FunctionsBaseUrl}");
     return;
 }
 
@@ -22,6 +21,7 @@ var mode = SelectMode(args);
 
 using var httpClient = new HttpClient();
 using var cancellationTokenSource = new CancellationTokenSource();
+var activationClient = new DeviceActivationClient(httpClient, activationEndpoint);
 var deviceAccessToken = options.DeviceAccessToken;
 
 if (string.IsNullOrWhiteSpace(deviceAccessToken))
@@ -33,33 +33,17 @@ if (string.IsNullOrWhiteSpace(deviceAccessToken))
         return;
     }
 
-    var activationPayload = new
-    {
-        serialNumber = options.DeviceSerialNumber,
-        deviceIdentifier = options.DeviceIdentifier
-    };
-
     try
     {
-        var response = await httpClient.PostAsJsonAsync(activationEndpoint, activationPayload, cancellationTokenSource.Token);
-        if (!response.IsSuccessStatusCode)
-        {
-            Console.WriteLine($"Neuspesna aktivacija: {(int)response.StatusCode} {response.ReasonPhrase}");
-            var responseBody = await response.Content.ReadAsStringAsync(cancellationTokenSource.Token);
-            if (!string.IsNullOrWhiteSpace(responseBody))
-            {
-                Console.WriteLine(responseBody);
-            }
-
-            return;
-        }
-
-        var activationResponse = await response.Content.ReadFromJsonAsync<DeviceActivationResponse>(cancellationTokenSource.Token);
+        var activationResponse = await activationClient.ActivateAsync(
+            options.DeviceSerialNumber,
+            options.DeviceIdentifier,
+            cancellationTokenSource.Token);
         deviceAccessToken = activationResponse?.DeviceAccessToken ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(deviceAccessToken))
         {
-            Console.WriteLine("Aktivacija nije vratila DeviceAccessToken.");
+            Console.WriteLine("Aktivacija nije uspela ili nije vratila DeviceAccessToken.");
             return;
         }
 
@@ -99,13 +83,16 @@ Console.WriteLine();
 
 while (!cancellationTokenSource.Token.IsCancellationRequested)
 {
-    var payload = generator.Generate(deviceAccessToken, DateTime.UtcNow);
+    var payload = generator.Generate(DateTime.UtcNow);
 
     Console.WriteLine($"Saljem: {FormatPayload(payload)}");
 
     try
     {
-        var result = await sender.SendAsync(payload, cancellationTokenSource.Token);
+        var result = await sender.SendAsync(
+            payload,
+            deviceAccessToken,
+            cancellationTokenSource.Token);
         Console.WriteLine($"API odgovor: {(int)result.StatusCode} {result.ReasonPhrase}");
 
         if (!string.IsNullOrWhiteSpace(result.Body))
@@ -201,5 +188,3 @@ static string FormatPayload(TelemetryPayload payload)
         $"temperatureCelsius={payload.TemperatureCelsius.ToString("F1", CultureInfo.InvariantCulture)}",
         $"batteryPercent={payload.BatteryPercent.ToString("F0", CultureInfo.InvariantCulture)}");
 }
-
-internal sealed record DeviceActivationResponse(string DeviceAccessToken, string? Warning);

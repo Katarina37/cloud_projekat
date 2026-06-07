@@ -266,6 +266,9 @@ paket-files/
 __pycache__/
 *.pyc
 
+# Project materials / reference files
+/materijal/
+
 # Azurite
 azurite-data/
 *.log

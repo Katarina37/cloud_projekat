@@ -53,7 +53,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         var device = await _deviceRepository.GetByAccessTokenAsync(request.DeviceAccessToken, cancellationToken);
         if (device is null)
         {
-            return Result.Failure("Device was not found.");
+            return Result.Failure("Device access token is invalid.");
         }
 
         if (device.Status != DeviceStatus.Paired)

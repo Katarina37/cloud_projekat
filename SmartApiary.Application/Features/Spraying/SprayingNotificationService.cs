@@ -13,15 +13,18 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
     private readonly IApiaryRepository _apiaryRepository;
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationSender _notificationSender;
+    private readonly IUnitOfWork _unitOfWork;
 
     public SprayingNotificationService(
         IApiaryRepository apiaryRepository,
         INotificationRepository notificationRepository,
-        INotificationSender notificationSender)
+        INotificationSender notificationSender,
+        IUnitOfWork unitOfWork)
     {
         _apiaryRepository = apiaryRepository;
         _notificationRepository = notificationRepository;
         _notificationSender = notificationSender;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<int> NotifyNearbyBeekeepersAsync(
@@ -48,6 +51,8 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
             await _notificationRepository.AddAsync(notification, cancellationToken);
             await _notificationSender.SendToUserAsync(beekeeperId, title, message, cancellationToken);
         }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return beekeeperIds.Count;
     }

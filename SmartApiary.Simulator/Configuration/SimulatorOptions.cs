@@ -4,7 +4,7 @@ namespace SmartApiary.Simulator.Configuration;
 
 public sealed record SimulatorOptions
 {
-    public string ApiBaseUrl { get; init; } = "https://localhost:7035/api";
+    public string FunctionsBaseUrl { get; init; } = "http://localhost:7271/api";
 
     public string DeviceAccessToken { get; init; } = string.Empty;
 
@@ -28,12 +28,12 @@ public sealed record SimulatorOptions
     {
         endpoint = null;
 
-        if (string.IsNullOrWhiteSpace(ApiBaseUrl))
+        if (string.IsNullOrWhiteSpace(FunctionsBaseUrl))
         {
             return false;
         }
 
-        var telemetryEndpoint = $"{ApiBaseUrl.TrimEnd('/')}/telemetry";
+        var telemetryEndpoint = $"{FunctionsBaseUrl.TrimEnd('/')}/telemetry";
         return Uri.TryCreate(telemetryEndpoint, UriKind.Absolute, out endpoint);
     }
 
@@ -41,12 +41,12 @@ public sealed record SimulatorOptions
     {
         endpoint = null;
 
-        if (string.IsNullOrWhiteSpace(ApiBaseUrl))
+        if (string.IsNullOrWhiteSpace(FunctionsBaseUrl))
         {
             return false;
         }
 
-        var activationEndpoint = $"{ApiBaseUrl.TrimEnd('/')}/devices/activate";
+        var activationEndpoint = $"{FunctionsBaseUrl.TrimEnd('/')}/devices/activate";
         return Uri.TryCreate(activationEndpoint, UriKind.Absolute, out endpoint);
     }
 }

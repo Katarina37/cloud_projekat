@@ -45,7 +45,7 @@ public static class SimulatorOptionsLoader
 
     private static SimulatorOptions ApplyEnvironmentOverrides(SimulatorOptions options)
     {
-        var apiBaseUrl = Environment.GetEnvironmentVariable("SMARTAPIARY_API_BASE_URL");
+        var functionsBaseUrl = Environment.GetEnvironmentVariable("SMARTAPIARY_FUNCTIONS_BASE_URL");
         var deviceAccessToken = Environment.GetEnvironmentVariable("SMARTAPIARY_DEVICE_ACCESS_TOKEN");
         var deviceSerialNumber = Environment.GetEnvironmentVariable("SMARTAPIARY_DEVICE_SERIAL_NUMBER");
         var deviceIdentifier = Environment.GetEnvironmentVariable("SMARTAPIARY_DEVICE_IDENTIFIER");
@@ -53,7 +53,7 @@ public static class SimulatorOptionsLoader
 
         return options with
         {
-            ApiBaseUrl = GetStringOverride(apiBaseUrl, options.ApiBaseUrl),
+            FunctionsBaseUrl = GetStringOverride(functionsBaseUrl, options.FunctionsBaseUrl),
             DeviceAccessToken = GetStringOverride(deviceAccessToken, options.DeviceAccessToken),
             DeviceSerialNumber = GetStringOverride(deviceSerialNumber, options.DeviceSerialNumber),
             DeviceIdentifier = GetStringOverride(deviceIdentifier, options.DeviceIdentifier),

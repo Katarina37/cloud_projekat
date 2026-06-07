@@ -19,13 +19,38 @@ public sealed class TelemetryIngestionFunction
 
     [Function("TelemetryIngestion")]
     public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "telemetry")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "telemetry")] HttpRequestData req,
         CancellationToken cancellationToken)
     {
-        var request = await JsonSerializer.DeserializeAsync<TelemetryIngestionRequest>(
-            req.Body,
-            JsonOptions,
-            cancellationToken);
+        if (!req.Headers.TryGetValues("X-Device-Token", out var tokenValues))
+        {
+            var unauthorized = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorized.WriteAsJsonAsync(new { message = "X-Device-Token header is required." }, cancellationToken);
+            return unauthorized;
+        }
+
+        var deviceAccessToken = tokenValues.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(deviceAccessToken))
+        {
+            var unauthorized = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorized.WriteAsJsonAsync(new { message = "X-Device-Token header is required." }, cancellationToken);
+            return unauthorized;
+        }
+
+        TelemetryIngestionRequest? request;
+        try
+        {
+            request = await JsonSerializer.DeserializeAsync<TelemetryIngestionRequest>(
+                req.Body,
+                JsonOptions,
+                cancellationToken);
+        }
+        catch (JsonException)
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(new { message = "Telemetry payload is invalid." }, cancellationToken);
+            return badRequest;
+        }
 
         if (request is null)
         {
@@ -34,22 +59,9 @@ public sealed class TelemetryIngestionFunction
             return badRequest;
         }
 
-        var deviceAccessToken = request.DeviceAccessToken;
-        if (string.IsNullOrWhiteSpace(deviceAccessToken) && req.Headers.TryGetValues("X-Device-Token", out var tokenValues))
-        {
-            deviceAccessToken = tokenValues.FirstOrDefault();
-        }
-
-        if (string.IsNullOrWhiteSpace(deviceAccessToken))
-        {
-            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
-            await badRequest.WriteAsJsonAsync(new { message = "Device access token is required." }, cancellationToken);
-            return badRequest;
-        }
-
         var result = await _mediator.Send(
             new ReceiveTelemetryCommand(
-                deviceAccessToken,
+                deviceAccessToken.Trim(),
                 request.WeightKg,
                 request.HumidityPercent,
                 request.TemperatureCelsius,
@@ -59,7 +71,14 @@ public sealed class TelemetryIngestionFunction
 
         if (result.IsFailure)
         {
-            var response = req.CreateResponse(HttpStatusCode.BadRequest);
+            var statusCode = string.Equals(
+                result.Error,
+                "Device access token is invalid.",
+                StringComparison.Ordinal)
+                ? HttpStatusCode.Unauthorized
+                : HttpStatusCode.BadRequest;
+
+            var response = req.CreateResponse(statusCode);
             await response.WriteAsJsonAsync(new { message = result.Error }, cancellationToken);
             return response;
         }
@@ -70,7 +89,6 @@ public sealed class TelemetryIngestionFunction
     }
 
     private sealed record TelemetryIngestionRequest(
-        string? DeviceAccessToken,
         double WeightKg,
         double HumidityPercent,
         double TemperatureCelsius,

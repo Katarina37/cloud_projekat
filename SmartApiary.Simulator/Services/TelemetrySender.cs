@@ -19,22 +19,14 @@ public sealed class TelemetrySender
 
     public async Task<TelemetrySendResult> SendAsync(
         TelemetryPayload payload,
+        string deviceAccessToken,
         CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, _telemetryEndpoint)
         {
-            Content = JsonContent.Create(
-                new
-                {
-                    payload.WeightKg,
-                    payload.HumidityPercent,
-                    payload.TemperatureCelsius,
-                    payload.BatteryPercent,
-                    payload.Timestamp
-                },
-                options: JsonOptions)
+            Content = JsonContent.Create(payload, options: JsonOptions)
         };
-        request.Headers.Add("X-Device-Token", payload.DeviceAccessToken);
+        request.Headers.Add("X-Device-Token", deviceAccessToken);
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
 

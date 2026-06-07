@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SmartApiary.Application.Features.Devices.ActivateDevice;
 using SmartApiary.Application.Features.Devices.GetDeviceByHive;
 using SmartApiary.Application.Features.Devices.RegisterDevice;
 
@@ -22,15 +21,6 @@ public sealed class DevicesController : BaseController
     {
         var result = await Mediator.Send(command, cancellationToken);
         return HandleCreatedResult(result, nameof(GetByHive), new { hiveId = command.HiveId });
-    }
-
-    [HttpPost("activate")]
-    public async Task<IActionResult> Activate(
-        ActivateDeviceCommand command,
-        CancellationToken cancellationToken)
-    {
-        var result = await Mediator.Send(command, cancellationToken);
-        return HandleResult(result);
     }
 
     [HttpGet("by-hive/{hiveId:guid}")]
