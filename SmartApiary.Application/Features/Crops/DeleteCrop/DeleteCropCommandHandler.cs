@@ -28,24 +28,24 @@ public sealed class DeleteCropCommandHandler : IRequestHandler<DeleteCropCommand
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
-            return Result.Failure("User is not authenticated.");
+            return Result.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var crop = await _cropRepository.GetByIdAsync(request.CropId, cancellationToken);
         if (crop is null)
         {
-            return Result.Failure("Crop was not found.");
+            return Result.Failure("Crop was not found.", ErrorType.NotFound);
         }
 
         var parcel = await _parcelRepository.GetByIdAsync(crop.ParcelId, cancellationToken);
         if (parcel is null)
         {
-            return Result.Failure("Parcel was not found.");
+            return Result.Failure("Parcel was not found.", ErrorType.NotFound);
         }
 
         if (parcel.FarmerId != farmerId)
         {
-            return Result.Failure("Crop does not belong to the current farmer.");
+            return Result.Failure("Crop does not belong to the current farmer.", ErrorType.Unauthorized);
         }
 
         _cropRepository.Delete(crop);

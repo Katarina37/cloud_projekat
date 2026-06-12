@@ -29,18 +29,18 @@ public sealed class CreateHiveCommandHandler : IRequestHandler<CreateHiveCommand
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result<Guid>.Failure("User is not authenticated.");
+            return Result<Guid>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var apiary = await _apiaryRepository.GetByIdAsync(request.ApiaryId, cancellationToken);
         if (apiary is null)
         {
-            return Result<Guid>.Failure("Apiary was not found.");
+            return Result<Guid>.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
         if (apiary.BeekeeperId != beekeeperId)
         {
-            return Result<Guid>.Failure("Apiary does not belong to the current beekeeper.");
+            return Result<Guid>.Failure("Apiary does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
         var hive = new Hive(

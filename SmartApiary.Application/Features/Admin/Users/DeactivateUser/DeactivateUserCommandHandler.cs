@@ -26,18 +26,18 @@ public sealed class DeactivateUserCommandHandler : IRequestHandler<DeactivateUse
     {
         if (!IsAdmin())
         {
-            return Result.Failure("User is not authorized to deactivate users.");
+            return Result.Failure("User is not authorized to deactivate users.", ErrorType.Unauthorized);
         }
 
         if (_currentUserService.UserId == request.UserId)
         {
-            return Result.Failure("Admins cannot deactivate their own account.");
+            return Result.Failure("Admins cannot deactivate their own account.", ErrorType.Conflict);
         }
 
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            return Result.Failure("User was not found.");
+            return Result.Failure("User was not found.", ErrorType.NotFound);
         }
 
         user.Deactivate();

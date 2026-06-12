@@ -2,7 +2,7 @@ namespace SmartApiary.Application.Common.Results;
 
 public class Result
 {
-    private Result(bool isSuccess, string? error, string? warning)
+    protected Result(bool isSuccess, Error? error, string? warning)
     {
         IsSuccess = isSuccess;
         Error = error;
@@ -13,7 +13,7 @@ public class Result
 
     public bool IsFailure => !IsSuccess;
 
-    public string? Error { get; }
+    public Error? Error { get; }
 
     public string? Warning { get; }
 
@@ -22,8 +22,8 @@ public class Result
         return new Result(true, null, warning);
     }
 
-    public static Result Failure(string error)
+    public static Result Failure(string message, ErrorType type = ErrorType.Failure)
     {
-        return new Result(false, error, null);
+        return new Result(false, new Error(message, type), null);
     }
 }

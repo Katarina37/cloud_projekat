@@ -26,18 +26,18 @@ public sealed class UpdateApiaryCommandHandler : IRequestHandler<UpdateApiaryCom
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result.Failure("User is not authenticated.");
+            return Result.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var apiary = await _apiaryRepository.GetByIdAsync(request.ApiaryId, cancellationToken);
         if (apiary is null)
         {
-            return Result.Failure("Apiary was not found.");
+            return Result.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
         if (apiary.BeekeeperId != beekeeperId)
         {
-            return Result.Failure("Apiary does not belong to the current beekeeper.");
+            return Result.Failure("Apiary does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
         var location = new GeoLocation(request.Latitude, request.Longitude);

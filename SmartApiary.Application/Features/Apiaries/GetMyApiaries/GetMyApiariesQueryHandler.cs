@@ -25,7 +25,7 @@ public sealed class GetMyApiariesQueryHandler : IRequestHandler<GetMyApiariesQue
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result<IReadOnlyList<ApiaryDto>>.Failure("User is not authenticated.");
+            return Result<IReadOnlyList<ApiaryDto>>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var apiaries = await _apiaryRepository.GetByBeekeeperIdAsync(beekeeperId, cancellationToken);

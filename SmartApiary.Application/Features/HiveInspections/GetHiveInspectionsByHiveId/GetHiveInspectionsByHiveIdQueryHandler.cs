@@ -32,24 +32,24 @@ public sealed class GetHiveInspectionsByHiveIdQueryHandler
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result<PagedList<HiveInspectionDto>>.Failure("User is not authenticated.");
+            return Result<PagedList<HiveInspectionDto>>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var hive = await _hiveRepository.GetByIdAsync(request.HiveId, cancellationToken);
         if (hive is null)
         {
-            return Result<PagedList<HiveInspectionDto>>.Failure("Hive was not found.");
+            return Result<PagedList<HiveInspectionDto>>.Failure("Hive was not found.", ErrorType.NotFound);
         }
 
         var apiary = await _apiaryRepository.GetByIdAsync(hive.ApiaryId, cancellationToken);
         if (apiary is null)
         {
-            return Result<PagedList<HiveInspectionDto>>.Failure("Apiary was not found.");
+            return Result<PagedList<HiveInspectionDto>>.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
         if (apiary.BeekeeperId != beekeeperId)
         {
-            return Result<PagedList<HiveInspectionDto>>.Failure("Hive does not belong to the current beekeeper.");
+            return Result<PagedList<HiveInspectionDto>>.Failure("Hive does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
         var records = await _hiveInspectionRepository.GetByHiveIdAsync(request.HiveId, cancellationToken);

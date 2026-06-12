@@ -25,7 +25,7 @@ public sealed class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, Result
     {
         if (!IsAdmin())
         {
-            return Result<IReadOnlyList<UserDto>>.Failure("User is not authorized to view users.");
+            return Result<IReadOnlyList<UserDto>>.Failure("User is not authorized to view users.", ErrorType.Unauthorized);
         }
 
         var users = await _userRepository.GetAllAsync(cancellationToken);

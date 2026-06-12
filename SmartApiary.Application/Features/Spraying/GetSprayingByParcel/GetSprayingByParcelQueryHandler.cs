@@ -30,18 +30,18 @@ public sealed class GetSprayingByParcelQueryHandler
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
-            return Result<PagedList<SprayingAnnouncementDto>>.Failure("User is not authenticated.");
+            return Result<PagedList<SprayingAnnouncementDto>>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var parcel = await _parcelRepository.GetByIdAsync(request.ParcelId, cancellationToken);
         if (parcel is null)
         {
-            return Result<PagedList<SprayingAnnouncementDto>>.Failure("Parcel was not found.");
+            return Result<PagedList<SprayingAnnouncementDto>>.Failure("Parcel was not found.", ErrorType.NotFound);
         }
 
         if (parcel.FarmerId != farmerId)
         {
-            return Result<PagedList<SprayingAnnouncementDto>>.Failure("Parcel does not belong to current farmer.");
+            return Result<PagedList<SprayingAnnouncementDto>>.Failure("Parcel does not belong to current farmer.", ErrorType.Unauthorized);
         }
 
         var (items, totalCount) = await _sprayingRepository.GetFilteredSprayingsAsync(

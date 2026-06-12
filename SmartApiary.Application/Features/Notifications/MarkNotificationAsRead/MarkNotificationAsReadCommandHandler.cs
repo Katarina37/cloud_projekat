@@ -28,18 +28,18 @@ public sealed class MarkNotificationAsReadCommandHandler
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } userId)
         {
-            return Result.Failure("User is not authenticated.");
+            return Result.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var notification = await _notificationRepository.GetByIdAsync(request.NotificationId, cancellationToken);
         if (notification is null)
         {
-            return Result.Failure("Notification was not found.");
+            return Result.Failure("Notification was not found.", ErrorType.NotFound);
         }
 
         if (notification.UserId != userId)
         {
-            return Result.Failure("Notification does not belong to the current user.");
+            return Result.Failure("Notification does not belong to the current user.", ErrorType.Unauthorized);
         }
 
         notification.MarkAsRead();

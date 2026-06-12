@@ -29,12 +29,12 @@ public sealed class ActivateAccountCommandHandler : IRequestHandler<ActivateAcco
         var user = await _userRepository.GetByActivationTokenAsync(request.Token.Trim(), cancellationToken);
         if (user is null || user.ActivationTokenExpiresAt is null)
         {
-            return Result.Failure("Activation token is invalid or expired.");
+            return Result.Failure("Activation token is invalid or expired.", ErrorType.Validation);
         }
 
         if (user.ActivationTokenExpiresAt <= _dateTimeProvider.UtcNow)
         {
-            return Result.Failure("Activation token is invalid or expired.");
+            return Result.Failure("Activation token is invalid or expired.", ErrorType.Validation);
         }
 
         var passwordHash = _passwordHasher.Hash(request.Password);

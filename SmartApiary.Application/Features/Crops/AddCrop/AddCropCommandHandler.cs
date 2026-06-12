@@ -29,18 +29,18 @@ public sealed class AddCropCommandHandler : IRequestHandler<AddCropCommand, Resu
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
-            return Result<Guid>.Failure("User is not authenticated.");
+            return Result<Guid>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var parcel = await _parcelRepository.GetByIdAsync(request.ParcelId, cancellationToken);
         if (parcel is null)
         {
-            return Result<Guid>.Failure("Parcel was not found.");
+            return Result<Guid>.Failure("Parcel was not found.", ErrorType.NotFound);
         }
 
         if (parcel.FarmerId != farmerId)
         {
-            return Result<Guid>.Failure("Parcel does not belong to the current farmer.");
+            return Result<Guid>.Failure("Parcel does not belong to the current farmer.", ErrorType.Unauthorized);
         }
 
         var crop = new Crop(

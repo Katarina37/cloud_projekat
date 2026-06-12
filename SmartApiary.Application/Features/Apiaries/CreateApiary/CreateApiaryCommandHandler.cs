@@ -30,7 +30,7 @@ public sealed class CreateApiaryCommandHandler : IRequestHandler<CreateApiaryCom
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result<Guid>.Failure("User is not authenticated.");
+            return Result<Guid>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         string? imageUrl = null;

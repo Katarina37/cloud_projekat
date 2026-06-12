@@ -26,7 +26,7 @@ public sealed class GetMyNotificationsQueryHandler
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } userId)
         {
-            return Result<IReadOnlyList<NotificationDto>>.Failure("User is not authenticated.");
+            return Result<IReadOnlyList<NotificationDto>>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var notifications = await _notificationRepository.GetByUserIdAsync(userId, cancellationToken);

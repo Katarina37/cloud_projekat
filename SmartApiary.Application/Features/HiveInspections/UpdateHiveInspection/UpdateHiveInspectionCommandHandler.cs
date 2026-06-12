@@ -32,23 +32,23 @@ public sealed class UpdateHiveInspectionCommandHandler : IRequestHandler<UpdateH
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result.Failure("User is not authenticated.");
+            return Result.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var record = await _hiveInspectionRepository.GetByIdAsync(request.Id, cancellationToken);
         if (record is null)
         {
-            return Result.Failure("Hive inspection record was not found.");
+            return Result.Failure("Hive inspection record was not found.", ErrorType.NotFound);
         }
 
         if (!await HiveBelongsToCurrentBeekeeperAsync(record.HiveId, beekeeperId, cancellationToken))
         {
-            return Result.Failure("Hive inspection record does not belong to the current beekeeper.");
+            return Result.Failure("Hive inspection record does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
         if (!await HiveBelongsToCurrentBeekeeperAsync(request.HiveId, beekeeperId, cancellationToken))
         {
-            return Result.Failure("Hive was not found.");
+            return Result.Failure("Hive was not found.", ErrorType.NotFound);
         }
 
         record.Update(

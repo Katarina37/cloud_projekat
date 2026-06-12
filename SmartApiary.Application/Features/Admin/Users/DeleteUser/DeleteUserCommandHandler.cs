@@ -26,18 +26,18 @@ public sealed class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand
     {
         if (!IsAdmin())
         {
-            return Result.Failure("User is not authorized to delete users.");
+            return Result.Failure("User is not authorized to delete users.", ErrorType.Unauthorized);
         }
 
         if (_currentUserService.UserId == request.UserId)
         {
-            return Result.Failure("Admins cannot delete their own account.");
+            return Result.Failure("Admins cannot delete their own account.", ErrorType.Conflict);
         }
 
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user is null)
         {
-            return Result.Failure("User was not found.");
+            return Result.Failure("User was not found.", ErrorType.NotFound);
         }
 
         _userRepository.Delete(user);

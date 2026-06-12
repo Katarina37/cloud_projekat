@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using SmartApiary.Application.Features.Devices.ActivateDevice;
+using SmartApiary.Functions.Extensions;
 
 namespace SmartApiary.Functions.DeviceActivation;
 
@@ -40,8 +41,8 @@ public sealed class DeviceActivationFunction
 
         if (result.IsFailure)
         {
-            var response = req.CreateResponse(HttpStatusCode.BadRequest);
-            await response.WriteAsJsonAsync(new { message = result.Error }, cancellationToken);
+            var response = req.CreateResponse(result.ToHttpStatusCode());
+            await response.WriteAsJsonAsync(new { message = result.Error?.Message }, cancellationToken);
             return response;
         }
 

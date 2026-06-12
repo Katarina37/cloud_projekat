@@ -38,14 +38,14 @@ public sealed class CreateUserCommandHandler : IRequestHandler<CreateUserCommand
     {
         if (!IsAdmin())
         {
-            return Result<Guid>.Failure("User is not authorized to create users.");
+            return Result<Guid>.Failure("User is not authorized to create users.", ErrorType.Unauthorized);
         }
 
         var email = request.Email.Trim();
         var existingUser = await _userRepository.GetByEmailAsync(email, cancellationToken);
         if (existingUser is not null)
         {
-            return Result<Guid>.Failure("User with this email already exists.");
+            return Result<Guid>.Failure("User with this email already exists.", ErrorType.Conflict);
         }
 
         var user = new User(

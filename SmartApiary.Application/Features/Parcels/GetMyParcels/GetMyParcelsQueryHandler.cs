@@ -25,7 +25,7 @@ public sealed class GetMyParcelsQueryHandler : IRequestHandler<GetMyParcelsQuery
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
-            return Result<IReadOnlyList<ParcelDto>>.Failure("User is not authenticated.");
+            return Result<IReadOnlyList<ParcelDto>>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var parcels = await _parcelRepository.GetByFarmerIdAsync(farmerId, cancellationToken);

@@ -26,7 +26,7 @@ public sealed class UpdateAlertSettingsCommandHandler : IRequestHandler<UpdateAl
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } userId)
         {
-            return Result.Failure("User is not authenticated.");
+            return Result.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var settings = await _userAlertSettingsRepository.GetByUserIdAsync(userId, cancellationToken);

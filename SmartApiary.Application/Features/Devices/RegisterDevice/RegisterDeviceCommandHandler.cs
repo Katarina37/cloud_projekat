@@ -32,24 +32,24 @@ public sealed class RegisterDeviceCommandHandler : IRequestHandler<RegisterDevic
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result<Guid>.Failure("User is not authenticated.");
+            return Result<Guid>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var hive = await _hiveRepository.GetByIdAsync(request.HiveId, cancellationToken);
         if (hive is null)
         {
-            return Result<Guid>.Failure("Hive was not found.");
+            return Result<Guid>.Failure("Hive was not found.", ErrorType.NotFound);
         }
 
         var apiary = await _apiaryRepository.GetByIdAsync(hive.ApiaryId, cancellationToken);
         if (apiary is null)
         {
-            return Result<Guid>.Failure("Apiary was not found.");
+            return Result<Guid>.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
         if (apiary.BeekeeperId != beekeeperId)
         {
-            return Result<Guid>.Failure("Hive does not belong to the current beekeeper.");
+            return Result<Guid>.Failure("Hive does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
         var existingDeviceWithSerialNumber = await _deviceRepository.GetBySerialNumberAsync(
@@ -57,13 +57,13 @@ public sealed class RegisterDeviceCommandHandler : IRequestHandler<RegisterDevic
             cancellationToken);
         if (existingDeviceWithSerialNumber is not null)
         {
-            return Result<Guid>.Failure("Device with this serial number is already registered.");
+            return Result<Guid>.Failure("Device with this serial number is already registered.", ErrorType.Conflict);
         }
 
         var existingDevice = await _deviceRepository.GetByHiveIdAsync(request.HiveId, cancellationToken);
         if (existingDevice is not null)
         {
-            return Result<Guid>.Failure("Hive already has a registered device.");
+            return Result<Guid>.Failure("Hive already has a registered device.", ErrorType.Conflict);
         }
 
         var device = new Device(request.HiveId, request.SerialNumber);

@@ -27,7 +27,7 @@ public sealed class CreateParcelCommandHandler : IRequestHandler<CreateParcelCom
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
-            return Result<Guid>.Failure("User is not authenticated.");
+            return Result<Guid>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var location = new GeoLocation(request.Latitude, request.Longitude);

@@ -30,7 +30,7 @@ public sealed class GetAlertSettingsQueryHandler : IRequestHandler<GetAlertSetti
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } userId)
         {
-            return Result<AlertSettingsDto>.Failure("User is not authenticated.");
+            return Result<AlertSettingsDto>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var settings = await _userAlertSettingsRepository.GetByUserIdAsync(userId, cancellationToken);

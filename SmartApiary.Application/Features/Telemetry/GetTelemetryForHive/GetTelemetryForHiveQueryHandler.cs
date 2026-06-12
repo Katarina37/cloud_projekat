@@ -32,24 +32,24 @@ public sealed class GetTelemetryForHiveQueryHandler
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("User is not authenticated.");
+            return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var hive = await _hiveRepository.GetByIdAsync(request.HiveId, cancellationToken);
         if (hive is null)
         {
-            return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("Hive was not found.");
+            return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("Hive was not found.", ErrorType.NotFound);
         }
 
         var apiary = await _apiaryRepository.GetByIdAsync(hive.ApiaryId, cancellationToken);
         if (apiary is null)
         {
-            return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("Apiary was not found.");
+            return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
         if (apiary.BeekeeperId != beekeeperId)
         {
-            return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("Hive does not belong to the current beekeeper.");
+            return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("Hive does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
         var readings = await _telemetryRepository.GetForHiveAsync(

@@ -29,18 +29,18 @@ public sealed class GetCropsByParcelQueryHandler
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
-            return Result<IReadOnlyList<CropDto>>.Failure("User is not authenticated.");
+            return Result<IReadOnlyList<CropDto>>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var parcel = await _parcelRepository.GetByIdAsync(request.ParcelId, cancellationToken);
         if (parcel is null)
         {
-            return Result<IReadOnlyList<CropDto>>.Failure("Parcel was not found.");
+            return Result<IReadOnlyList<CropDto>>.Failure("Parcel was not found.", ErrorType.NotFound);
         }
 
         if (parcel.FarmerId != farmerId)
         {
-            return Result<IReadOnlyList<CropDto>>.Failure("Parcel does not belong to the current farmer.");
+            return Result<IReadOnlyList<CropDto>>.Failure("Parcel does not belong to the current farmer.", ErrorType.Unauthorized);
         }
 
         var crops = await _cropRepository.GetByParcelIdAsync(request.ParcelId, cancellationToken);

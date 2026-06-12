@@ -37,18 +37,18 @@ public sealed class GetNearbyParcelsQueryHandler
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
-            return Result<IReadOnlyList<MapParcelDto>>.Failure("User is not authenticated.");
+            return Result<IReadOnlyList<MapParcelDto>>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var apiary = await _apiaryRepository.GetByIdAsync(request.ApiaryId, cancellationToken);
         if (apiary is null)
         {
-            return Result<IReadOnlyList<MapParcelDto>>.Failure("Apiary was not found.");
+            return Result<IReadOnlyList<MapParcelDto>>.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
         if (apiary.BeekeeperId != beekeeperId)
         {
-            return Result<IReadOnlyList<MapParcelDto>>.Failure("Apiary does not belong to the current beekeeper.");
+            return Result<IReadOnlyList<MapParcelDto>>.Failure("Apiary does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
         var parcels = await _parcelRepository.FindWithinRadiusAsync(

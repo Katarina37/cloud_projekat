@@ -20,7 +20,7 @@ public sealed class AuthController : BaseController
     public async Task<IActionResult> Login(LoginCommand command, CancellationToken cancellationToken)
     {
         var result = await Mediator.Send(command, cancellationToken);
-        return result.IsSuccess ? Ok(result) : Unauthorized(result.Error);
+        return HandleResult(result);
     }
 
     [HttpPost("activate")]

@@ -27,12 +27,12 @@ public sealed class ActivateDeviceCommandHandler : IRequestHandler<ActivateDevic
         var device = await _deviceRepository.GetBySerialNumberAsync(request.SerialNumber, cancellationToken);
         if (device is null)
         {
-            return Result<string>.Failure("Device was not found.");
+            return Result<string>.Failure("Device was not found.", ErrorType.NotFound);
         }
 
         if (device.Status == DeviceStatus.Paired)
         {
-            return Result<string>.Failure("Device is already paired.");
+            return Result<string>.Failure("Device is already paired.", ErrorType.Conflict);
         }
 
         var accessToken = _deviceTokenGenerator.GenerateToken();

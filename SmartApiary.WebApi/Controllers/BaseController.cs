@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiary.Application.Common.Results;
+using System.Text.Json;
 
 namespace SmartApiary.WebApi.Controllers;
 
@@ -55,47 +56,59 @@ public abstract class BaseController : ControllerBase
         return result.IsSuccess ? NoContent() : HandleFailure(result.Error);
     }
 
-    protected IActionResult HandleFailure(string? error)
+    protected IActionResult HandleFailure(Error? error)
     {
-        if (IsNotFoundError(error))
+        if (error is null)
         {
-            return NotFound(error);
+            return BadRequest();
         }
 
-        if (IsUnauthorizedError(error))
+        var errorResponse = CreateErrorResponse(error);
+
+        return error.Type switch
         {
-            return Unauthorized(error);
+            ErrorType.Validation => BadRequest(errorResponse),
+            ErrorType.NotFound => NotFound(errorResponse),
+            ErrorType.Conflict => Conflict(errorResponse),
+            ErrorType.Unauthorized => Unauthorized(errorResponse),
+            ErrorType.Unexpected => StatusCode(StatusCodes.Status500InternalServerError, errorResponse),
+            _ => BadRequest(errorResponse)
+        };
+    }
+
+    private static object CreateErrorResponse(Error error)
+    {
+        if (error.Type != ErrorType.Validation)
+        {
+            return new
+            {
+                type = error.Type.ToString(),
+                errors = (object?)null,
+                message = error.Message
+            };
         }
 
-        if (IsForbiddenError(error))
+        object validationErrors = error.Message;
+
+        try
         {
-            return StatusCode(StatusCodes.Status403Forbidden, error);
+            var deserializedErrors =
+                JsonSerializer.Deserialize<Dictionary<string, string[]>>(error.Message);
+
+            if (deserializedErrors is not null)
+            {
+                validationErrors = deserializedErrors;
+            }
+        }
+        catch (JsonException)
+        {
         }
 
-        return BadRequest(error);
-    }
-
-    private static bool IsNotFoundError(string? error)
-    {
-        return Contains(error, "not found");
-    }
-
-    private static bool IsUnauthorizedError(string? error)
-    {
-        return Contains(error, "not authenticated")
-            || Contains(error, "unauthorized");
-    }
-
-    private static bool IsForbiddenError(string? error)
-    {
-        return Contains(error, "does not belong")
-            || Contains(error, "forbidden")
-            || Contains(error, "not allowed")
-            || Contains(error, "not authorized");
-    }
-
-    private static bool Contains(string? value, string expected)
-    {
-        return value?.Contains(expected, StringComparison.OrdinalIgnoreCase) == true;
+        return new
+        {
+            type = error.Type.ToString(),
+            errors = validationErrors,
+            message = "Validation failed."
+        };
     }
 }

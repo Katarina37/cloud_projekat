@@ -57,24 +57,24 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         var device = await _deviceRepository.GetByAccessTokenAsync(request.DeviceAccessToken, cancellationToken);
         if (device is null)
         {
-            return Result.Failure("Device access token is invalid.");
+            return Result.Failure("Device access token is invalid.", ErrorType.Unauthorized);
         }
 
         if (device.Status != DeviceStatus.Paired)
         {
-            return Result.Failure("Device is not paired.");
+            return Result.Failure("Device is not paired.", ErrorType.Conflict);
         }
 
         var hive = await _hiveRepository.GetByIdAsync(device.HiveId, cancellationToken);
         if (hive is null)
         {
-            return Result.Failure("Hive was not found.");
+            return Result.Failure("Hive was not found.", ErrorType.NotFound);
         }
 
         var apiary = await _apiaryRepository.GetByIdAsync(hive.ApiaryId, cancellationToken);
         if (apiary is null)
         {
-            return Result.Failure("Apiary was not found.");
+            return Result.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
         var previousReading = await _telemetryRepository.GetPreviousForHiveAsync(

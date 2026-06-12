@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using SmartApiary.Application.Features.Telemetry.ReceiveTelemetry;
+using SmartApiary.Functions.Extensions;
 
 namespace SmartApiary.Functions.TelemetryIngestion;
 
@@ -71,15 +72,8 @@ public sealed class TelemetryIngestionFunction
 
         if (result.IsFailure)
         {
-            var statusCode = string.Equals(
-                result.Error,
-                "Device access token is invalid.",
-                StringComparison.Ordinal)
-                ? HttpStatusCode.Unauthorized
-                : HttpStatusCode.BadRequest;
-
-            var response = req.CreateResponse(statusCode);
-            await response.WriteAsJsonAsync(new { message = result.Error }, cancellationToken);
+            var response = req.CreateResponse(result.ToHttpStatusCode());
+            await response.WriteAsJsonAsync(new { message = result.Error?.Message }, cancellationToken);
             return response;
         }
 

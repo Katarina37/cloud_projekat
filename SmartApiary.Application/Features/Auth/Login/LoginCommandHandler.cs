@@ -27,17 +27,17 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, Result<L
         var user = await _userRepository.GetByEmailAsync(request.Email.Trim(), cancellationToken);
         if (user is null || string.IsNullOrWhiteSpace(user.PasswordHash))
         {
-            return Result<LoginResponseDto>.Failure("Invalid email or password.");
+            return Result<LoginResponseDto>.Failure("Invalid email or password.", ErrorType.Unauthorized);
         }
 
         if (!user.IsActive)
         {
-            return Result<LoginResponseDto>.Failure("Account is not active.");
+            return Result<LoginResponseDto>.Failure("Account is not active.", ErrorType.Unauthorized);
         }
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            return Result<LoginResponseDto>.Failure("Invalid email or password.");
+            return Result<LoginResponseDto>.Failure("Invalid email or password.", ErrorType.Unauthorized);
         }
 
         var token = _jwtTokenGenerator.GenerateToken(user);

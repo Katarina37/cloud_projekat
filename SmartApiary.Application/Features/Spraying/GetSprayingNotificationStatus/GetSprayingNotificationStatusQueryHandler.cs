@@ -28,7 +28,7 @@ public sealed class GetSprayingNotificationStatusQueryHandler
     {
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
-            return Result<int>.Failure("User is not authenticated.");
+            return Result<int>.Failure("User is not authenticated.", ErrorType.Unauthorized);
         }
 
         var announcement = await _sprayingAnnouncementRepository.GetByIdAsync(
@@ -36,18 +36,18 @@ public sealed class GetSprayingNotificationStatusQueryHandler
             cancellationToken);
         if (announcement is null)
         {
-            return Result<int>.Failure("Spraying announcement was not found.");
+            return Result<int>.Failure("Spraying announcement was not found.", ErrorType.NotFound);
         }
 
         var parcel = await _parcelRepository.GetByIdAsync(announcement.ParcelId, cancellationToken);
         if (parcel is null)
         {
-            return Result<int>.Failure("Parcel was not found.");
+            return Result<int>.Failure("Parcel was not found.", ErrorType.NotFound);
         }
 
         if (parcel.FarmerId != farmerId)
         {
-            return Result<int>.Failure("Spraying announcement does not belong to the current farmer.");
+            return Result<int>.Failure("Spraying announcement does not belong to the current farmer.", ErrorType.Unauthorized);
         }
 
         return Result<int>.Success(announcement.NotifiedBeekeepersCount);

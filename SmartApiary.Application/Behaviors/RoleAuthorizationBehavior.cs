@@ -81,7 +81,7 @@ public sealed class RoleAuthorizationBehavior<TRequest, TResponse> : IPipelineBe
     {
         if (typeof(TResponse) == typeof(Result))
         {
-            return (TResponse)(object)Result.Failure(message);
+            return (TResponse)(object)Result.Failure(message, ErrorType.Unauthorized);
         }
 
         if (typeof(TResponse).IsGenericType
@@ -89,10 +89,12 @@ public sealed class RoleAuthorizationBehavior<TRequest, TResponse> : IPipelineBe
         {
             var valueType = typeof(TResponse).GetGenericArguments()[0];
             var resultType = typeof(Result<>).MakeGenericType(valueType);
-            var failureMethod = resultType.GetMethod(nameof(Result<object>.Failure), [typeof(string)])
+            var failureMethod = resultType.GetMethod(
+                nameof(Result<object>.Failure),
+                [typeof(string), typeof(ErrorType)])
                 ?? throw new InvalidOperationException("Result failure factory was not found.");
 
-            return (TResponse)failureMethod.Invoke(null, [message])!;
+            return (TResponse)failureMethod.Invoke(null, [message, ErrorType.Unauthorized])!;
         }
 
         throw new InvalidOperationException(
