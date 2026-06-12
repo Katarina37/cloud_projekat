@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using NetTopologySuite.Geometries;
 using SmartApiary.Domain.Models;
 
 namespace SmartApiary.Infrastructure.Persistence.Configurations;
@@ -29,6 +30,17 @@ public class ParcelConfiguration : IEntityTypeConfiguration<Parcel>
 
         builder.Navigation(parcel => parcel.Location)
             .IsRequired();
+
+        builder.Property<Point>("LocationPoint")
+            .HasColumnType("geography")
+            .HasComputedColumnSql(
+                "geography::Point([Latitude], [Longitude], 4326)",
+                stored: true);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(parcel => parcel.FarmerId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(parcel => parcel.FarmerId);
     }

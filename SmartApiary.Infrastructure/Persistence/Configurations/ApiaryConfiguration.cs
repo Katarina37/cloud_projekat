@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using NetTopologySuite.Geometries;
 using SmartApiary.Domain.Models;
 
 namespace SmartApiary.Infrastructure.Persistence.Configurations;
@@ -38,6 +39,17 @@ public class ApiaryConfiguration : IEntityTypeConfiguration<Apiary>
 
         builder.Navigation(apiary => apiary.Location)
             .IsRequired();
+
+        builder.Property<Point>("LocationPoint")
+            .HasColumnType("geography")
+            .HasComputedColumnSql(
+                "geography::Point([Latitude], [Longitude], 4326)",
+                stored: true);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(apiary => apiary.BeekeeperId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(apiary => apiary.BeekeeperId);
     }

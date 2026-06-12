@@ -20,6 +20,11 @@ public class SprayingAnnouncementConfiguration : IEntityTypeConfiguration<Sprayi
             .HasConversion<string>()
             .HasMaxLength(32);
 
+        builder.HasOne<Parcel>()
+            .WithMany()
+            .HasForeignKey(announcement => announcement.ParcelId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(announcement => announcement.ParcelId);
 
         builder.HasIndex(announcement => announcement.StartTime);

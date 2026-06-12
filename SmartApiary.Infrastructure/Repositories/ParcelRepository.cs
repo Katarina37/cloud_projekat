@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Domain.Models;
 using SmartApiary.Domain.ValueObjects;
@@ -8,7 +9,6 @@ namespace SmartApiary.Infrastructure.Repositories;
 
 public class ParcelRepository : IParcelRepository
 {
-    private const double EarthRadiusKm = 6371d;
     private readonly SmartApiaryDbContext _context;
 
     public ParcelRepository(SmartApiaryDbContext context)
@@ -36,11 +36,16 @@ public class ParcelRepository : IParcelRepository
         double radiusKm,
         CancellationToken cancellationToken = default)
     {
-        var parcels = await _context.Parcels.ToListAsync(cancellationToken);
+        var searchPoint = new Point(location.Longitude, location.Latitude)
+        {
+            SRID = 4326
+        };
+        var radiusMeters = radiusKm * 1000d;
 
-        return parcels
-            .Where(parcel => CalculateDistanceKm(location, parcel.Location) <= radiusKm)
-            .ToList();
+        return await _context.Parcels
+            .Where(parcel =>
+                EF.Property<Point>(parcel, "LocationPoint").Distance(searchPoint) <= radiusMeters)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task AddAsync(Parcel parcel, CancellationToken cancellationToken = default)
@@ -56,28 +61,5 @@ public class ParcelRepository : IParcelRepository
     public void Delete(Parcel parcel)
     {
         _context.Parcels.Remove(parcel);
-    }
-
-    private static double CalculateDistanceKm(GeoLocation first, GeoLocation second)
-    {
-        var latitudeDelta = ToRadians(second.Latitude - first.Latitude);
-        var longitudeDelta = ToRadians(second.Longitude - first.Longitude);
-
-        var firstLatitude = ToRadians(first.Latitude);
-        var secondLatitude = ToRadians(second.Latitude);
-
-        var haversine =
-            Math.Sin(latitudeDelta / 2) * Math.Sin(latitudeDelta / 2) +
-            Math.Cos(firstLatitude) * Math.Cos(secondLatitude) *
-            Math.Sin(longitudeDelta / 2) * Math.Sin(longitudeDelta / 2);
-
-        var centralAngle = 2 * Math.Atan2(Math.Sqrt(haversine), Math.Sqrt(1 - haversine));
-
-        return EarthRadiusKm * centralAngle;
-    }
-
-    private static double ToRadians(double degrees)
-    {
-        return degrees * Math.PI / 180d;
     }
 }

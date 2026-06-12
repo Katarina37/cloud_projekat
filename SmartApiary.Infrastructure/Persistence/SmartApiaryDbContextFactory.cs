@@ -8,7 +8,9 @@ public class SmartApiaryDbContextFactory : IDesignTimeDbContextFactory<SmartApia
     public SmartApiaryDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<SmartApiaryDbContext>();
-        optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=SmartApiaryDb;Trusted_Connection=True;TrustServerCertificate=True");
+        optionsBuilder.UseSqlServer(
+            "Server=(localdb)\\mssqllocaldb;Database=SmartApiaryDb;Trusted_Connection=True;TrustServerCertificate=True",
+            sqlServerOptions => sqlServerOptions.UseNetTopologySuite());
 
         return new SmartApiaryDbContext(optionsBuilder.Options);
     }

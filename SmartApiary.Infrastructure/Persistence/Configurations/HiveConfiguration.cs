@@ -28,6 +28,11 @@ public class HiveConfiguration : IEntityTypeConfiguration<Hive>
         builder.Property(hive => hive.Notes)
             .HasMaxLength(1000);
 
+        builder.HasOne<Apiary>()
+            .WithMany()
+            .HasForeignKey(hive => hive.ApiaryId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(hive => hive.ApiaryId);
     }
 }

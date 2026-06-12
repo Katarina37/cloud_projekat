@@ -12,6 +12,11 @@ public class UserAlertSettingsConfiguration : IEntityTypeConfiguration<UserAlert
 
         builder.HasKey(settings => settings.Id);
 
+        builder.HasOne<User>()
+            .WithOne()
+            .HasForeignKey<UserAlertSettings>(settings => settings.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(settings => settings.UserId)
             .IsUnique();
     }

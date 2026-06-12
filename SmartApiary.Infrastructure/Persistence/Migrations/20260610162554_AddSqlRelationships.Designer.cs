@@ -3,8 +3,8 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using NetTopologySuite.Geometries;
 using SmartApiary.Infrastructure.Persistence;
 
 #nullable disable
@@ -12,9 +12,11 @@ using SmartApiary.Infrastructure.Persistence;
 namespace SmartApiary.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SmartApiaryDbContext))]
-    partial class SmartApiaryDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610162554_AddSqlRelationships")]
+    partial class AddSqlRelationships
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,11 +40,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(2048)
                         .HasColumnType("nvarchar(2048)");
-
-                    b.Property<Point>("LocationPoint")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("geography")
-                        .HasComputedColumnSql("geography::Point([Latitude], [Longitude], 4326)", true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -196,11 +193,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("BottomBoardColor")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<int>("BroodFrames")
                         .HasColumnType("int");
 
@@ -212,10 +204,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("HiveId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("HoneyQuantityKg")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
@@ -285,11 +273,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("FarmerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Point>("LocationPoint")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("geography")
-                        .HasComputedColumnSql("geography::Point([Latitude], [Longitude], 4326)", true);
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -317,9 +300,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                     b.Property<int>("DurationHours")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("EndTime")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("NotifiedBeekeepersCount")
                         .HasColumnType("int");
 
@@ -337,9 +317,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
-
-                    b.Property<string>("WeatherSnapshotJson")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

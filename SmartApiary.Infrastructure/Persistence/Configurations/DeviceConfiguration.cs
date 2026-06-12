@@ -27,6 +27,11 @@ public class DeviceConfiguration : IEntityTypeConfiguration<Device>
             .HasConversion<string>()
             .HasMaxLength(32);
 
+        builder.HasOne<Hive>()
+            .WithOne()
+            .HasForeignKey<Device>(device => device.HiveId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(device => device.SerialNumber)
             .IsUnique();
 

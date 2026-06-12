@@ -19,6 +19,11 @@ public class CropConfiguration : IEntityTypeConfiguration<Crop>
         builder.Property(crop => crop.Notes)
             .HasMaxLength(1000);
 
+        builder.HasOne<Parcel>()
+            .WithMany()
+            .HasForeignKey(crop => crop.ParcelId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasIndex(crop => crop.ParcelId);
     }
 }

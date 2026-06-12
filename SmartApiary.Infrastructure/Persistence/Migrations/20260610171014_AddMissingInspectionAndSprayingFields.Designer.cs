@@ -3,8 +3,8 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using NetTopologySuite.Geometries;
 using SmartApiary.Infrastructure.Persistence;
 
 #nullable disable
@@ -12,9 +12,11 @@ using SmartApiary.Infrastructure.Persistence;
 namespace SmartApiary.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SmartApiaryDbContext))]
-    partial class SmartApiaryDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610171014_AddMissingInspectionAndSprayingFields")]
+    partial class AddMissingInspectionAndSprayingFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,11 +40,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(2048)
                         .HasColumnType("nvarchar(2048)");
-
-                    b.Property<Point>("LocationPoint")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("geography")
-                        .HasComputedColumnSql("geography::Point([Latitude], [Longitude], 4326)", true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -284,11 +281,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("FarmerId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<Point>("LocationPoint")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("geography")
-                        .HasComputedColumnSql("geography::Point([Latitude], [Longitude], 4326)", true);
 
                     b.Property<string>("Name")
                         .IsRequired()

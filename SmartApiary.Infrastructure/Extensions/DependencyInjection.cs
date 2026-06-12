@@ -21,7 +21,9 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
 
         services.AddDbContext<SmartApiaryDbContext>(options =>
-            options.UseSqlServer(connectionString));
+            options.UseSqlServer(
+                connectionString,
+                sqlServerOptions => sqlServerOptions.UseNetTopologySuite()));
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IApiaryRepository, ApiaryRepository>();
