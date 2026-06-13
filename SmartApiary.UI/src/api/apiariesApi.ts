@@ -26,6 +26,7 @@ export type UpdateApiaryRequest = {
   latitude: number;
   longitude: number;
   terrainDescription?: string | null;
+  image?: File | null;
 };
 
 export async function getApiaries(): Promise<ApiaryDto[]> {
@@ -34,6 +35,20 @@ export async function getApiaries(): Promise<ApiaryDto[]> {
 }
 
 export async function createApiary(payload: CreateApiaryRequest): Promise<string | undefined> {
+  const formData = toApiaryFormData(payload);
+  const response = await apiClient.post<ResultResponse<string>>('/apiaries', formData);
+  return response.data.value;
+}
+
+export async function updateApiary(apiaryId: string, payload: UpdateApiaryRequest): Promise<void> {
+  await apiClient.put(`/apiaries/${apiaryId}`, toApiaryFormData(payload));
+}
+
+export async function deleteApiary(apiaryId: string): Promise<void> {
+  await apiClient.delete(`/apiaries/${apiaryId}`);
+}
+
+function toApiaryFormData(payload: CreateApiaryRequest | UpdateApiaryRequest) {
   const formData = new FormData();
   formData.append('name', payload.name);
   formData.append('latitude', String(payload.latitude));
@@ -47,14 +62,5 @@ export async function createApiary(payload: CreateApiaryRequest): Promise<string
     formData.append('image', payload.image);
   }
 
-  const response = await apiClient.post<ResultResponse<string>>('/apiaries', formData);
-  return response.data.value;
-}
-
-export async function updateApiary(apiaryId: string, payload: UpdateApiaryRequest): Promise<void> {
-  await apiClient.put(`/apiaries/${apiaryId}`, payload);
-}
-
-export async function deleteApiary(apiaryId: string): Promise<void> {
-  await apiClient.delete(`/apiaries/${apiaryId}`);
+  return formData;
 }

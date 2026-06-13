@@ -11,6 +11,7 @@ public sealed class GetLatestHiveStatusQueryHandler
 {
     private readonly IApiaryRepository _apiaryRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IDeviceRepository _deviceRepository;
     private readonly IHiveRepository _hiveRepository;
     private readonly ITelemetryRepository _telemetryRepository;
 
@@ -18,11 +19,13 @@ public sealed class GetLatestHiveStatusQueryHandler
         ICurrentUserService currentUserService,
         IHiveRepository hiveRepository,
         IApiaryRepository apiaryRepository,
+        IDeviceRepository deviceRepository,
         ITelemetryRepository telemetryRepository)
     {
         _currentUserService = currentUserService;
         _hiveRepository = hiveRepository;
         _apiaryRepository = apiaryRepository;
+        _deviceRepository = deviceRepository;
         _telemetryRepository = telemetryRepository;
     }
 
@@ -52,7 +55,13 @@ public sealed class GetLatestHiveStatusQueryHandler
             return Result<LatestHiveStatusDto>.Failure("Hive does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
-        var latestReading = await _telemetryRepository.GetLatestForHiveAsync(request.HiveId, cancellationToken);
+        var device = await _deviceRepository.GetByHiveIdAsync(request.HiveId, cancellationToken);
+        if (device is null)
+        {
+            return Result<LatestHiveStatusDto>.Failure("Telemetry reading was not found.", ErrorType.NotFound);
+        }
+
+        var latestReading = await _telemetryRepository.GetLatestAsync(device.Id, cancellationToken);
         if (latestReading is null)
         {
             return Result<LatestHiveStatusDto>.Failure("Telemetry reading was not found.", ErrorType.NotFound);

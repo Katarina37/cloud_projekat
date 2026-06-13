@@ -19,8 +19,12 @@ export type SprayingAnnouncementDto = {
   notifiedBeekeepersCount: number;
   createdAt: string;
   cancelledAt?: string | null;
-  endTime?: string | null;
+  actualStartTime?: string | null;
+  actualEndTime?: string | null;
+  cropId?: string | null;
   cropName?: string | null;
+  note?: string | null;
+  farmerName: string;
   weatherSnapshot?: WeatherInfoDto | null;
 };
 
@@ -34,6 +38,13 @@ export type CreateSprayingRequest = {
 export type RescheduleSprayingRequest = {
   newStartTime: string;
   newDurationHours: number;
+};
+
+export type CompleteSprayingRequest = {
+  actualStartTime: string;
+  actualEndTime: string;
+  cropId: string;
+  note?: string | null;
 };
 
 export type SprayingActionResult<T = void> = {
@@ -88,8 +99,11 @@ export async function cancelSpraying(sprayingId: string): Promise<void> {
   await apiClient.put(`/spraying/${sprayingId}/cancel`);
 }
 
-export async function completeSpraying(sprayingId: string): Promise<void> {
-  await apiClient.put(`/spraying/${sprayingId}/complete`);
+export async function completeSpraying(
+  sprayingId: string,
+  payload: CompleteSprayingRequest,
+): Promise<void> {
+  await apiClient.put(`/spraying/${sprayingId}/complete`, payload);
 }
 
 export async function getSprayingNotificationStatus(sprayingId: string): Promise<number> {

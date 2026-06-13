@@ -2,6 +2,7 @@ using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
+using SmartApiary.Domain.Enums;
 using System.Text.Json;
 
 namespace SmartApiary.Application.Features.Spraying.CompleteSpraying;
@@ -58,23 +59,38 @@ public sealed class CompleteSprayingCommandHandler : IRequestHandler<CompleteSpr
             return Result.Failure("Spraying announcement does not belong to the current farmer.", ErrorType.Unauthorized);
         }
 
+        if (announcement.Status != SprayingStatus.Scheduled)
+        {
+            return Result.Failure("Only a scheduled spraying announcement can be completed.", ErrorType.Conflict);
+        }
 
-        var endTime = DateTime.UtcNow;
+        var crop = await _cropRepository.GetByIdAsync(request.CropId, cancellationToken);
+        if (crop is null)
+        {
+            return Result.Failure("Crop was not found.", ErrorType.NotFound);
+        }
+
+        if (crop.ParcelId != parcel.Id)
+        {
+            return Result.Failure("Selected crop does not belong to the spraying parcel.", ErrorType.Validation);
+        }
+
         var weatherDto = await _weatherService.GetWeatherAsync(
             parcel.Location.Latitude,
             parcel.Location.Longitude,
-            endTime,
+            request.ActualEndTime!.Value,
             cancellationToken);
         var weatherSnapshotJson = weatherDto is null
             ? "No weather data"
             : JsonSerializer.Serialize(weatherDto);
 
-        var crops = await _cropRepository.GetByParcelIdAsync(parcel.Id, cancellationToken);
-        var cropName = crops.Count == 0
-            ? null
-            : string.Join(", ", crops.Select(crop => crop.Name));
-
-        announcement.Complete(cropName, weatherSnapshotJson);
+        announcement.Complete(
+            request.ActualStartTime!.Value,
+            request.ActualEndTime.Value,
+            crop.Id,
+            crop.Name,
+            request.Note,
+            weatherSnapshotJson);
 
         _sprayingAnnouncementRepository.Update(announcement);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

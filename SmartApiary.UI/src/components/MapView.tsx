@@ -2,10 +2,7 @@ import { Fragment, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import MarkerClusterGroup from 'react-leaflet-markercluster';
-import defaultCropIconUrl from '../assets/crops/default.svg';
-import lavenderIconUrl from '../assets/crops/lavender.svg';
-import rapeseedIconUrl from '../assets/crops/rapeseed.svg';
-import sunflowerIconUrl from '../assets/crops/sunflower.svg';
+import { getCropMarkerIcon } from '../utils/cropMarkerIcons';
 
 export type MapCropItem = {
   name: string;
@@ -26,6 +23,7 @@ export type MapItem = {
   farmerPhone?: string | null;
   crops?: MapCropItem[];
   radiusMeters?: number;
+  thumbnailUrl?: string | null;
 };
 
 type Props = {
@@ -42,34 +40,6 @@ function makeIcon(html: string) {
     iconSize: [30, 42],
     iconAnchor: [15, 42],
   });
-}
-
-function makeCropIcon(iconUrl: string) {
-  return L.icon({
-    iconUrl,
-    iconSize: [42, 42],
-    iconAnchor: [21, 42],
-    popupAnchor: [0, -38],
-    className: 'crop-marker-icon',
-  });
-}
-
-const sunflowerIcon = makeCropIcon(sunflowerIconUrl);
-const rapeseedIcon = makeCropIcon(rapeseedIconUrl);
-const lavenderIcon = makeCropIcon(lavenderIconUrl);
-const defaultCropIcon = makeCropIcon(defaultCropIconUrl);
-
-function getCropIcon(cropName?: string) {
-  switch (cropName?.trim().toLowerCase()) {
-    case 'suncokret':
-      return sunflowerIcon;
-    case 'uljana repica':
-      return rapeseedIcon;
-    case 'lavanda':
-      return lavenderIcon;
-    default:
-      return defaultCropIcon;
-  }
 }
 
 function FitBoundsToItems({ items }: { items: MapItem[] }) {
@@ -98,7 +68,7 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
   const center: [number, number] = items.length > 0 ? [items[0].latitude, items[0].longitude] : [45.2671, 19.8335];
   // Promena kljuca ponovo iscrta mapu kada se promene markeri.
   const mapKey = items
-    .map((item) => `${item.type || 'item'}:${item.id}:${item.latitude}:${item.longitude}:${item.crops?.[0]?.name || ''}`)
+    .map((item) => `${item.type || 'item'}:${item.id}:${item.latitude}:${item.longitude}:${item.crops?.[0]?.name || ''}:${item.thumbnailUrl || ''}`)
     .join('|');
 
   return (
@@ -113,7 +83,7 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
             if (it.type === 'apiary') {
               icon = makeIcon(`<div style="font-size:20px">🐝</div>`);
             } else {
-              icon = getCropIcon(it.crops?.[0]?.name);
+              icon = getCropMarkerIcon(it.crops?.[0]?.name);
             }
 
             return (
@@ -133,10 +103,7 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
                     {it.type === 'parcel' ? (
                       <ParcelPopup item={it} />
                     ) : (
-                      <div>
-                        <strong>{it.name}</strong>
-                        {it.subtitle ? <div>{it.subtitle}</div> : null}
-                      </div>
+                      <ApiaryPopup item={it} />
                     )}
                   </Popup>
                 </Marker>
@@ -146,6 +113,23 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
           })}
         </MarkerClusterGroup>
       </MapContainer>
+    </div>
+  );
+}
+
+function ApiaryPopup({ item }: { item: MapItem }) {
+  return (
+    <div className="map-popup">
+      {item.thumbnailUrl ? (
+        <img
+          alt={`Pčelinjak ${item.name}`}
+          className="map-popup-thumbnail"
+          loading="lazy"
+          src={item.thumbnailUrl}
+        />
+      ) : null}
+      <h3>{item.name}</h3>
+      {item.subtitle ? <div>{item.subtitle}</div> : null}
     </div>
   );
 }

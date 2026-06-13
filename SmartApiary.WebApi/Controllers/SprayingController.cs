@@ -45,9 +45,14 @@ public sealed class SprayingController : BaseController
     }
 
     [HttpPut("{id:guid}/complete")]
-    public async Task<IActionResult> Complete(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Complete(
+        Guid id,
+        CompleteSprayingCommand command,
+        CancellationToken cancellationToken)
     {
-        var result = await Mediator.Send(new CompleteSprayingCommand(id), cancellationToken);
+        var result = await Mediator.Send(
+            command with { SprayingAnnouncementId = id },
+            cancellationToken);
         return HandleResult(result);
     }
 

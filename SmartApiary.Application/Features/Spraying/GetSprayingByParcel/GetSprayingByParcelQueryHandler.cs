@@ -13,15 +13,18 @@ public sealed class GetSprayingByParcelQueryHandler
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
     private readonly ISprayingAnnouncementRepository _sprayingRepository;
+    private readonly IUserRepository _userRepository;
 
     public GetSprayingByParcelQueryHandler(
         ICurrentUserService currentUserService,
         IParcelRepository parcelRepository,
-        ISprayingAnnouncementRepository sprayingRepository)
+        ISprayingAnnouncementRepository sprayingRepository,
+        IUserRepository userRepository)
     {
         _currentUserService = currentUserService;
         _parcelRepository = parcelRepository;
         _sprayingRepository = sprayingRepository;
+        _userRepository = userRepository;
     }
 
     public async Task<Result<PagedList<SprayingAnnouncementDto>>> Handle(
@@ -46,6 +49,10 @@ public sealed class GetSprayingByParcelQueryHandler
 
         var (items, totalCount) = await _sprayingRepository.GetFilteredSprayingsAsync(
             request.ParcelId, request.FromDate, request.ToDate, request.PageNumber, request.PageSize, cancellationToken);
+        var farmer = await _userRepository.GetByIdAsync(parcel.FarmerId, cancellationToken);
+        var farmerName = farmer is null
+            ? string.Empty
+            : $"{farmer.FirstName} {farmer.LastName}".Trim();
 
         var mappedDtos = items.Select(s => {
             WeatherInfoDto? weatherObject = null;
@@ -73,8 +80,12 @@ public sealed class GetSprayingByParcelQueryHandler
                 NotifiedBeekeepersCount = s.NotifiedBeekeepersCount,
                 CreatedAt = s.CreatedAt,
                 CancelledAt = s.CancelledAt,
-                EndTime = s.EndTime,
+                ActualStartTime = s.ActualStartTime,
+                ActualEndTime = s.ActualEndTime,
+                CropId = s.CropId,
                 CropName = s.CropName,
+                Note = s.Note,
+                FarmerName = farmerName,
                 WeatherSnapshot = weatherObject 
             };
         }).ToList();

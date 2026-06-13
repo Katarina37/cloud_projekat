@@ -11,6 +11,7 @@ public sealed class GetTelemetryForHiveQueryHandler
 {
     private readonly IApiaryRepository _apiaryRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IDeviceRepository _deviceRepository;
     private readonly IHiveRepository _hiveRepository;
     private readonly ITelemetryRepository _telemetryRepository;
 
@@ -18,11 +19,13 @@ public sealed class GetTelemetryForHiveQueryHandler
         ICurrentUserService currentUserService,
         IHiveRepository hiveRepository,
         IApiaryRepository apiaryRepository,
+        IDeviceRepository deviceRepository,
         ITelemetryRepository telemetryRepository)
     {
         _currentUserService = currentUserService;
         _hiveRepository = hiveRepository;
         _apiaryRepository = apiaryRepository;
+        _deviceRepository = deviceRepository;
         _telemetryRepository = telemetryRepository;
     }
 
@@ -52,8 +55,14 @@ public sealed class GetTelemetryForHiveQueryHandler
             return Result<IReadOnlyList<TelemetryReadingDto>>.Failure("Hive does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
-        var readings = await _telemetryRepository.GetForHiveAsync(
-            request.HiveId,
+        var device = await _deviceRepository.GetByHiveIdAsync(request.HiveId, cancellationToken);
+        if (device is null)
+        {
+            return Result<IReadOnlyList<TelemetryReadingDto>>.Success([]);
+        }
+
+        var readings = await _telemetryRepository.GetByDeviceAsync(
+            device.Id,
             request.From,
             request.To,
             cancellationToken);

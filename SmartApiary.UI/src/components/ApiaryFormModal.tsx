@@ -8,6 +8,9 @@ import {
   type UpdateApiaryRequest,
 } from '../api/apiClient';
 
+const maxImageSizeBytes = 5 * 1024 * 1024;
+const supportedImageTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 type ApiaryFormModalProps = {
   apiary?: ApiaryDto;
   onClose: () => void;
@@ -47,6 +50,16 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
       return null;
     }
 
+    if (image && image.size > maxImageSizeBytes) {
+      setError('Slika ne sme biti veća od 5 MB.');
+      return null;
+    }
+
+    if (image && !supportedImageTypes.has(image.type)) {
+      setError('Podržani formati slike su JPG, PNG i WEBP.');
+      return null;
+    }
+
     setError(null);
     return {
       name: trimmedName,
@@ -69,7 +82,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
 
     try {
       if (apiary) {
-        await updateApiary(apiary.id, payload);
+        await updateApiary(apiary.id, { ...payload, image });
       } else {
         await createApiary({ ...payload, image });
       }
@@ -157,21 +170,19 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
             />
           </label>
 
-          {!isEditMode ? (
-            <label>
-              Slika
-              <input
-                accept="image/*"
-                onChange={(event) => {
-                  const selectedFile = event.target.files && event.target.files.length > 0
-                    ? event.target.files[0]
-                    : null;
-                  setImage(selectedFile);
-                }}
-                type="file"
-              />
-            </label>
-          ) : null}
+          <label>
+            {isEditMode ? 'Nova slika (opciono)' : 'Slika (opciono)'}
+            <input
+              accept=".jpg,.jpeg,.png,.webp"
+              onChange={(event) => {
+                const selectedFile = event.target.files && event.target.files.length > 0
+                  ? event.target.files[0]
+                  : null;
+                setImage(selectedFile);
+              }}
+              type="file"
+            />
+          </label>
 
           {error ? (
             <p className="form-error" role="alert">

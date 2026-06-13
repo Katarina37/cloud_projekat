@@ -10,7 +10,33 @@ public class TelemetryReading
         double humidityPercent,
         double temperatureCelsius,
         double batteryPercent)
+        : this(
+            Guid.NewGuid(),
+            hiveId,
+            deviceId,
+            timestamp,
+            weightKg,
+            humidityPercent,
+            temperatureCelsius,
+            batteryPercent)
     {
+    }
+
+    private TelemetryReading(
+        Guid id,
+        Guid hiveId,
+        Guid deviceId,
+        DateTime timestamp,
+        double weightKg,
+        double humidityPercent,
+        double temperatureCelsius,
+        double batteryPercent)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("Telemetry reading id cannot be empty.", nameof(id));
+        }
+
         if (hiveId == Guid.Empty)
         {
             throw new ArgumentException("Hive id cannot be empty.", nameof(hiveId));
@@ -21,7 +47,7 @@ public class TelemetryReading
             throw new ArgumentException("Device id cannot be empty.", nameof(deviceId));
         }
 
-        Id = Guid.NewGuid();
+        Id = id;
         HiveId = hiveId;
         DeviceId = deviceId;
         Timestamp = timestamp;
@@ -46,6 +72,27 @@ public class TelemetryReading
     public double TemperatureCelsius { get; private set; }
 
     public double BatteryPercent { get; private set; }
+
+    public static TelemetryReading Load(
+        Guid id,
+        Guid hiveId,
+        Guid deviceId,
+        DateTime timestamp,
+        double weightKg,
+        double humidityPercent,
+        double temperatureCelsius,
+        double batteryPercent)
+    {
+        return new TelemetryReading(
+            id,
+            hiveId,
+            deviceId,
+            timestamp,
+            weightKg,
+            humidityPercent,
+            temperatureCelsius,
+            batteryPercent);
+    }
 
     private static double RequireNonNegative(double value, string parameterName)
     {

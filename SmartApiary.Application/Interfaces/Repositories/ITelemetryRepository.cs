@@ -6,9 +6,18 @@ public interface ITelemetryRepository
 {
     Task AddAsync(TelemetryReading reading, CancellationToken cancellationToken = default);
 
-    Task<TelemetryReading?> GetLatestForHiveAsync(Guid hiveId, CancellationToken cancellationToken = default);
+    Task<TelemetryReading?> GetLatestAsync(
+        Guid deviceId,
+        CancellationToken cancellationToken = default);
 
-    Task<TelemetryReading?> GetPreviousForHiveAsync(Guid hiveId, DateTime before, CancellationToken cancellationToken = default);
+    Task<TelemetryReading?> GetPreviousAsync(
+        Guid deviceId,
+        DateTime before,
+        CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<TelemetryReading>> GetForHiveAsync(Guid hiveId, DateTime from, DateTime to, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TelemetryReading>> GetByDeviceAsync(
+        Guid deviceId,
+        DateTime from,
+        DateTime to,
+        CancellationToken cancellationToken = default);
 }

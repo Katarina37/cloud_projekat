@@ -23,7 +23,6 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
     private readonly ITelemetryQueueService _telemetryQueueService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserAlertSettingsRepository _userAlertSettingsRepository;
-    private readonly ITelemetryTableService _telemetryTableService;
     private readonly ILogger<ReceiveTelemetryCommandHandler> _logger;
 
     public ReceiveTelemetryCommandHandler(
@@ -35,7 +34,6 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         INotificationRepository notificationRepository,
         INotificationSender notificationSender,
         IUnitOfWork unitOfWork,
-        ITelemetryTableService telemetryTableService,
         ITelemetryQueueService telemetryQueueService,
         ILogger<ReceiveTelemetryCommandHandler> logger)
     {
@@ -47,7 +45,6 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
         _notificationRepository = notificationRepository;
         _notificationSender = notificationSender;
         _unitOfWork = unitOfWork;
-        _telemetryTableService = telemetryTableService;
         _telemetryQueueService = telemetryQueueService;
         _logger = logger;
     }
@@ -77,8 +74,8 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
             return Result.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
-        var previousReading = await _telemetryRepository.GetPreviousForHiveAsync(
-            device.HiveId,
+        var previousReading = await _telemetryRepository.GetPreviousAsync(
+            device.Id,
             request.Timestamp,
             cancellationToken);
 
@@ -108,15 +105,6 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
             cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        try
-        {
-            await _telemetryTableService.InsertAsync(reading, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to insert telemetry reading {ReadingId} into Table Storage.", reading.Id);
-        }
 
         try
         {

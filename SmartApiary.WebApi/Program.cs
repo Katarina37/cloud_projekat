@@ -110,6 +110,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
         options.Events = new JwtBearerEvents
         {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"].ToString();
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrWhiteSpace(accessToken)
+                    && path.StartsWithSegments("/hubs/telemetry"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            },
             OnTokenValidated = async context =>
             {
                 var principal = context.Principal;
@@ -197,6 +210,7 @@ static (int StatusCode, string Message) MapException(Exception exception)
     return exception switch
     {
         DomainException domainException => (StatusCodes.Status400BadRequest, domainException.Message),
+        InvalidDataException invalidDataException => (StatusCodes.Status400BadRequest, invalidDataException.Message),
         KeyNotFoundException notFoundException => (StatusCodes.Status404NotFound, notFoundException.Message),
         _ when IsNotFoundException(exception) => (StatusCodes.Status404NotFound, exception.Message),
         _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")

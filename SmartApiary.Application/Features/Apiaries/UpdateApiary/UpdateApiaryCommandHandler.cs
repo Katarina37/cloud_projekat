@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
@@ -11,15 +12,21 @@ public sealed class UpdateApiaryCommandHandler : IRequestHandler<UpdateApiaryCom
     private readonly IApiaryRepository _apiaryRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IFileStorageService _fileStorageService;
+    private readonly ILogger<UpdateApiaryCommandHandler> _logger;
 
     public UpdateApiaryCommandHandler(
         ICurrentUserService currentUserService,
         IApiaryRepository apiaryRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IFileStorageService fileStorageService,
+        ILogger<UpdateApiaryCommandHandler> logger)
     {
         _currentUserService = currentUserService;
         _apiaryRepository = apiaryRepository;
         _unitOfWork = unitOfWork;
+        _fileStorageService = fileStorageService;
+        _logger = logger;
     }
 
     public async Task<Result> Handle(UpdateApiaryCommand request, CancellationToken cancellationToken)
@@ -43,9 +50,51 @@ public sealed class UpdateApiaryCommandHandler : IRequestHandler<UpdateApiaryCom
         var location = new GeoLocation(request.Latitude, request.Longitude);
         apiary.UpdateDetails(request.Name, location, request.TerrainDescription);
 
+        var oldImageUrl = apiary.ImageUrl;
+        var oldThumbnailUrl = apiary.ThumbnailUrl;
+        var imageWasReplaced = false;
+
+        if (request.ImageStream is not null &&
+            !string.IsNullOrWhiteSpace(request.ImageFileName))
+        {
+            var uploadedImages = await _fileStorageService.UploadImageWithThumbnailAsync(
+                request.ImageStream,
+                request.ImageFileName,
+                string.IsNullOrWhiteSpace(request.ImageContentType)
+                    ? "application/octet-stream"
+                    : request.ImageContentType,
+                cancellationToken);
+
+            apiary.UpdateImages(uploadedImages.ImageUrl, uploadedImages.ThumbnailUrl);
+            imageWasReplaced = true;
+        }
+
         _apiaryRepository.Update(apiary);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        if (imageWasReplaced)
+        {
+            await DeleteOldImageAsync(oldImageUrl, cancellationToken);
+            await DeleteOldImageAsync(oldThumbnailUrl, cancellationToken);
+        }
+
         return Result.Success();
+    }
+
+    private async Task DeleteOldImageAsync(string? fileUrl, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(fileUrl))
+        {
+            return;
+        }
+
+        try
+        {
+            await _fileStorageService.DeleteAsync(fileUrl, cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Failed to delete replaced apiary image {FileUrl}.", fileUrl);
+        }
     }
 }

@@ -8,4 +8,8 @@ public sealed record UpdateApiaryCommand(
     string Name,
     double Latitude,
     double Longitude,
-    string? TerrainDescription) : IRequest<Result>;
+    string? TerrainDescription,
+    Stream? ImageStream,
+    string? ImageFileName,
+    string? ImageContentType,
+    long ImageSizeInBytes) : IRequest<Result>;

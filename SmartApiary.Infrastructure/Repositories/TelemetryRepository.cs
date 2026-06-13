@@ -1,55 +1,103 @@
-using Microsoft.EntityFrameworkCore;
+using Azure.Data.Tables;
+using Microsoft.Extensions.Options;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Domain.Models;
-using SmartApiary.Infrastructure.Persistence;
+using SmartApiary.Infrastructure.TableStorage;
 
 namespace SmartApiary.Infrastructure.Repositories;
 
-public class TelemetryRepository : ITelemetryRepository
+internal sealed class TelemetryRepository : ITelemetryRepository
 {
-    private readonly SmartApiaryDbContext _context;
+    private readonly ITableKeyProvider<TelemetryReading> _keyProvider;
+    private readonly ITableMapper<TelemetryReading, TelemetryTableEntity> _mapper;
+    private readonly TableClient _tableClient;
 
-    public TelemetryRepository(SmartApiaryDbContext context)
+    public TelemetryRepository(
+        TableServiceClient tableServiceClient,
+        ITableKeyProvider<TelemetryReading> keyProvider,
+        ITableMapper<TelemetryReading, TelemetryTableEntity> mapper,
+        IOptions<AzureTableOptions> options)
     {
-        _context = context;
+        _keyProvider = keyProvider;
+        _mapper = mapper;
+        _tableClient = tableServiceClient.GetTableClient(options.Value.TelemetryTable);
+        _tableClient.CreateIfNotExists();
     }
 
-    public async Task AddAsync(TelemetryReading reading, CancellationToken cancellationToken = default)
-    {
-        await _context.TelemetryReadings.AddAsync(reading, cancellationToken);
-    }
-
-    public Task<TelemetryReading?> GetLatestForHiveAsync(
-        Guid hiveId,
+    public async Task AddAsync(
+        TelemetryReading reading,
         CancellationToken cancellationToken = default)
     {
-        return _context.TelemetryReadings
-            .Where(reading => reading.HiveId == hiveId)
-            .OrderByDescending(reading => reading.Timestamp)
-            .FirstOrDefaultAsync(cancellationToken);
+        var entity = _mapper.ToEntity(reading);
+        entity.PartitionKey = _keyProvider.GetPartitionKey(reading);
+        entity.RowKey = _keyProvider.GetRowKey(reading);
+
+        await _tableClient.AddEntityAsync(entity, cancellationToken);
     }
 
-    public Task<TelemetryReading?> GetPreviousForHiveAsync(
-        Guid hiveId,
+    public async Task<TelemetryReading?> GetLatestAsync(
+        Guid deviceId,
+        CancellationToken cancellationToken = default)
+    {
+        var partitionKey = deviceId.ToString();
+        var entities = _tableClient.QueryAsync<TelemetryTableEntity>(
+            entity => entity.PartitionKey == partitionKey,
+            maxPerPage: 1,
+            cancellationToken: cancellationToken);
+
+        await foreach (var entity in entities.WithCancellation(cancellationToken))
+        {
+            return _mapper.ToDomain(entity);
+        }
+
+        return null;
+    }
+
+    public async Task<TelemetryReading?> GetPreviousAsync(
+        Guid deviceId,
         DateTime before,
         CancellationToken cancellationToken = default)
     {
-        return _context.TelemetryReadings
-            .Where(reading => reading.HiveId == hiveId && reading.Timestamp < before)
-            .OrderByDescending(reading => reading.Timestamp)
-            .FirstOrDefaultAsync(cancellationToken);
+        var partitionKey = deviceId.ToString();
+        var entities = _tableClient.QueryAsync<TelemetryTableEntity>(
+            entity => entity.PartitionKey == partitionKey
+                && entity.ReadingTimestamp < before,
+            maxPerPage: 1,
+            cancellationToken: cancellationToken);
+
+        await foreach (var entity in entities.WithCancellation(cancellationToken))
+        {
+            return _mapper.ToDomain(entity);
+        }
+
+        return null;
     }
 
-    public async Task<IReadOnlyList<TelemetryReading>> GetForHiveAsync(
-        Guid hiveId,
+    public async Task<IReadOnlyList<TelemetryReading>> GetByDeviceAsync(
+        Guid deviceId,
         DateTime from,
         DateTime to,
         CancellationToken cancellationToken = default)
     {
-        return await _context.TelemetryReadings
-            .Where(reading => reading.HiveId == hiveId)
-            .Where(reading => reading.Timestamp >= from && reading.Timestamp <= to)
+        var partitionKey = deviceId.ToString();
+        var entities = _tableClient.QueryAsync<TelemetryTableEntity>(
+            entity => entity.PartitionKey == partitionKey
+                && entity.ReadingTimestamp >= from
+                && entity.ReadingTimestamp <= to,
+            cancellationToken: cancellationToken);
+        var readings = new List<TelemetryReading>();
+
+        await foreach (var entity in entities.WithCancellation(cancellationToken))
+        {
+            var reading = _mapper.ToDomain(entity);
+            if (reading is not null)
+            {
+                readings.Add(reading);
+            }
+        }
+
+        return readings
             .OrderBy(reading => reading.Timestamp)
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 }

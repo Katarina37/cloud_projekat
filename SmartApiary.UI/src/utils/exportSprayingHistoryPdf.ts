@@ -29,6 +29,7 @@ export async function exportSprayingHistoryPdf(
 
   addLine('Digitalni karton prskanja', true);
   addLine(`Parcela: ${parcelName}`);
+  addLine(`Farmer: ${formatText(treatments[0]?.farmerName)}`);
   addLine(`Period: ${formatPeriod(fromDate, toDate)}`);
   addLine(`Broj zavrsenih tretmana: ${treatments.length}`);
   cursorY += 4;
@@ -36,9 +37,11 @@ export async function exportSprayingHistoryPdf(
   treatments.forEach((treatment, index) => {
     addLine(`${index + 1}. Preparat: ${formatText(treatment.preparationType)}`, true);
     addLine(`Kultura: ${formatText(treatment.cropName)}`);
-    addLine(`Pocetak: ${formatDateTime(treatment.startTime)}`);
-    addLine(`Kraj: ${formatDateTime(treatment.endTime)}`);
+    addLine(`Stvarni pocetak: ${formatDateTime(treatment.actualStartTime)}`);
+    addLine(`Stvarni kraj: ${formatDateTime(treatment.actualEndTime)}`);
+    addLine(`Status: ${formatText(treatment.status)}`);
     addLine(`Vreme: ${formatWeather(treatment)}`);
+    addLine(`Napomena: ${formatText(treatment.note)}`);
     cursorY += 3;
   });
 

@@ -2,7 +2,6 @@ import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react';
 import { AlertTriangle, Bell, CalendarClock, CheckCircle2, FileDown, Plus, RotateCw, UsersRound, XCircle } from 'lucide-react';
 import {
   cancelSpraying,
-  completeSpraying,
   getApiErrorMessage,
   getParcels,
   getSprayingByParcel,
@@ -11,6 +10,7 @@ import {
   type SprayingAnnouncementDto,
 } from '../api/apiClient';
 import DataTable, { type DataTableColumn } from '../components/DataTable';
+import CompleteSprayingModal from '../components/CompleteSprayingModal';
 import PageHeader from '../components/PageHeader';
 import RescheduleSprayingModal from '../components/RescheduleSprayingModal';
 import SprayingFormModal from '../components/SprayingFormModal';
@@ -40,6 +40,7 @@ export default function SprayingPage() {
   const [weatherWarning, setWeatherWarning] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [reschedulingAnnouncement, setReschedulingAnnouncement] = useState<SprayingAnnouncementDto | null>(null);
+  const [completingAnnouncement, setCompletingAnnouncement] = useState<SprayingAnnouncementDto | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [notificationLoadingId, setNotificationLoadingId] = useState<string | null>(null);
   const [notificationCounts, setNotificationCounts] = useState<{ [id: string]: number }>({});
@@ -213,29 +214,15 @@ export default function SprayingPage() {
     }
   };
 
-  const handleCompleteSpraying = async (announcement: SprayingAnnouncementDto) => {
-    const confirmed = window.confirm('Da li želite da označite tretiranje kao završeno?');
-
-    if (!confirmed) {
-      return;
-    }
-
-    setActionLoadingId(announcement.id);
+  const handleSprayingCompleted = async () => {
     setActionError(null);
     setSuccessMessage(null);
     setWeatherWarning(null);
 
-    try {
-      await completeSpraying(announcement.id);
-      const refreshed = await refreshSelectedSpraying();
+    const refreshed = await refreshSelectedSpraying();
 
-      if (refreshed) {
-        setSuccessMessage('Tretiranje je označeno kao završeno.');
-      }
-    } catch (requestError) {
-      setActionError(getApiErrorMessage(requestError, 'Greška pri završavanju tretiranja.'));
-    } finally {
-      setActionLoadingId(null);
+    if (refreshed) {
+      setSuccessMessage('Digitalni karton prskanja je uspešno sačuvan.');
     }
   };
 
@@ -341,7 +328,7 @@ export default function SprayingPage() {
 
   const columns: DataTableColumn<SprayingAnnouncementDto>[] = [
     {
-      header: 'StartTime',
+      header: 'Planirani početak',
       render: (item) => (
         <span className="inline-metric">
           <CalendarClock size={15} />
@@ -373,8 +360,24 @@ export default function SprayingPage() {
     },
     { header: 'CreatedAt', render: (item) => formatDateTime(item.createdAt) },
     {
-      header: 'Kraj tretmana',
-      render: (item) => (item.endTime ? formatDateTime(item.endTime) : <span className="muted-text">-</span>),
+      header: 'Stvarni početak',
+      render: (item) => (
+        item.actualStartTime
+          ? formatDateTime(item.actualStartTime)
+          : <span className="muted-text">-</span>
+      ),
+    },
+    {
+      header: 'Stvarni kraj',
+      render: (item) => (
+        item.actualEndTime
+          ? formatDateTime(item.actualEndTime)
+          : <span className="muted-text">-</span>
+      ),
+    },
+    {
+      header: 'Napomena',
+      render: (item) => item.note || <span className="muted-text">-</span>,
     },
     {
       header: 'Weather snapshot',
@@ -428,11 +431,16 @@ export default function SprayingPage() {
               <button
                 className="secondary-action-button"
                 disabled={actionsDisabled}
-                onClick={() => handleCompleteSpraying(item)}
+                onClick={() => {
+                  setSuccessMessage(null);
+                  setActionError(null);
+                  setWeatherWarning(null);
+                  setCompletingAnnouncement(item);
+                }}
                 type="button"
               >
                 <CheckCircle2 size={16} />
-                {actionLoadingId === item.id ? 'Čuvanje...' : 'Označi kao završeno'}
+                Završi prskanje
               </button>
             ) : null}
 
@@ -624,6 +632,14 @@ export default function SprayingPage() {
           onClose={() => setReschedulingAnnouncement(null)}
           onSaved={handleSprayingRescheduled}
           spraying={reschedulingAnnouncement}
+        />
+      ) : null}
+
+      {completingAnnouncement ? (
+        <CompleteSprayingModal
+          onClose={() => setCompletingAnnouncement(null)}
+          onSaved={handleSprayingCompleted}
+          spraying={completingAnnouncement}
         />
       ) : null}
     </div>

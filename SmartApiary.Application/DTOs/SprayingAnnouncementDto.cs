@@ -22,9 +22,17 @@ public class SprayingAnnouncementDto
 
     public DateTime? CancelledAt { get; set; }
 
-    public DateTime? EndTime { get; set; }
+    public DateTime? ActualStartTime { get; set; }
+
+    public DateTime? ActualEndTime { get; set; }
+
+    public Guid? CropId { get; set; }
 
     public string? CropName { get; set; }
+
+    public string? Note { get; set; }
+
+    public string FarmerName { get; set; } = string.Empty;
 
     public WeatherInfoDto? WeatherSnapshot { get; set; }
 }

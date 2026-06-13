@@ -29,11 +29,25 @@ public class SprayingAnnouncementConfiguration : IEntityTypeConfiguration<Sprayi
 
         builder.HasIndex(announcement => announcement.StartTime);
 
-        builder.Property(announcement => announcement.EndTime)
+        builder.Property(announcement => announcement.ActualStartTime)
             .HasColumnType("datetime2");
+
+        builder.Property(announcement => announcement.ActualEndTime)
+            .HasColumnName("EndTime")
+            .HasColumnType("datetime2");
+
+        builder.HasOne<Crop>()
+            .WithMany()
+            .HasForeignKey(announcement => announcement.CropId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(announcement => announcement.CropId);
 
         builder.Property(announcement => announcement.CropName)
             .HasMaxLength(500);
+
+        builder.Property(announcement => announcement.Note)
+            .HasMaxLength(1000);
 
         builder.Property(announcement => announcement.WeatherSnapshotJson)
             .HasColumnType("nvarchar(max)");

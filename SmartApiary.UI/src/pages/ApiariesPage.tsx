@@ -100,6 +100,7 @@ export default function ApiariesPage() {
         longitude: apiary.longitude,
         subtitle: apiary.terrainDescription || undefined,
         type: 'apiary',
+        thumbnailUrl: apiary.thumbnailUrl,
       };
 
       const nearbyItems: MapItem[] = nearby.map((parcel) => ({
@@ -142,6 +143,7 @@ export default function ApiariesPage() {
       longitude: apiary.longitude,
       subtitle: apiary.terrainDescription || undefined,
       type: 'apiary',
+      thumbnailUrl: apiary.thumbnailUrl,
     }));
   }
 
@@ -197,6 +199,23 @@ export default function ApiariesPage() {
                   <MapPin size={18} />
                 </div>
               </div>
+
+              {apiary.imageUrl ? (
+                <a
+                  className="apiary-image-link"
+                  href={apiary.imageUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                  title="Otvori originalnu sliku"
+                >
+                  <img
+                    alt={`Pčelinjak ${apiary.name}`}
+                    className="apiary-image"
+                    loading="lazy"
+                    src={apiary.imageUrl}
+                  />
+                </a>
+              ) : null}
 
               <div>
                 <h2>{apiary.name}</h2>

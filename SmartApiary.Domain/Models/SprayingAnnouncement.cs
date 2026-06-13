@@ -45,9 +45,15 @@ public class SprayingAnnouncement
 
     public DateTime? CancelledAt { get; private set; }
 
-    public DateTime? EndTime { get; private set; }
+    public DateTime? ActualStartTime { get; private set; }
+
+    public DateTime? ActualEndTime { get; private set; }
+
+    public Guid? CropId { get; private set; }
 
     public string? CropName { get; private set; }
+
+    public string? Note { get; private set; }
 
     public string? WeatherSnapshotJson { get; private set; }
 
@@ -67,11 +73,36 @@ public class SprayingAnnouncement
         CancelledAt = DateTime.UtcNow;
     }
 
-    public void Complete(string? cropName = null, string? weatherSnapshotJson = null)
+    public void Complete(
+        DateTime actualStartTime,
+        DateTime actualEndTime,
+        Guid cropId,
+        string cropName,
+        string? note,
+        string? weatherSnapshotJson)
     {
         EnsureCanChangeLifecycle();
-        EndTime = DateTime.UtcNow;
+
+        if (actualEndTime <= actualStartTime)
+        {
+            throw new ArgumentException("Actual end time must be after actual start time.", nameof(actualEndTime));
+        }
+
+        if (cropId == Guid.Empty)
+        {
+            throw new ArgumentException("Crop id cannot be empty.", nameof(cropId));
+        }
+
+        if (string.IsNullOrWhiteSpace(cropName))
+        {
+            throw new ArgumentException("Crop name cannot be empty.", nameof(cropName));
+        }
+
+        ActualStartTime = actualStartTime;
+        ActualEndTime = actualEndTime;
+        CropId = cropId;
         CropName = cropName;
+        Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
         WeatherSnapshotJson = weatherSnapshotJson;
         Status = SprayingStatus.Completed;
     }

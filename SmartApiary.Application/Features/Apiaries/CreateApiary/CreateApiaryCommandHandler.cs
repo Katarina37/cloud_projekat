@@ -37,20 +37,14 @@ public sealed class CreateApiaryCommandHandler : IRequestHandler<CreateApiaryCom
         string? thumbnailUrl = null;
 
         if (request.ImageStream is not null &&
-            !string.IsNullOrWhiteSpace(request.ImageFileName) &&
-            !string.IsNullOrWhiteSpace(request.ImageContentType))
+            !string.IsNullOrWhiteSpace(request.ImageFileName))
         {
-            imageUrl = await _fileStorageService.UploadAsync(
+            (imageUrl, thumbnailUrl) = await _fileStorageService.UploadImageWithThumbnailAsync(
                 request.ImageStream,
                 request.ImageFileName,
-                request.ImageContentType,
-                cancellationToken);
-
-            request.ImageStream.Position = 0;
-            thumbnailUrl = await _fileStorageService.UploadAsync(
-                request.ImageStream,
-                $"thumb_{request.ImageFileName}",
-                request.ImageContentType,
+                string.IsNullOrWhiteSpace(request.ImageContentType)
+                    ? "application/octet-stream"
+                    : request.ImageContentType,
                 cancellationToken);
         }
 

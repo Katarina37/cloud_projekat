@@ -14,6 +14,7 @@ import {
   type TelemetryReadingDto,
   type TelemetryUpdateDto,
 } from '../api/apiClient';
+import { getAuthToken } from '../auth/authStorage';
 import PageHeader from '../components/PageHeader';
 import TelemetryCharts from '../components/TelemetryCharts';
 import TelemetryFilters from '../components/TelemetryFilters';
@@ -114,7 +115,9 @@ export default function TelemetryPage() {
 
   useEffect(() => {
     const connection = new HubConnectionBuilder()
-      .withUrl(telemetryHubUrl)
+      .withUrl(telemetryHubUrl, {
+        accessTokenFactory: () => getAuthToken() ?? '',
+      })
       .withAutomaticReconnect()
       .build();
     let isActive = true;

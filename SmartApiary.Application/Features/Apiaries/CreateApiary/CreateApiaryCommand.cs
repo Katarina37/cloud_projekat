@@ -10,4 +10,5 @@ public sealed record CreateApiaryCommand(
     string? TerrainDescription,
     Stream? ImageStream,
     string? ImageFileName,
-    string? ImageContentType) : IRequest<Result<Guid>>;
+    string? ImageContentType,
+    long ImageSizeInBytes) : IRequest<Result<Guid>>;

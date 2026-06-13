@@ -873,6 +873,20 @@ a {
   gap: 18px;
 }
 
+.apiary-image-link {
+  display: block;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--surface-muted);
+}
+
+.apiary-image {
+  display: block;
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+}
+
 .device-card-main {
   align-items: center;
 }
@@ -1370,6 +1384,15 @@ a {
 .map-popup h3 {
   margin: 0 0 8px;
   font-size: 16px;
+}
+
+.map-popup-thumbnail {
+  display: block;
+  width: 100%;
+  max-height: 160px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .map-popup-contact,
