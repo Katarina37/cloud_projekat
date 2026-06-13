@@ -1,14 +1,21 @@
 import axios from 'axios';
 
 type ErrorResponse = {
+  type?: string;
+  errors?: string | Record<string, string[]>;
   message?: string;
+};
+
+type ResultError = {
+  message: string;
+  type: string | number;
 };
 
 export type ResultResponse<T> = {
   // T predstavlja konkretan podatak koji backend vraca u polju value.
   isSuccess: boolean;
   isFailure: boolean;
-  error: string | null;
+  error: ResultError | null;
   warning: string | null;
   value: T;
 };
@@ -23,8 +30,16 @@ export function getApiErrorMessage(error: unknown, fallbackError: string) {
       if (responseData) {
         return responseData;
       }
-    } else if (responseData && responseData.message) {
-      return responseData.message;
+    } else if (responseData) {
+      const validationMessage = getValidationErrorMessage(responseData.errors);
+
+      if (validationMessage) {
+        return validationMessage;
+      }
+
+      if (responseData.message) {
+        return responseData.message;
+      }
     }
 
     if (error.message) {
@@ -37,4 +52,22 @@ export function getApiErrorMessage(error: unknown, fallbackError: string) {
   }
 
   return fallbackError;
+}
+
+function getValidationErrorMessage(errors: ErrorResponse['errors']) {
+  if (typeof errors === 'string') {
+    return errors;
+  }
+
+  if (!errors) {
+    return null;
+  }
+
+  const messages: string[] = [];
+
+  for (const fieldMessages of Object.values(errors)) {
+    messages.push(...fieldMessages);
+  }
+
+  return messages.length > 0 ? messages.join(' ') : null;
 }

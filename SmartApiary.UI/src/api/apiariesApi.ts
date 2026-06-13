@@ -18,9 +18,15 @@ export type CreateApiaryRequest = {
   latitude: number;
   longitude: number;
   terrainDescription?: string | null;
+  image?: File | null;
 };
 
-export type UpdateApiaryRequest = CreateApiaryRequest;
+export type UpdateApiaryRequest = {
+  name: string;
+  latitude: number;
+  longitude: number;
+  terrainDescription?: string | null;
+};
 
 export async function getApiaries(): Promise<ApiaryDto[]> {
   const response = await apiClient.get<ResultResponse<ApiaryDto[]>>('/apiaries');
@@ -35,6 +41,10 @@ export async function createApiary(payload: CreateApiaryRequest): Promise<string
 
   if (payload.terrainDescription) {
     formData.append('terrainDescription', payload.terrainDescription);
+  }
+
+  if (payload.image) {
+    formData.append('image', payload.image);
   }
 
   const response = await apiClient.post<ResultResponse<string>>('/apiaries', formData);

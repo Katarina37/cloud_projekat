@@ -115,7 +115,13 @@ export default function ParcelsPage() {
       latitude: parcel.latitude,
       longitude: parcel.longitude,
       type: 'parcel',
-      crops: crops.map((crop) => crop.name),
+      crops: crops.map((crop) => ({
+        name: crop.name,
+        expectedBloomingStart: crop.expectedBloomingStart,
+        expectedBloomingEnd: crop.expectedBloomingEnd,
+        area: crop.area,
+        notes: crop.notes,
+      })),
     }));
   } else {
     mapItems = parcels.map((parcel) => ({

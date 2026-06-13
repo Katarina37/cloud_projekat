@@ -28,6 +28,15 @@ export type UpdateCropRequest = {
   notes?: string | null;
 };
 
+export type MapCropDto = {
+  cropId: string;
+  name: string;
+  expectedBloomingStart: string;
+  expectedBloomingEnd: string;
+  area?: number | null;
+  notes?: string | null;
+};
+
 export type MapParcelDto = {
   parcelId: string;
   parcelName: string;
@@ -35,7 +44,7 @@ export type MapParcelDto = {
   longitude: number;
   farmerName?: string | null;
   farmerPhone?: string | null;
-  crops?: CropDto[];
+  crops?: MapCropDto[];
 };
 
 export async function getCropsByParcel(parcelId: string): Promise<CropDto[]> {

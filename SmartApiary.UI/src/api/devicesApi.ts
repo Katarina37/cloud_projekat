@@ -21,6 +21,15 @@ export type ActivateDeviceRequest = {
   deviceIdentifier: string;
 };
 
+type DeviceActivationResponse = {
+  deviceAccessToken: string;
+  warning?: string | null;
+};
+
+const functionsApiBaseUrl = (
+  import.meta.env.VITE_FUNCTIONS_API_URL || 'http://localhost:7271/api'
+).replace(/\/$/, '');
+
 export async function getDeviceByHive(hiveId: string): Promise<DeviceDto | null> {
   try {
     const response = await apiClient.get<ResultResponse<DeviceDto>>(`/devices/by-hive/${hiveId}`);
@@ -42,6 +51,9 @@ export async function registerDevice(payload: RegisterDeviceRequest): Promise<st
 }
 
 export async function activateDevice(payload: ActivateDeviceRequest): Promise<string | undefined> {
-  const response = await apiClient.post<ResultResponse<string>>('/devices/activate', payload);
-  return response.data.value;
+  const response = await apiClient.post<DeviceActivationResponse>(
+    `${functionsApiBaseUrl}/devices/activate`,
+    payload,
+  );
+  return response.data.deviceAccessToken;
 }

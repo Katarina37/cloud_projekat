@@ -6,6 +6,8 @@ public class SprayingAnnouncementDto
 
     public Guid ParcelId { get; set; }
 
+    public string ParcelName { get; set; } = string.Empty;
+
     public DateTime StartTime { get; set; }
 
     public int DurationHours { get; set; }
@@ -21,6 +23,8 @@ public class SprayingAnnouncementDto
     public DateTime? CancelledAt { get; set; }
 
     public DateTime? EndTime { get; set; }
+
+    public string? CropName { get; set; }
 
     public WeatherInfoDto? WeatherSnapshot { get; set; }
 }

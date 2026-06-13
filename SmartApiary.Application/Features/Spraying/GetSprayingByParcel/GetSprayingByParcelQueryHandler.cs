@@ -65,6 +65,7 @@ public sealed class GetSprayingByParcelQueryHandler
             {
                 Id = s.Id,
                 ParcelId = s.ParcelId,
+                ParcelName = parcel.Name,
                 StartTime = s.StartTime,
                 DurationHours = s.DurationHours,
                 PreparationType = s.PreparationType,
@@ -73,6 +74,7 @@ public sealed class GetSprayingByParcelQueryHandler
                 CreatedAt = s.CreatedAt,
                 CancelledAt = s.CancelledAt,
                 EndTime = s.EndTime,
+                CropName = s.CropName,
                 WeatherSnapshot = weatherObject 
             };
         }).ToList();

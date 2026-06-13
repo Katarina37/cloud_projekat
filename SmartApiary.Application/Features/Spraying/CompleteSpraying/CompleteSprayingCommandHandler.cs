@@ -2,6 +2,7 @@ using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
+using System.Text.Json;
 
 namespace SmartApiary.Application.Features.Spraying.CompleteSpraying;
 
@@ -9,21 +10,24 @@ public sealed class CompleteSprayingCommandHandler : IRequestHandler<CompleteSpr
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
+    private readonly ICropRepository _cropRepository;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
-    private readonly IWeatherService _weatherService; 
+    private readonly IWeatherService _weatherService;
     private readonly IUnitOfWork _unitOfWork;
 
     public CompleteSprayingCommandHandler(
         ICurrentUserService currentUserService,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IParcelRepository parcelRepository,
-        IWeatherService weatherService, 
+        ICropRepository cropRepository,
+        IWeatherService weatherService,
         IUnitOfWork unitOfWork)
     {
         _currentUserService = currentUserService;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _parcelRepository = parcelRepository;
-        _weatherService = weatherService; 
+        _cropRepository = cropRepository;
+        _weatherService = weatherService;
         _unitOfWork = unitOfWork;
     }
 
@@ -55,12 +59,22 @@ public sealed class CompleteSprayingCommandHandler : IRequestHandler<CompleteSpr
         }
 
 
-        string? weatherSnapshotJson = null;
-
         var endTime = DateTime.UtcNow;
-        var weatherDto = await _weatherService.GetWeatherAsync(parcel.Location.Latitude, parcel.Location.Longitude, endTime, cancellationToken);
+        var weatherDto = await _weatherService.GetWeatherAsync(
+            parcel.Location.Latitude,
+            parcel.Location.Longitude,
+            endTime,
+            cancellationToken);
+        var weatherSnapshotJson = weatherDto is null
+            ? "No weather data"
+            : JsonSerializer.Serialize(weatherDto);
 
-        announcement.Complete(weatherSnapshotJson);
+        var crops = await _cropRepository.GetByParcelIdAsync(parcel.Id, cancellationToken);
+        var cropName = crops.Count == 0
+            ? null
+            : string.Join(", ", crops.Select(crop => crop.Name));
+
+        announcement.Complete(cropName, weatherSnapshotJson);
 
         _sprayingAnnouncementRepository.Update(announcement);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

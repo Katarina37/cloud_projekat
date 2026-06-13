@@ -14,9 +14,20 @@ type CropFormModalProps = {
   onSaved: () => Promise<void>;
 };
 
+const commonCropNames = ['Suncokret', 'Uljana repica', 'Lavanda'];
+const otherCropOption = 'Drugo';
+
 export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved }: CropFormModalProps) {
   const isEditMode = crop !== undefined;
-  const [name, setName] = useState(crop ? crop.name : '');
+  const initialCropSelection = crop && commonCropNames.includes(crop.name)
+    ? crop.name
+    : crop
+      ? otherCropOption
+      : '';
+  const [selectedCropName, setSelectedCropName] = useState(initialCropSelection);
+  const [otherCropName, setOtherCropName] = useState(
+    crop && !commonCropNames.includes(crop.name) ? crop.name : '',
+  );
   const [expectedBloomingStart, setExpectedBloomingStart] = useState(
     toInputDate(crop ? crop.expectedBloomingStart : undefined),
   );
@@ -35,7 +46,10 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const trimmedName = name.trim();
+    const cropName = selectedCropName === otherCropOption
+      ? otherCropName
+      : selectedCropName;
+    const trimmedName = cropName.trim();
     const trimmedArea = area.trim();
     const trimmedNotes = notes.trim();
     const parsedArea = trimmedArea ? Number(trimmedArea) : null;
@@ -46,7 +60,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
     }
 
     if (!trimmedName) {
-      setError('Name ne sme biti prazan.');
+      setError('Izaberite ili unesite naziv kulture.');
       return;
     }
 
@@ -137,18 +151,36 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            Name
-            <input
+            Kultura
+            <select
               autoFocus
-              onChange={(event) => setName(event.target.value)}
-              placeholder="Bagrem"
-              type="text"
-              value={name}
-            />
+              onChange={(event) => setSelectedCropName(event.target.value)}
+              value={selectedCropName}
+            >
+              <option value="">Izaberite kulturu</option>
+              {commonCropNames.map((cropName) => (
+                <option key={cropName} value={cropName}>
+                  {cropName}
+                </option>
+              ))}
+              <option value={otherCropOption}>{otherCropOption}</option>
+            </select>
           </label>
 
+          {selectedCropName === otherCropOption ? (
+            <label>
+              Naziv druge kulture
+              <input
+                onChange={(event) => setOtherCropName(event.target.value)}
+                placeholder="Unesite naziv kulture"
+                type="text"
+                value={otherCropName}
+              />
+            </label>
+          ) : null}
+
           <label>
-            ExpectedBloomingStart
+            Početak cvetanja
             <input
               onChange={(event) => setExpectedBloomingStart(event.target.value)}
               type="date"
@@ -157,7 +189,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
           </label>
 
           <label>
-            ExpectedBloomingEnd
+            Kraj cvetanja
             <input
               onChange={(event) => setExpectedBloomingEnd(event.target.value)}
               type="date"
@@ -166,7 +198,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
           </label>
 
           <label>
-            Area
+            Površina
             <input
               min="0"
               onChange={(event) => setArea(event.target.value)}
@@ -178,7 +210,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
           </label>
 
           <label>
-            Notes
+            Beleška
             <textarea
               onChange={(event) => setNotes(event.target.value)}
               placeholder="Napomena"

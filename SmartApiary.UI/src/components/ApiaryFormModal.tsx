@@ -22,6 +22,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
   const [terrainDescription, setTerrainDescription] = useState(
     apiary && apiary.terrainDescription ? apiary.terrainDescription : '',
   );
+  const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,7 +71,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
       if (apiary) {
         await updateApiary(apiary.id, payload);
       } else {
-        await createApiary(payload);
+        await createApiary({ ...payload, image });
       }
 
       await onSaved();
@@ -155,6 +156,22 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
               value={terrainDescription}
             />
           </label>
+
+          {!isEditMode ? (
+            <label>
+              Slika
+              <input
+                accept="image/*"
+                onChange={(event) => {
+                  const selectedFile = event.target.files && event.target.files.length > 0
+                    ? event.target.files[0]
+                    : null;
+                  setImage(selectedFile);
+                }}
+                type="file"
+              />
+            </label>
+          ) : null}
 
           {error ? (
             <p className="form-error" role="alert">

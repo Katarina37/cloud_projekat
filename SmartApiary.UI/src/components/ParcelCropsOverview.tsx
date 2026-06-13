@@ -47,7 +47,15 @@ export default function ParcelCropsOverview({ apiaryId }: Props) {
         const nearby = await getNearbyParcels(apiaryId);
         const results: ParcelCrops[] = nearby.map((p) => ({
           parcel: { id: p.parcelId, name: p.parcelName, latitude: p.latitude, longitude: p.longitude, createdAt: '' },
-          crops: p.crops || [],
+          crops: (p.crops || []).map((crop) => ({
+            id: crop.cropId,
+            parcelId: p.parcelId,
+            name: crop.name,
+            expectedBloomingStart: crop.expectedBloomingStart,
+            expectedBloomingEnd: crop.expectedBloomingEnd,
+            area: crop.area,
+            notes: crop.notes,
+          })),
           cropsUnavailable: false,
         }));
 

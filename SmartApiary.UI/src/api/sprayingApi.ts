@@ -1,9 +1,17 @@
 import type { ResultResponse } from './apiResult';
+import type { PagedResult } from './hiveInspectionsApi';
 import apiClient from './httpClient';
+
+export type WeatherInfoDto = {
+  windSpeed: number;
+  hasRain: boolean;
+  description?: string | null;
+};
 
 export type SprayingAnnouncementDto = {
   id: string;
   parcelId: string;
+  parcelName: string;
   startTime: string;
   durationHours: number;
   preparationType?: string | null;
@@ -11,6 +19,9 @@ export type SprayingAnnouncementDto = {
   notifiedBeekeepersCount: number;
   createdAt: string;
   cancelledAt?: string | null;
+  endTime?: string | null;
+  cropName?: string | null;
+  weatherSnapshot?: WeatherInfoDto | null;
 };
 
 export type CreateSprayingRequest = {
@@ -30,12 +41,26 @@ export type SprayingActionResult<T = void> = {
   weatherWarning: string | null;
 };
 
-export async function getSprayingByParcel(parcelId: string): Promise<SprayingAnnouncementDto[]> {
-  const response = await apiClient.get<ResultResponse<{ items: SprayingAnnouncementDto[] }>>(
+export async function getSprayingByParcel(
+  parcelId: string,
+  fromDate?: string,
+  toDate?: string,
+  pageNumber = 1,
+  pageSize = 10,
+): Promise<PagedResult<SprayingAnnouncementDto>> {
+  const response = await apiClient.get<ResultResponse<PagedResult<SprayingAnnouncementDto>>>(
     `/spraying/by-parcel/${parcelId}`,
+    {
+      params: {
+        fromDate: fromDate || undefined,
+        toDate: toDate || undefined,
+        pageNumber,
+        pageSize,
+      },
+    },
   );
 
-  return response.data.value.items;
+  return response.data.value;
 }
 
 export async function createSpraying(payload: CreateSprayingRequest): Promise<SprayingActionResult<string>> {

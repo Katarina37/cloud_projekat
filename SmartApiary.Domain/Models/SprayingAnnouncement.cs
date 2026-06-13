@@ -46,6 +46,9 @@ public class SprayingAnnouncement
     public DateTime? CancelledAt { get; private set; }
 
     public DateTime? EndTime { get; private set; }
+
+    public string? CropName { get; private set; }
+
     public string? WeatherSnapshotJson { get; private set; }
 
     public void Reschedule(DateTime startTime, int durationHours)
@@ -64,10 +67,11 @@ public class SprayingAnnouncement
         CancelledAt = DateTime.UtcNow;
     }
 
-    public void Complete(string? weatherSnapshotJson = null)
+    public void Complete(string? cropName = null, string? weatherSnapshotJson = null)
     {
         EnsureCanChangeLifecycle();
         EndTime = DateTime.UtcNow;
+        CropName = cropName;
         WeatherSnapshotJson = weatherSnapshotJson;
         Status = SprayingStatus.Completed;
     }

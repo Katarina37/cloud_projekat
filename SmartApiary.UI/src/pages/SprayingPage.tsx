@@ -1,5 +1,5 @@
-import { type ChangeEvent, useEffect, useState } from 'react';
-import { AlertTriangle, Bell, CalendarClock, CheckCircle2, Plus, RotateCw, UsersRound, XCircle } from 'lucide-react';
+import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react';
+import { AlertTriangle, Bell, CalendarClock, CheckCircle2, FileDown, Plus, RotateCw, UsersRound, XCircle } from 'lucide-react';
 import {
   cancelSpraying,
   completeSpraying,
@@ -15,6 +15,7 @@ import PageHeader from '../components/PageHeader';
 import RescheduleSprayingModal from '../components/RescheduleSprayingModal';
 import SprayingFormModal from '../components/SprayingFormModal';
 import StatusBadge, { type StatusTone } from '../components/StatusBadge';
+import { exportSprayingHistoryPdf } from '../utils/exportSprayingHistoryPdf';
 
 const loadingMessage = 'Učitavanje tretiranja...';
 const loadErrorMessage = 'Greška pri učitavanju tretiranja.';
@@ -25,7 +26,14 @@ export default function SprayingPage() {
   const [parcels, setParcels] = useState<ParcelDto[]>([]);
   const [selectedParcelId, setSelectedParcelId] = useState('');
   const [announcements, setAnnouncements] = useState<SprayingAnnouncementDto[]>([]);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -36,22 +44,55 @@ export default function SprayingPage() {
   const [notificationLoadingId, setNotificationLoadingId] = useState<string | null>(null);
   const [notificationCounts, setNotificationCounts] = useState<{ [id: string]: number }>({});
 
-  async function loadSprayingForParcel(parcelId: string) {
-    const announcements = await getSprayingByParcel(parcelId);
-    setAnnouncements(announcements);
+  async function loadSprayingForParcel(
+    parcelId: string,
+    nextPageNumber: number,
+    nextPageSize: number,
+    nextFromDate: string,
+    nextToDate: string,
+  ) {
+    const result = await getSprayingByParcel(
+      parcelId,
+      toFromDateParameter(nextFromDate),
+      toToDateParameter(nextToDate),
+      nextPageNumber,
+      nextPageSize,
+    );
+
+    setAnnouncements(result.items);
+    setPageNumber(result.pageNumber);
+    setPageSize(nextPageSize);
+    setTotalPages(result.totalPages);
+    setTotalCount(result.totalCount);
+
+    return result;
   }
 
-  async function fetchSprayingForParcel(parcelId: string) {
+  async function fetchSprayingForParcel(
+    parcelId: string,
+    nextPageNumber = 1,
+    nextPageSize = pageSize,
+    nextFromDate = fromDate,
+    nextToDate = toDate,
+  ) {
     setLoading(true);
     setError(null);
 
     try {
-      await loadSprayingForParcel(parcelId);
-      return true;
+      return await loadSprayingForParcel(
+        parcelId,
+        nextPageNumber,
+        nextPageSize,
+        nextFromDate,
+        nextToDate,
+      );
     } catch {
       setAnnouncements([]);
+      setPageNumber(1);
+      setTotalPages(1);
+      setTotalCount(0);
       setError(loadErrorMessage);
-      return false;
+      return null;
     } finally {
       setLoading(false);
     }
@@ -73,14 +114,20 @@ export default function SprayingPage() {
       setNotificationCounts({});
 
       if (nextParcelId) {
-        await loadSprayingForParcel(nextParcelId);
+        await loadSprayingForParcel(nextParcelId, 1, 10, '', '');
       } else {
         setAnnouncements([]);
+        setPageNumber(1);
+        setTotalPages(1);
+        setTotalCount(0);
       }
     } catch {
       setParcels([]);
       setSelectedParcelId('');
       setAnnouncements([]);
+      setPageNumber(1);
+      setTotalPages(1);
+      setTotalCount(0);
       setNotificationCounts({});
       setError(loadErrorMessage);
     } finally {
@@ -99,7 +146,7 @@ export default function SprayingPage() {
     }
 
     setNotificationCounts({});
-    return fetchSprayingForParcel(selectedParcelId);
+    return fetchSprayingForParcel(selectedParcelId, pageNumber, pageSize, fromDate, toDate);
   }
 
   const handleParcelChange = async (event: ChangeEvent<HTMLSelectElement>) => {
@@ -110,13 +157,16 @@ export default function SprayingPage() {
     setWeatherWarning(null);
     setSelectedParcelId(nextParcelId);
     setAnnouncements([]);
+    setPageNumber(1);
+    setTotalPages(1);
+    setTotalCount(0);
     setNotificationCounts({});
 
     if (!nextParcelId) {
       return;
     }
 
-    await fetchSprayingForParcel(nextParcelId);
+    await fetchSprayingForParcel(nextParcelId, 1, pageSize, fromDate, toDate);
   };
 
   const handleSprayingCreated = async (nextWeatherWarning: string | null) => {
@@ -206,6 +256,89 @@ export default function SprayingPage() {
     }
   };
 
+  const handleFilterSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!selectedParcelId) {
+      return;
+    }
+
+    setSuccessMessage(null);
+    setActionError(null);
+    await fetchSprayingForParcel(selectedParcelId, 1, pageSize, fromDate, toDate);
+  };
+
+  const handleClearFilters = async () => {
+    setFromDate('');
+    setToDate('');
+    setSuccessMessage(null);
+    setActionError(null);
+
+    if (selectedParcelId) {
+      await fetchSprayingForParcel(selectedParcelId, 1, pageSize, '', '');
+    }
+  };
+
+  const handlePageChange = async (nextPageNumber: number) => {
+    if (
+      !selectedParcelId
+      || nextPageNumber < 1
+      || nextPageNumber === pageNumber
+      || nextPageNumber > totalPages
+    ) {
+      return;
+    }
+
+    await fetchSprayingForParcel(selectedParcelId, nextPageNumber, pageSize, fromDate, toDate);
+  };
+
+  const handlePageSizeChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+    const nextPageSize = Number(event.target.value);
+
+    if (!selectedParcelId || !Number.isFinite(nextPageSize) || nextPageSize <= 0) {
+      return;
+    }
+
+    await fetchSprayingForParcel(selectedParcelId, 1, nextPageSize, fromDate, toDate);
+  };
+
+  const handleExportPdf = async () => {
+    if (!selectedParcelId) {
+      return;
+    }
+
+    setPdfLoading(true);
+    setActionError(null);
+
+    try {
+      const result = await getSprayingByParcel(
+        selectedParcelId,
+        toFromDateParameter(fromDate),
+        toToDateParameter(toDate),
+        1,
+        Math.max(totalCount, 1),
+      );
+      const completedTreatments = result.items.filter((item) => isCompletedSprayingStatus(item.status));
+
+      if (completedTreatments.length === 0) {
+        setActionError('Nema zavrsenih tretmana za PDF izvoz.');
+        return;
+      }
+
+      const selectedParcel = parcels.find((parcel) => parcel.id === selectedParcelId);
+      await exportSprayingHistoryPdf(
+        selectedParcel ? selectedParcel.name : 'Parcela',
+        completedTreatments,
+        fromDate,
+        toDate,
+      );
+    } catch (requestError) {
+      setActionError(getApiErrorMessage(requestError, 'Greska pri generisanju PDF kartona prskanja.'));
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   const columns: DataTableColumn<SprayingAnnouncementDto>[] = [
     {
       header: 'StartTime',
@@ -222,6 +355,10 @@ export default function SprayingPage() {
       render: (item) => item.preparationType || <span className="muted-text">-</span>,
     },
     {
+      header: 'Kultura',
+      render: (item) => item.cropName || <span className="muted-text">-</span>,
+    },
+    {
       header: 'Status',
       render: (item) => <StatusBadge tone={getSprayingStatusTone(item.status)}>{item.status || '-'}</StatusBadge>,
     },
@@ -235,6 +372,14 @@ export default function SprayingPage() {
       ),
     },
     { header: 'CreatedAt', render: (item) => formatDateTime(item.createdAt) },
+    {
+      header: 'Kraj tretmana',
+      render: (item) => (item.endTime ? formatDateTime(item.endTime) : <span className="muted-text">-</span>),
+    },
+    {
+      header: 'Weather snapshot',
+      render: (item) => formatWeather(item),
+    },
     {
       header: 'CancelledAt',
       render: (item) => (item.cancelledAt ? formatDateTime(item.cancelledAt) : <span className="muted-text">-</span>),
@@ -314,28 +459,39 @@ export default function SprayingPage() {
     <div className="page-stack">
       <PageHeader
         title="Tretiranja pesticidima"
-        subtitle="Najave za izabranu parcelu"
+        subtitle="Najave i digitalni karton prskanja za izabranu parcelu"
         action={
-          <button
-            className="primary-button orange-button"
-            disabled={!selectedParcelId}
-            onClick={() => {
-              setSuccessMessage(null);
-              setActionError(null);
-              setWeatherWarning(null);
-              setIsCreateModalOpen(true);
-            }}
-            type="button"
-          >
-            <Plus size={18} />
-            Zakaži tretiranje
-          </button>
+          <div className="row-actions">
+            <button
+              className="secondary-action-button"
+              disabled={!selectedParcelId || totalCount === 0 || pdfLoading}
+              onClick={handleExportPdf}
+              type="button"
+            >
+              <FileDown size={18} />
+              {pdfLoading ? 'PDF...' : 'PDF karton'}
+            </button>
+            <button
+              className="primary-button orange-button"
+              disabled={!selectedParcelId}
+              onClick={() => {
+                setSuccessMessage(null);
+                setActionError(null);
+                setWeatherWarning(null);
+                setIsCreateModalOpen(true);
+              }}
+              type="button"
+            >
+              <Plus size={18} />
+              Zakaži tretiranje
+            </button>
+          </div>
         }
       />
 
       {parcels.length > 0 ? (
         <section className="section-card">
-          <div className="filter-row">
+          <form className="filter-row" onSubmit={handleFilterSubmit}>
             <label>
               Parcela
               <select disabled={loading} onChange={handleParcelChange} value={selectedParcelId}>
@@ -346,7 +502,39 @@ export default function SprayingPage() {
                 ))}
               </select>
             </label>
-          </div>
+
+            <label>
+              Od datuma
+              <input
+                disabled={loading}
+                onChange={(event) => setFromDate(event.target.value)}
+                type="date"
+                value={fromDate}
+              />
+            </label>
+
+            <label>
+              Do datuma
+              <input
+                disabled={loading}
+                onChange={(event) => setToDate(event.target.value)}
+                type="date"
+                value={toDate}
+              />
+            </label>
+
+            <button className="secondary-action-button" disabled={loading} type="submit">
+              Primeni filter
+            </button>
+            <button
+              className="secondary-action-button"
+              disabled={loading || (!fromDate && !toDate)}
+              onClick={handleClearFilters}
+              type="button"
+            >
+              Očisti
+            </button>
+          </form>
         </section>
       ) : null}
 
@@ -383,7 +571,43 @@ export default function SprayingPage() {
 
       {!loading && !error && selectedParcelId && announcements.length > 0 ? (
         <section className="section-card table-card">
-          <DataTable columns={columns} rows={announcements} getRowKey={(item) => item.id} minWidth={1180} />
+          <div className="filter-row">
+            <label>
+              Broj zapisa po strani
+              <select disabled={loading} onChange={handlePageSizeChange} value={pageSize}>
+                {[5, 10, 20, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="muted-text">
+              Strana {pageNumber} od {totalPages} | Ukupno zapisa: {totalCount}
+            </div>
+
+            <div className="row-actions">
+              <button
+                className="secondary-action-button"
+                disabled={pageNumber <= 1 || loading}
+                onClick={() => handlePageChange(pageNumber - 1)}
+                type="button"
+              >
+                Prethodna
+              </button>
+              <button
+                className="secondary-action-button"
+                disabled={pageNumber >= totalPages || loading}
+                onClick={() => handlePageChange(pageNumber + 1)}
+                type="button"
+              >
+                Sledeća
+              </button>
+            </div>
+          </div>
+
+          <DataTable columns={columns} rows={announcements} getRowKey={(item) => item.id} minWidth={1500} />
         </section>
       ) : null}
 
@@ -434,7 +658,33 @@ function isScheduledSprayingStatus(status: string) {
   return status.toLowerCase() === 'scheduled';
 }
 
-function formatDateTime(value: string) {
+function isCompletedSprayingStatus(status: string) {
+  return status.toLowerCase() === 'completed';
+}
+
+function formatWeather(item: SprayingAnnouncementDto) {
+  const weather = item.weatherSnapshot;
+
+  if (!weather) {
+    return <span className="muted-text">-</span>;
+  }
+
+  return `${weather.description || 'Bez opisa'}, ${weather.windSpeed.toFixed(1)} m/s, kiša: ${weather.hasRain ? 'da' : 'ne'}`;
+}
+
+function toFromDateParameter(value: string) {
+  return value ? `${value}T00:00:00` : undefined;
+}
+
+function toToDateParameter(value: string) {
+  return value ? `${value}T23:59:59.999` : undefined;
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return '-';
+  }
+
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {

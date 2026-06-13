@@ -6,7 +6,6 @@ import {
   getApiErrorMessage,
   getNearbyParcels,
   type ApiaryDto,
-  type MapParcelDto,
 } from '../api/apiClient';
 import { getCurrentUserId } from '../auth/authStorage';
 import ApiaryFormModal from '../components/ApiaryFormModal';
@@ -108,8 +107,16 @@ export default function ApiariesPage() {
         name: parcel.parcelName,
         latitude: parcel.latitude,
         longitude: parcel.longitude,
-        subtitle: getNearbyParcelSubtitle(parcel),
         type: 'parcel',
+        farmerName: parcel.farmerName,
+        farmerPhone: parcel.farmerPhone,
+        crops: (parcel.crops || []).map((crop) => ({
+          name: crop.name,
+          expectedBloomingStart: crop.expectedBloomingStart,
+          expectedBloomingEnd: crop.expectedBloomingEnd,
+          area: crop.area,
+          notes: crop.notes,
+        })),
       }));
 
       setMapItems([apiaryItem, ...nearbyItems]);
@@ -275,20 +282,4 @@ function isApiaryOwnedByAnotherUser(apiary: ApiaryDto, currentUserId: string | n
   }
 
   return apiary.beekeeperId !== currentUserId;
-}
-
-function getNearbyParcelSubtitle(parcel: MapParcelDto) {
-  if (parcel.farmerName && parcel.farmerPhone) {
-    return `${parcel.farmerName} • ${parcel.farmerPhone}`;
-  }
-
-  if (parcel.farmerName) {
-    return parcel.farmerName;
-  }
-
-  if (parcel.crops && parcel.crops.length > 0) {
-    return parcel.crops.map((crop) => crop.name).join(', ');
-  }
-
-  return undefined;
 }
