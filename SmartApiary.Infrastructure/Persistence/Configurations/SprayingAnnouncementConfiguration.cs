@@ -32,6 +32,9 @@ public class SprayingAnnouncementConfiguration : IEntityTypeConfiguration<Sprayi
         builder.Property(announcement => announcement.EndTime)
             .HasColumnType("datetime2");
 
+        builder.Property(announcement => announcement.CropName)
+            .HasMaxLength(500);
+
         builder.Property(announcement => announcement.WeatherSnapshotJson)
             .HasColumnType("nvarchar(max)");
     }
