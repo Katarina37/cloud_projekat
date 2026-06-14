@@ -1,15 +1,16 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import Topbar from '../components/Topbar';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function DashboardLayout() {
+  const location = useLocation();
+  const isWideContentPage = location.pathname === '/pcelinjaci';
+
   return (
     <div className="app-shell">
       <Sidebar />
       <div className="app-main">
-        <Topbar />
-        <main className="content-shell">
+        <main className={`content-shell${isWideContentPage ? ' content-shell-wide' : ''}`}>
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>

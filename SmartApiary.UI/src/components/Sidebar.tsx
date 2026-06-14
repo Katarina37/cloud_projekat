@@ -3,7 +3,6 @@ import {
   CalendarClock,
   LayoutDashboard,
   LogOut,
-  Map,
   MapPinned,
   Settings,
   Sprout,
@@ -22,7 +21,6 @@ import './Sidebar.css';
 const beekeeperNavigation = [
   { path: '/pregled', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/pcelinjaci', label: 'Pčelinjaci', icon: MapPinned },
-  { path: '/pcelinjaci#mapa', label: 'Mapa', icon: Map },
   { path: '/upozorenja', label: 'Upozorenja', icon: Bell },
   { path: '/podesavanja', label: 'Podešavanja', icon: Settings },
 ];

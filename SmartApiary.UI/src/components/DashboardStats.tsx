@@ -13,34 +13,49 @@ export default function DashboardStats({ apiaries, hives, alerts, deviceCount }:
   const unreadAlertsCount = alerts.filter((alert) => !alert.isRead).length;
 
   return (
-    <section className="stats-grid dashboard-stats-grid" aria-label="Dashboard statistika">
-      <StatCard
-        title="Pčelinjaci"
-        value={String(apiaries.length)}
-        detail="ukupno evidentirano"
-        icon={<MapPinned size={20} />}
-      />
-      <StatCard
-        title="Košnice"
-        value={String(hives.length)}
-        detail="za izabrani pčelinjak"
-        icon={<Hexagon size={20} />}
-        tone="orange"
-      />
-      <StatCard
-        title="Upozorenja"
-        value={String(unreadAlertsCount)}
-        detail="neprocitana upozorenja"
-        icon={<AlertTriangle size={20} />}
-        tone="red"
-      />
-      <StatCard
-        title="Uređaji"
-        value={String(deviceCount)}
-        detail="za izabranu košnicu"
-        icon={<Cpu size={20} />}
-        tone="green"
-      />
+    <section className="dashboard-metric-section" aria-labelledby="dashboard-summary-title">
+      <div className="dashboard-section-heading">
+        <div>
+          <span className="dashboard-section-kicker">Sažetak</span>
+          <h2 id="dashboard-summary-title">Stanje sistema</h2>
+        </div>
+        <span className="dashboard-section-note">Trenutni pregled</span>
+      </div>
+
+      <div className="stats-grid dashboard-stats-grid">
+        <StatCard
+          title="Pčelinjaci"
+          value={String(apiaries.length)}
+          detail="ukupno evidentirano"
+          icon={<MapPinned size={28} strokeWidth={1.8} />}
+          tone="apiary"
+          variant="split"
+        />
+        <StatCard
+          title="Košnice"
+          value={String(hives.length)}
+          detail="za izabrani pčelinjak"
+          icon={<Hexagon size={28} strokeWidth={1.8} />}
+          tone="hive"
+          variant="split"
+        />
+        <StatCard
+          title="Upozorenja"
+          value={String(unreadAlertsCount)}
+          detail="nepročitana upozorenja"
+          icon={<AlertTriangle size={28} strokeWidth={1.8} />}
+          tone="alert"
+          variant="split"
+        />
+        <StatCard
+          title="Uređaji"
+          value={String(deviceCount)}
+          detail="za izabranu košnicu"
+          icon={<Cpu size={28} strokeWidth={1.8} />}
+          tone="device"
+          variant="split"
+        />
+      </div>
     </section>
   );
 }

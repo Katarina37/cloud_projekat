@@ -1,4 +1,5 @@
 import { type ChangeEvent, useEffect, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import {
   getAlerts,
   getApiaries,
@@ -158,17 +159,27 @@ export default function DashboardPage() {
   const hasDashboardData = hasApiaryData || hasHiveData || latestStatus !== null || dailyDeltas.length > 0 || alerts.length > 0;
 
   return (
-    <div className="page-stack">
+    <div className="page-stack dashboard-page">
       <PageHeader
         title="Pregled sistema"
         subtitle="Pregled pčelinjaka, košnica, uređaja, telemetrije i upozorenja"
       />
 
       {apiaries.length > 0 ? (
-        <section className="section-card">
-          <div className="device-filter-grid">
-            <label>
-              Pčelinjak
+        <section
+          className="section-card dashboard-filter-card"
+          aria-label="Izbor pčelinjaka i košnice"
+        >
+          <div
+            className={`dashboard-scope-control${
+              hives.length > 0 ? '' : ' dashboard-scope-control-single'
+            }`}
+          >
+            <label className="dashboard-scope-step dashboard-scope-apiary">
+              <span className="dashboard-scope-label">
+                <span className="dashboard-scope-number">01</span>
+                Pčelinjak
+              </span>
               <select disabled={loading} onChange={handleApiaryChange} value={selectedApiaryId}>
                 {apiaries.map((apiary) => (
                   <option key={apiary.id} value={apiary.id}>
@@ -179,16 +190,24 @@ export default function DashboardPage() {
             </label>
 
             {hives.length > 0 ? (
-              <label>
-                Košnica
-                <select disabled={loading} onChange={handleHiveChange} value={selectedHiveId}>
-                  {hives.map((hive) => (
-                    <option key={hive.id} value={hive.id}>
-                      {hive.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <>
+                <span className="dashboard-scope-connector" aria-hidden="true">
+                  <ArrowRight size={22} strokeWidth={1.9} />
+                </span>
+                <label className="dashboard-scope-step dashboard-scope-hive">
+                  <span className="dashboard-scope-label">
+                    <span className="dashboard-scope-number">02</span>
+                    Košnica
+                  </span>
+                  <select disabled={loading} onChange={handleHiveChange} value={selectedHiveId}>
+                    {hives.map((hive) => (
+                      <option key={hive.id} value={hive.id}>
+                        {hive.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
             ) : null}
           </div>
         </section>

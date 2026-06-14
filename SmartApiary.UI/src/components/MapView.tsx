@@ -28,17 +28,25 @@ export type MapItem = {
 
 type Props = {
   items: MapItem[];
-  height?: number;
+  className?: string;
+  height?: number | string;
   zoom?: number;
   onSelect?: (item: MapItem) => void;
 };
 
-function makeIcon(html: string) {
+function makeApiaryIcon() {
   return L.divIcon({
     className: 'custom-div-icon',
-    html,
-    iconSize: [30, 42],
-    iconAnchor: [15, 42],
+    html: `
+      <div class="apiary-map-marker" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+          <circle cx="12" cy="10" r="2.5" />
+        </svg>
+      </div>
+    `,
+    iconSize: [42, 48],
+    iconAnchor: [21, 46],
   });
 }
 
@@ -64,7 +72,7 @@ function FitBoundsToItems({ items }: { items: MapItem[] }) {
   return null;
 }
 
-export default function MapView({ items, height = 380, zoom = 10, onSelect }: Props) {
+export default function MapView({ items, className, height = 380, zoom = 10, onSelect }: Props) {
   const center: [number, number] = items.length > 0 ? [items[0].latitude, items[0].longitude] : [45.2671, 19.8335];
   // Promena kljuca ponovo iscrta mapu kada se promene markeri.
   const mapKey = items
@@ -72,7 +80,7 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
     .join('|');
 
   return (
-    <div style={{ height }}>
+    <div className={className} style={{ height }}>
       <MapContainer key={mapKey} center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <FitBoundsToItems items={items} />
@@ -81,7 +89,7 @@ export default function MapView({ items, height = 380, zoom = 10, onSelect }: Pr
             let icon;
 
             if (it.type === 'apiary') {
-              icon = makeIcon(`<div style="font-size:20px">🐝</div>`);
+              icon = makeApiaryIcon();
             } else {
               icon = getCropMarkerIcon(it.crops?.[0]?.name);
             }
