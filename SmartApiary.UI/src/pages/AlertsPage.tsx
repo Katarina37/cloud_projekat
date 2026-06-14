@@ -144,13 +144,14 @@ export default function AlertsPage() {
                         <small>{formatDate(notification.createdAt)}</small>
                         {!notification.isRead ? (
                           <button
-                            className="secondary-action-button"
+                            aria-label="Označi kao pročitano"
+                            className="secondary-action-button icon-action-button"
                             disabled={markingNotificationId === notification.id}
                             onClick={() => handleMarkAsRead(notification.id)}
+                            title="Označi kao pročitano"
                             type="button"
                           >
                             <CheckCircle2 size={16} />
-                            Označi kao pročitano
                           </button>
                         ) : null}
                       </div>

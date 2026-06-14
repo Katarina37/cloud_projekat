@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { clearAuthToken, getAuthToken } from '../auth/authStorage';
+import { CONFIG } from '../config/config';
 
 const apiClient = axios.create({
-  baseURL: 'https://localhost:7035/api',
+  baseURL: CONFIG.API_BASE_URL,
 });
 
 apiClient.interceptors.request.use((config) => {

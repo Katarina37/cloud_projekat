@@ -39,7 +39,7 @@ public class SprayingAnnouncementConfiguration : IEntityTypeConfiguration<Sprayi
         builder.HasOne<Crop>()
             .WithMany()
             .HasForeignKey(announcement => announcement.CropId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasIndex(announcement => announcement.CropId);
 

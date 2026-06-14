@@ -3,15 +3,16 @@ using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
-using SmartApiary.Domain.Models;
 
 namespace SmartApiary.Application.Features.Telemetry.GetDailyWeightDelta;
 
 public sealed class GetDailyWeightDeltaQueryHandler
     : IRequestHandler<GetDailyWeightDeltaQuery, Result<IReadOnlyList<DailyWeightDeltaDto>>>
 {
-    private static readonly TimeSpan MorningTargetTime = TimeSpan.FromHours(8);
-    private static readonly TimeSpan EveningTargetTime = TimeSpan.FromHours(20);
+    private static readonly TimeSpan MorningStartTime = TimeSpan.FromHours(8);
+    private static readonly TimeSpan MorningEndTime = TimeSpan.FromHours(9);
+    private static readonly TimeSpan EveningStartTime = TimeSpan.FromHours(19);
+    private static readonly TimeSpan EveningEndTime = TimeSpan.FromHours(20);
 
     private readonly IApiaryRepository _apiaryRepository;
     private readonly ICurrentUserService _currentUserService;
@@ -71,32 +72,40 @@ public sealed class GetDailyWeightDeltaQueryHandler
             request.To,
             cancellationToken);
 
-        var dailyDeltas = readings
-            .GroupBy(reading => reading.Timestamp.Date)
-            .OrderBy(group => group.Key)
-            .Select(group =>
-            {
-                var dayReadings = group.ToList();
-                var morningReading = GetClosestReading(dayReadings, group.Key.Add(MorningTargetTime));
-                var eveningReading = GetClosestReading(dayReadings, group.Key.Add(EveningTargetTime));
+        var dailyDeltas = new List<DailyWeightDeltaDto>();
 
-                return new DailyWeightDeltaDto
-                {
-                    Date = group.Key,
-                    DeltaKg = eveningReading.WeightKg - morningReading.WeightKg
-                };
-            })
-            .ToList();
+        foreach (var group in readings
+                     .GroupBy(reading => reading.Timestamp.Date)
+                     .OrderBy(group => group.Key))
+        {
+            var morningReading = group
+                .Where(reading =>
+                    reading.Timestamp.TimeOfDay >= MorningStartTime &&
+                    reading.Timestamp.TimeOfDay <= MorningEndTime)
+                .OrderBy(reading => reading.Timestamp)
+                .FirstOrDefault();
+
+            var eveningReading = group
+                .Where(reading =>
+                    reading.Timestamp.TimeOfDay >= EveningStartTime &&
+                    reading.Timestamp.TimeOfDay <= EveningEndTime)
+                .OrderBy(reading => reading.Timestamp)
+                .LastOrDefault();
+
+            if (morningReading is null ||
+                eveningReading is null ||
+                morningReading.Id == eveningReading.Id)
+            {
+                continue;
+            }
+
+            dailyDeltas.Add(new DailyWeightDeltaDto
+            {
+                Date = group.Key,
+                DeltaKg = eveningReading.WeightKg - morningReading.WeightKg
+            });
+        }
 
         return Result<IReadOnlyList<DailyWeightDeltaDto>>.Success(dailyDeltas);
-    }
-
-    private static TelemetryReading GetClosestReading(
-        IReadOnlyList<TelemetryReading> readings,
-        DateTime targetTime)
-    {
-        return readings
-            .OrderBy(reading => Math.Abs((reading.Timestamp - targetTime).TotalSeconds))
-            .First();
     }
 }

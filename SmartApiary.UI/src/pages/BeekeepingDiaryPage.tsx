@@ -277,25 +277,27 @@ export default function BeekeepingDiaryPage() {
       render: (inspection) => (
         <div className="row-actions">
           <button
-            className="secondary-action-button"
+            aria-label="Izmeni zapis"
+            className="secondary-action-button icon-action-button"
             disabled={deletingInspectionId === inspection.id}
             onClick={() => {
               setSuccessMessage(null);
               setEditingInspection(inspection);
             }}
+            title="Izmeni zapis"
             type="button"
           >
             <Pencil size={16} />
-            Izmeni
           </button>
           <button
-            className="danger-action-button"
+            aria-label={deletingInspectionId === inspection.id ? 'Brisanje zapisa' : 'Obriši zapis'}
+            className="danger-action-button icon-action-button"
             disabled={deletingInspectionId === inspection.id}
             onClick={() => handleDeleteInspection(inspection)}
+            title={deletingInspectionId === inspection.id ? 'Brisanje zapisa' : 'Obriši zapis'}
             type="button"
           >
             <Trash2 size={16} />
-            {deletingInspectionId === inspection.id ? 'Brisanje...' : 'Obriši'}
           </button>
         </div>
       ),

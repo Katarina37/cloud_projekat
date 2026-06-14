@@ -1,9 +1,13 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace SmartApiary.Simulator.Services;
 
 public sealed class DeviceActivationClient
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private readonly HttpClient _httpClient;
     private readonly Uri _activationEndpoint;
 
@@ -24,9 +28,13 @@ public sealed class DeviceActivationClient
             deviceIdentifier
         };
 
-        using var response = await _httpClient.PostAsJsonAsync(
+        using var content = new ByteArrayContent(
+            JsonSerializer.SerializeToUtf8Bytes(payload, JsonOptions));
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+        using var response = await _httpClient.PostAsync(
             _activationEndpoint,
-            payload,
+            content,
             cancellationToken);
 
         if (!response.IsSuccessStatusCode)

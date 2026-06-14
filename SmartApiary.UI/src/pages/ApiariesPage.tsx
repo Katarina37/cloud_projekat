@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapPin, Pencil, Plus, Trash2 } from 'lucide-react';
+import { MapPin, MapPinned, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
   deleteApiary,
   getApiaries,
@@ -239,34 +239,37 @@ export default function ApiariesPage() {
 
               <div className="card-action-row">
                 <button
-                  className="secondary-action-button"
+                  aria-label="Prikaži okolne parcele"
+                  className="secondary-action-button icon-action-button"
                   disabled={nearbyLoadingId === apiary.id || isApiaryOwnedByAnotherUser(apiary, currentUserId)}
                   onClick={() => handleShowNearbyParcels(apiary)}
                   type="button"
-                  title={isApiaryOwnedByAnotherUser(apiary, currentUserId) ? 'Nemate pravo da vidite okolne parcele za ovaj pčelinjak' : undefined}
+                  title={isApiaryOwnedByAnotherUser(apiary, currentUserId) ? 'Nemate pravo da vidite okolne parcele za ovaj pčelinjak' : 'Prikaži okolne parcele'}
                 >
-                  {nearbyLoadingId === apiary.id ? 'Učitavanje...' : 'Okolne parcele'}
+                  <MapPinned size={18} />
                 </button>
                 <button
-                  className="secondary-action-button"
+                  aria-label="Izmeni pčelinjak"
+                  className="secondary-action-button icon-action-button"
                   disabled={deletingApiaryId === apiary.id}
                   onClick={() => {
                     setSuccessMessage(null);
                     setEditingApiary(apiary);
                   }}
+                  title="Izmeni pčelinjak"
                   type="button"
                 >
                   <Pencil size={16} />
-                  Izmeni
                 </button>
                 <button
-                  className="danger-action-button"
+                  aria-label={deletingApiaryId === apiary.id ? 'Brisanje pčelinjaka' : 'Obriši pčelinjak'}
+                  className="danger-action-button icon-action-button"
                   disabled={deletingApiaryId === apiary.id}
                   onClick={() => handleDeleteApiary(apiary)}
+                  title={deletingApiaryId === apiary.id ? 'Brisanje pčelinjaka' : 'Obriši pčelinjak'}
                   type="button"
                 >
                   <Trash2 size={16} />
-                  {deletingApiaryId === apiary.id ? 'Brisanje...' : 'Obriši'}
                 </button>
               </div>
             </article>

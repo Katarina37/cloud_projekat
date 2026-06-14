@@ -9,7 +9,6 @@ namespace SmartApiary.WebApi.Services;
 public static class DevelopmentUserSeeder
 {
     private const string DefaultAdminEmail = "admin@smartapiary.local";
-    private const string DefaultAdminPassword = "Admin123!";
 
     public static async Task SeedDevelopmentAdminAsync(this WebApplication app)
     {
@@ -39,7 +38,10 @@ public static class DevelopmentUserSeeder
         var password = configuration["DevelopmentAdmin:Password"];
         if (string.IsNullOrWhiteSpace(password))
         {
-            password = DefaultAdminPassword;
+            logger.LogWarning(
+                "Development admin was not seeded because DevelopmentAdmin:Password is not configured. "
+                + "Set it with User Secrets or an environment variable.");
+            return;
         }
 
         var passwordHash = passwordHasher.Hash(password);
@@ -72,8 +74,7 @@ public static class DevelopmentUserSeeder
 
         await dbContext.SaveChangesAsync();
         logger.LogInformation(
-            "Development admin is ready. Email: {Email}. Password: {Password}",
-            email,
-            password);
+            "Development admin is ready. Email: {Email}.",
+            email);
     }
 }

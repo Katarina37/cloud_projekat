@@ -19,9 +19,9 @@ import PageHeader from '../components/PageHeader';
 import TelemetryCharts from '../components/TelemetryCharts';
 import TelemetryFilters from '../components/TelemetryFilters';
 import TelemetryStatusCards from '../components/TelemetryStatusCards';
+import { CONFIG } from '../config/config';
 
 const telemetryLoadErrorMessage = 'Greška pri učitavanju telemetrije.';
-const telemetryHubUrl = 'https://localhost:7035/hubs/telemetry';
 const telemetryUpdateEvent = 'ReceiveTelemetryUpdate';
 const telemetryToDate = formatApiDateTime(new Date());
 const telemetryFromDate = formatApiDateTime(addDays(new Date(), -7));
@@ -115,7 +115,7 @@ export default function TelemetryPage() {
 
   useEffect(() => {
     const connection = new HubConnectionBuilder()
-      .withUrl(telemetryHubUrl, {
+      .withUrl(CONFIG.HUB_URL, {
         accessTokenFactory: () => getAuthToken() ?? '',
       })
       .withAutomaticReconnect()

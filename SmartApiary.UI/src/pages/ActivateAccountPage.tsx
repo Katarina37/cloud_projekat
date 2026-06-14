@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { KeyRound } from 'lucide-react';
 import { activateAccount, getApiErrorMessage } from '../api/apiClient';
 import BrandLogo from '../components/BrandLogo';
+import AuthLayout from '../components/auth/AuthLayout';
+import registerVideo from '../assets/auth/RegisterVideo.mp4';
 
 export default function ActivateAccountPage() {
   const [searchParams] = useSearchParams();
@@ -38,20 +40,24 @@ export default function ActivateAccountPage() {
   };
 
   return (
-    <main className="auth-shell">
-      <section className="auth-card">
-        <div className="brand auth-brand">
-          <BrandLogo />
-          <div>
-            <strong>Aktivacija naloga</strong>
-            <span>Smart Apiary</span>
+    <AuthLayout videoSrc={registerVideo}>
+      <section className="auth-layout-card auth-layout-card-wide">
+        <header className="auth-layout-card-header">
+          <div className="auth-layout-brand">
+            <BrandLogo />
+            <div className="auth-layout-brand-copy">
+              <span className="auth-layout-eyebrow">Aktivacija naloga</span>
+              <h1>SmartApiary</h1>
+            </div>
           </div>
-        </div>
-        <p className="auth-note">
+          <p className="auth-layout-subtitle">Kreirajte nalog i povežite svoj pčelinjak</p>
+        </header>
+
+        <p className="auth-layout-note">
           Aktivacioni link popunjava token automatski. Ako imas samo token, unesi ga ovdje i izaberi novu lozinku.
         </p>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="auth-layout-form" onSubmit={handleSubmit}>
           <label>
             Aktivacioni token
             <input
@@ -91,16 +97,16 @@ export default function ActivateAccountPage() {
           {successMessage ? <p className="form-success">{successMessage}</p> : null}
           {error ? <p className="form-error">{error}</p> : null}
 
-          <button className="primary-button orange-button" disabled={isSubmitting} type="submit">
+          <button className="primary-button auth-layout-submit" disabled={isSubmitting} type="submit">
             <KeyRound size={18} />
             {isSubmitting ? 'Aktivacija...' : 'Aktiviraj'}
           </button>
         </form>
 
-        <div className="auth-links">
-          <Link to="/login">Nazad na prijavu</Link>
+        <div className="auth-layout-links">
+          <Link to="/login">Već imate nalog? Prijavite se</Link>
         </div>
       </section>
-    </main>
+    </AuthLayout>
   );
 }

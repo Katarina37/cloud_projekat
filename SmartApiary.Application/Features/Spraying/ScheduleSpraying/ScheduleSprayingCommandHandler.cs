@@ -71,10 +71,11 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
         announcement.SetNotifiedBeekeepersCount(notifiedBeekeepersCount);
 
         var title = "Pesticide spraying scheduled";
-        var message = BuildScheduledMessage(parcel.Name, announcement.StartTime, announcement.DurationHours, announcement.PreparationType);
 
         await _sprayingQueueService.EnqueueAsync(new SprayingNotificationMessage(
             announcement.Id,
+            parcel.Id,
+            parcel.FarmerId,
             parcel.Name,
             announcement.StartTime,
             announcement.DurationHours,
@@ -82,7 +83,7 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
             parcel.Location.Latitude,
             parcel.Location.Longitude,
             title,
-            message,
+            "Warning: planned pesticide spraying may endanger nearby bee colonies.",
             NotificationType.PesticideWarning), cancellationToken);
 
         await _sprayingAnnouncementRepository.AddAsync(announcement, cancellationToken);
@@ -114,18 +115,5 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
         {
             return null;
         }
-    }
-
-    private static string BuildScheduledMessage(
-        string parcelName,
-        DateTime startTime,
-        int durationHours,
-        string? preparationType)
-    {
-        var preparation = string.IsNullOrWhiteSpace(preparationType)
-            ? "Not specified"
-            : preparationType;
-
-        return $"Spraying on parcel '{parcelName}' is scheduled for {startTime:u} and will last {durationHours} hour(s). Preparation: {preparation}.";
     }
 }

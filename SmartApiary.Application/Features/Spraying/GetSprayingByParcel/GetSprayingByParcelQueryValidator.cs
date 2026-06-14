@@ -8,5 +8,12 @@ public sealed class GetSprayingByParcelQueryValidator : AbstractValidator<GetSpr
     {
         RuleFor(query => query.ParcelId)
             .NotEmpty();
+
+        RuleFor(query => query.PageNumber)
+            .GreaterThanOrEqualTo(1);
+
+        RuleFor(query => query.PageSize)
+            .GreaterThan(0)
+            .LessThanOrEqualTo(50);
     }
 }

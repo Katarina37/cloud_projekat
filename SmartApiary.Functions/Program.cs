@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SmartApiary.Application.Behaviors;
 using SmartApiary.Application.Common.Results;
+using SmartApiary.Application.Interfaces.Services;
+using SmartApiary.Functions.Services;
 using SmartApiary.Infrastructure.Extensions;
 
 var applicationAssembly = typeof(Result).Assembly;
@@ -14,6 +16,7 @@ var host = new HostBuilder()
     .ConfigureServices((context, services) =>
     {
         services.AddInfrastructure(context.Configuration);
+        services.AddSingleton<ICurrentUserService, FunctionCurrentUserService>();
         services.AddMediatR(configuration =>
         {
             configuration.RegisterServicesFromAssembly(applicationAssembly);

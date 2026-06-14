@@ -23,10 +23,22 @@ public sealed class DeviceActivationFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "devices/activate")] HttpRequestData req,
         CancellationToken cancellationToken)
     {
-        var request = await JsonSerializer.DeserializeAsync<DeviceActivationRequest>(
-            req.Body,
-            JsonOptions,
-            cancellationToken);
+        DeviceActivationRequest? request;
+        try
+        {
+            request = await JsonSerializer.DeserializeAsync<DeviceActivationRequest>(
+                req.Body,
+                JsonOptions,
+                cancellationToken);
+        }
+        catch (JsonException)
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(
+                new { message = "Activation payload is invalid." },
+                cancellationToken);
+            return badRequest;
+        }
 
         if (request is null || string.IsNullOrWhiteSpace(request.SerialNumber) || string.IsNullOrWhiteSpace(request.DeviceIdentifier))
         {

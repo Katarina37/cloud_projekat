@@ -163,25 +163,27 @@ export default function HivesPage() {
       render: (hive) => (
         <div className="row-actions">
           <button
-            className="secondary-action-button"
+            aria-label="Izmeni košnicu"
+            className="secondary-action-button icon-action-button"
             disabled={deletingHiveId === hive.id}
             onClick={() => {
               setSuccessMessage(null);
               setEditingHive(hive);
             }}
+            title="Izmeni košnicu"
             type="button"
           >
             <Pencil size={16} />
-            Izmeni
           </button>
           <button
-            className="danger-action-button"
+            aria-label={deletingHiveId === hive.id ? 'Brisanje košnice' : 'Obriši košnicu'}
+            className="danger-action-button icon-action-button"
             disabled={deletingHiveId === hive.id}
             onClick={() => handleDeleteHive(hive)}
+            title={deletingHiveId === hive.id ? 'Brisanje košnice' : 'Obriši košnicu'}
             type="button"
           >
             <Trash2 size={16} />
-            {deletingHiveId === hive.id ? 'Brisanje...' : 'Obriši'}
           </button>
         </div>
       ),

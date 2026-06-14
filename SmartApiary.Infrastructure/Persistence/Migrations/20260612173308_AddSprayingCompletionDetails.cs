@@ -41,7 +41,7 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                 column: "CropId",
                 principalTable: "Crops",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                onDelete: ReferentialAction.NoAction);
         }
 
         /// <inheritdoc />

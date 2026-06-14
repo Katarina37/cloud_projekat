@@ -6,6 +6,12 @@ local.settings.json
 
 # Local appsettings overrides
 appsettings.Development.local.json
+appsettings.*.local.json
+
+# Local environment files
+.env
+.env.*
+!.env.example
 
 # User-specific files
 *.suo

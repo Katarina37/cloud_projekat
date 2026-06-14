@@ -231,7 +231,8 @@ export default function ParcelsPage() {
 
               <div className="card-action-row">
                 <button
-                  className="secondary-action-button orange-action-button"
+                  aria-label="Izmeni parcelu"
+                  className="secondary-action-button orange-action-button icon-action-button"
                   disabled={deletingParcelId === parcel.id}
                   onClick={() => {
                     setError(null);
@@ -239,19 +240,20 @@ export default function ParcelsPage() {
                     setSelectedParcel(parcel);
                     setEditModalOpen(true);
                   }}
+                  title="Izmeni parcelu"
                   type="button"
                 >
                   <Pencil size={16} />
-                  Izmeni
                 </button>
                 <button
-                  className="danger-action-button"
+                  aria-label={deletingParcelId === parcel.id ? 'Brisanje parcele' : 'Obriši parcelu'}
+                  className="danger-action-button icon-action-button"
                   disabled={deletingParcelId === parcel.id}
                   onClick={() => handleDeleteParcel(parcel)}
+                  title={deletingParcelId === parcel.id ? 'Brisanje parcele' : 'Obriši parcelu'}
                   type="button"
                 >
                   <Trash2 size={16} />
-                  {deletingParcelId === parcel.id ? 'Brisanje...' : 'Obriši'}
                 </button>
               </div>
             </article>

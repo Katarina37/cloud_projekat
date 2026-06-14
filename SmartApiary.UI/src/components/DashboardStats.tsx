@@ -10,6 +10,8 @@ type DashboardStatsProps = {
 };
 
 export default function DashboardStats({ apiaries, hives, alerts, deviceCount }: DashboardStatsProps) {
+  const unreadAlertsCount = alerts.filter((alert) => !alert.isRead).length;
+
   return (
     <section className="stats-grid dashboard-stats-grid" aria-label="Dashboard statistika">
       <StatCard
@@ -27,8 +29,8 @@ export default function DashboardStats({ apiaries, hives, alerts, deviceCount }:
       />
       <StatCard
         title="Upozorenja"
-        value={String(alerts.length)}
-        detail="trenutno dostupno"
+        value={String(unreadAlertsCount)}
+        detail="neprocitana upozorenja"
         icon={<AlertTriangle size={20} />}
         tone="red"
       />

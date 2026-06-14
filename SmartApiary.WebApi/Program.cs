@@ -24,6 +24,10 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var applicationAssembly = typeof(Result).Assembly;
+var webApiConfig = builder.Configuration.GetSection("WebApi");
+var corsPolicyName = webApiConfig.GetValue<string>("CorsPolicyName") ?? "AllowFrontend";
+var reactOrigin = webApiConfig.GetValue<string>("ReactOrigin") ?? "http://localhost:5173";
+var telemetryHubRoute = webApiConfig.GetValue<string>("TelemetryHubRoute") ?? "/hubs/telemetry";
 
 builder.Services.AddControllers(options =>
 {
@@ -56,14 +60,10 @@ builder.Services.AddSwaggerGen(options =>
 });
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy(corsPolicyName, policy =>
     {
         policy
-            .WithOrigins(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://localhost:5174",
-                "http://127.0.0.1:5174")
+            .WithOrigins(reactOrigin)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -80,7 +80,6 @@ builder.Services.AddValidatorsFromAssembly(applicationAssembly);
 builder.Services.AddScoped<ISprayingNotificationService, SprayingNotificationService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RoleAuthorizationBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -89,6 +88,12 @@ builder.Services.AddHostedService<TelemetryWorker>();
 var jwtOptions = builder.Configuration
     .GetSection(JwtOptions.SectionName)
     .Get<JwtOptions>() ?? new JwtOptions();
+
+if (string.IsNullOrWhiteSpace(jwtOptions.Secret))
+{
+    throw new InvalidOperationException(
+        "Jwt:Secret is not configured. Set it with User Secrets or an environment variable.");
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -116,7 +121,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var path = context.HttpContext.Request.Path;
 
                 if (!string.IsNullOrWhiteSpace(accessToken)
-                    && path.StartsWithSegments("/hubs/telemetry"))
+                    && path.StartsWithSegments(telemetryHubRoute))
                 {
                     context.Token = accessToken;
                 }
@@ -195,12 +200,12 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowFrontend");
+app.UseCors(corsPolicyName);
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<TelemetryHub>("/hubs/telemetry");
+app.MapHub<TelemetryHub>(telemetryHubRoute);
 app.MapControllers();
 
 app.Run();

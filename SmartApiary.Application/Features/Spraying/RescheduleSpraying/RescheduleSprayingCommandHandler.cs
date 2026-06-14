@@ -65,6 +65,8 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
 
         await _sprayingQueueService.EnqueueAsync(new SprayingNotificationMessage(
             announcement.Id,
+            parcel.Id,
+            parcel.FarmerId,
             parcel.Name,
             announcement.StartTime,
             announcement.DurationHours,
@@ -72,7 +74,7 @@ public sealed class RescheduleSprayingCommandHandler : IRequestHandler<Reschedul
             parcel.Location.Latitude,
             parcel.Location.Longitude,
             "Pesticide spraying changed",
-            $"Spraying on parcel '{parcel.Name}' was rescheduled to {announcement.StartTime:u} and will last {announcement.DurationHours} hour(s).",
+            "Warning: the planned pesticide spraying time has changed.",
             NotificationType.SprayingChanged), cancellationToken);
 
         _sprayingAnnouncementRepository.Update(announcement);

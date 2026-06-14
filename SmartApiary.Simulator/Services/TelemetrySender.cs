@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using SmartApiary.Simulator.Models;
 
@@ -22,9 +22,13 @@ public sealed class TelemetrySender
         string deviceAccessToken,
         CancellationToken cancellationToken)
     {
+        var content = new ByteArrayContent(
+            JsonSerializer.SerializeToUtf8Bytes(payload, JsonOptions));
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
         using var request = new HttpRequestMessage(HttpMethod.Post, _telemetryEndpoint)
         {
-            Content = JsonContent.Create(payload, options: JsonOptions)
+            Content = content
         };
         request.Headers.Add("X-Device-Token", deviceAccessToken);
 

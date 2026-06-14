@@ -298,14 +298,26 @@ export default function SprayingPage() {
     setActionError(null);
 
     try {
-      const result = await getSprayingByParcel(
-        selectedParcelId,
-        toFromDateParameter(fromDate),
-        toToDateParameter(toDate),
-        1,
-        Math.max(totalCount, 1),
-      );
-      const completedTreatments = result.items.filter((item) => isCompletedSprayingStatus(item.status));
+      const completedTreatments: SprayingAnnouncementDto[] = [];
+      const exportPageSize = 50;
+      let exportPageNumber = 1;
+      let exportTotalPages = 1;
+
+      while (exportPageNumber <= exportTotalPages) {
+        const result = await getSprayingByParcel(
+          selectedParcelId,
+          toFromDateParameter(fromDate),
+          toToDateParameter(toDate),
+          exportPageNumber,
+          exportPageSize,
+        );
+
+        completedTreatments.push(
+          ...result.items.filter((item) => isCompletedSprayingStatus(item.status)),
+        );
+        exportTotalPages = result.totalPages;
+        exportPageNumber += 1;
+      }
 
       if (completedTreatments.length === 0) {
         setActionError('Nema zavrsenih tretmana za PDF izvoz.');
@@ -401,7 +413,8 @@ export default function SprayingPage() {
             {!isFinalSprayingStatus(item.status) ? (
               <>
                 <button
-                  className="secondary-action-button orange-action-button"
+                  aria-label="Pomeri termin"
+                  className="secondary-action-button orange-action-button icon-action-button"
                   disabled={actionsDisabled}
                   onClick={() => {
                     setSuccessMessage(null);
@@ -409,27 +422,29 @@ export default function SprayingPage() {
                     setWeatherWarning(null);
                     setReschedulingAnnouncement(item);
                   }}
+                  title="Pomeri termin"
                   type="button"
                 >
                   <RotateCw size={16} />
-                  Pomeri termin
                 </button>
 
                 <button
-                  className="danger-action-button"
+                  aria-label={actionLoadingId === item.id ? 'Otkazivanje tretiranja' : 'Otkaži tretiranje'}
+                  className="danger-action-button icon-action-button"
                   disabled={actionsDisabled}
                   onClick={() => handleCancelSpraying(item)}
+                  title={actionLoadingId === item.id ? 'Otkazivanje tretiranja' : 'Otkaži tretiranje'}
                   type="button"
                 >
                   <XCircle size={16} />
-                  {actionLoadingId === item.id ? 'Otkazivanje...' : 'Otkaži'}
                 </button>
               </>
             ) : null}
 
             {isScheduledSprayingStatus(item.status) ? (
               <button
-                className="secondary-action-button"
+                aria-label="Završi prskanje"
+                className="secondary-action-button icon-action-button"
                 disabled={actionsDisabled}
                 onClick={() => {
                   setSuccessMessage(null);
@@ -437,21 +452,22 @@ export default function SprayingPage() {
                   setWeatherWarning(null);
                   setCompletingAnnouncement(item);
                 }}
+                title="Završi prskanje"
                 type="button"
               >
                 <CheckCircle2 size={16} />
-                Završi prskanje
               </button>
             ) : null}
 
             <button
-              className="secondary-action-button"
+              aria-label="Status obaveštenja"
+              className="secondary-action-button icon-action-button"
               disabled={notificationDisabled}
               onClick={() => handleNotificationStatus(item)}
+              title="Status obaveštenja"
               type="button"
             >
               <Bell size={16} />
-              {notificationLoadingId === item.id ? 'Učitavanje...' : 'Status obaveštenja'}
             </button>
 
             {notificationLoaded ? (

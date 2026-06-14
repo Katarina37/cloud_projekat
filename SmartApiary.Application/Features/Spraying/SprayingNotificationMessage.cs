@@ -4,6 +4,8 @@ namespace SmartApiary.Application.Features.Spraying;
 
 public sealed record SprayingNotificationMessage(
     Guid AnnouncementId,
+    Guid ParcelId,
+    Guid FarmerId,
     string ParcelName,
     DateTime StartTime,
     int DurationHours,

@@ -178,7 +178,8 @@ export default function AdminUsersPage() {
                       <td className="table-actions-cell">
                         <div className="row-actions">
                           <button
-                            className="danger-action-button"
+                            aria-label={deactivatingUserId === user.id ? 'Deaktivacija korisnika' : 'Deaktiviraj korisnika'}
+                            className="danger-action-button icon-action-button"
                             disabled={
                               isCurrentUser
                               || !user.isActive
@@ -186,21 +187,20 @@ export default function AdminUsersPage() {
                               || deletingUserId === user.id
                             }
                             onClick={() => handleDeactivate(user)}
-                            title={isCurrentUser ? 'Ne mozete deaktivirati sopstveni nalog.' : undefined}
+                            title={isCurrentUser ? 'Ne mozete deaktivirati sopstveni nalog.' : 'Deaktiviraj korisnika'}
                             type="button"
                           >
                             <UserX size={16} />
-                            {deactivatingUserId === user.id ? 'Deaktivacija...' : 'Deaktiviraj'}
                           </button>
                           <button
-                            className="danger-action-button"
+                            aria-label={deletingUserId === user.id ? 'Brisanje korisnika' : 'Obriši korisnika'}
+                            className="danger-action-button icon-action-button"
                             disabled={isCurrentUser || deletingUserId === user.id || deactivatingUserId === user.id}
                             onClick={() => handleDelete(user)}
-                            title={isCurrentUser ? 'Ne mozete obrisati sopstveni nalog.' : undefined}
+                            title={isCurrentUser ? 'Ne mozete obrisati sopstveni nalog.' : 'Obriši korisnika'}
                             type="button"
                           >
                             <Trash2 size={16} />
-                            {deletingUserId === user.id ? 'Brisanje...' : 'Obrisi'}
                           </button>
                         </div>
                       </td>

@@ -59,6 +59,8 @@ public sealed class CancelSprayingCommandHandler : IRequestHandler<CancelSprayin
 
         await _sprayingQueueService.EnqueueAsync(new SprayingNotificationMessage(
             announcement.Id,
+            parcel.Id,
+            parcel.FarmerId,
             parcel.Name,
             announcement.StartTime,
             announcement.DurationHours,
@@ -66,7 +68,7 @@ public sealed class CancelSprayingCommandHandler : IRequestHandler<CancelSprayin
             parcel.Location.Latitude,
             parcel.Location.Longitude,
             "Pesticide spraying cancelled",
-            $"Spraying on parcel '{parcel.Name}' scheduled for {announcement.StartTime:u} was cancelled.",
+            "The previously announced pesticide spraying has been cancelled.",
             NotificationType.SprayingCancelled), cancellationToken);
 
         _sprayingAnnouncementRepository.Update(announcement);

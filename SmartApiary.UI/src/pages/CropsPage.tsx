@@ -230,25 +230,27 @@ export default function CropsPage() {
 
               <div className="card-action-row">
                 <button
-                  className="secondary-action-button"
+                  aria-label="Izmeni kulturu"
+                  className="secondary-action-button icon-action-button"
                   disabled={deletingCropId === crop.id}
                   onClick={() => {
                     setSuccessMessage(null);
                     setEditingCrop(crop);
                   }}
+                  title="Izmeni kulturu"
                   type="button"
                 >
                   <Pencil size={16} />
-                  Izmeni
                 </button>
                 <button
-                  className="danger-action-button"
+                  aria-label={deletingCropId === crop.id ? 'Brisanje kulture' : 'Obriši kulturu'}
+                  className="danger-action-button icon-action-button"
                   disabled={deletingCropId === crop.id}
                   onClick={() => handleDeleteCrop(crop)}
+                  title={deletingCropId === crop.id ? 'Brisanje kulture' : 'Obriši kulturu'}
                   type="button"
                 >
                   <Trash2 size={16} />
-                  {deletingCropId === crop.id ? 'Brisanje...' : 'Obriši'}
                 </button>
               </div>
             </article>

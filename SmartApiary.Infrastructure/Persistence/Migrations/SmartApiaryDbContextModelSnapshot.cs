@@ -367,42 +367,6 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                     b.ToTable("SprayingAnnouncements", (string)null);
                 });
 
-            modelBuilder.Entity("SmartApiary.Domain.Models.TelemetryReading", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("BatteryPercent")
-                        .HasColumnType("float");
-
-                    b.Property<Guid>("DeviceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("HiveId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("HumidityPercent")
-                        .HasColumnType("float");
-
-                    b.Property<double>("TemperatureCelsius")
-                        .HasColumnType("float");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("WeightKg")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeviceId");
-
-                    b.HasIndex("HiveId", "Timestamp");
-
-                    b.ToTable("TelemetryReadings", (string)null);
-                });
-
             modelBuilder.Entity("SmartApiary.Domain.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -616,26 +580,11 @@ namespace SmartApiary.Infrastructure.Persistence.Migrations
                     b.HasOne("SmartApiary.Domain.Models.Crop", null)
                         .WithMany()
                         .HasForeignKey("CropId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("SmartApiary.Domain.Models.Parcel", null)
                         .WithMany()
                         .HasForeignKey("ParcelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("SmartApiary.Domain.Models.TelemetryReading", b =>
-                {
-                    b.HasOne("SmartApiary.Domain.Models.Device", null)
-                        .WithMany()
-                        .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SmartApiary.Domain.Models.Hive", null)
-                        .WithMany()
-                        .HasForeignKey("HiveId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
