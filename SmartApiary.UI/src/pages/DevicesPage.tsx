@@ -24,6 +24,7 @@ import {
   type DeviceDto,
   type HiveDto,
 } from '../api/apiClient';
+import devicesBanner from '../assets/banners/devices-banner.png';
 import ActivateDeviceModal from '../components/ActivateDeviceModal';
 import PageHeader from '../components/PageHeader';
 import RegisterDeviceModal from '../components/RegisterDeviceModal';
@@ -173,19 +174,21 @@ export default function DevicesPage() {
   const pageLoading = apiariesLoading || hivesLoading || loading;
 
   return (
-    <div className="page-stack resource-page devices-page">
+    <div className="page-stack resource-page devices-page banner-page">
       <PageHeader
+        bannerImage={devicesBanner}
         title="Uređaji"
         subtitle="Povežite pametne vage sa košnicama, proverite status uparivanja i upravljajte aktivacijom."
         action={
           <button
-            className="primary-button apiary-add-button"
+            aria-label="Registruj uređaj"
+            className="primary-button apiary-add-button page-banner-action"
             disabled={!selectedHiveId}
             onClick={() => setRegisterModalOpen(true)}
             type="button"
           >
-            <Plus size={18} />
-            Registruj uređaj
+            <Plus aria-hidden="true" size={20} />
+            <span className="page-banner-action-label">Registruj uređaj</span>
           </button>
         }
       />

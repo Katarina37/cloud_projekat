@@ -3,15 +3,27 @@
   min-width: 0;
 }
 
+.map-hero-page {
+  margin-top: 0;
+}
+
+.map-hero-page > :not(.apiary-map-panel) {
+  margin-right: 38px;
+  margin-left: 38px;
+}
+
 .apiary-map-panel {
   position: relative;
-  height: 520px;
-  min-height: 520px;
+  height: clamp(540px, 66vh, 700px);
+  min-height: 540px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
   background: #dfe7d8;
-  box-shadow: var(--shadow-md);
+  isolation: isolate;
+}
+
+.map-hero-page .apiary-map-panel {
+  margin-right: 0;
+  margin-left: 0;
 }
 
 .apiary-map-canvas {
@@ -23,38 +35,138 @@
   background: #dfe7d8;
 }
 
-.apiary-map-add-button,
-.farmer-map-export-button {
+.apiary-map-panel::after {
+  position: absolute;
+  z-index: 450;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 180px;
+  background: linear-gradient(0deg, rgba(24, 31, 20, 0.58), rgba(24, 31, 20, 0));
+  content: "";
+  pointer-events: none;
+}
+
+.map-hero-heading {
   position: absolute;
   z-index: 500;
+  bottom: 26px;
+  left: 32px;
+  max-width: min(560px, calc(100% - 260px));
+  color: #ffffff;
+  pointer-events: none;
+  text-shadow: 0 2px 14px rgba(16, 23, 13, 0.44);
+}
+
+.map-hero-heading > span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.map-hero-heading h1 {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 42px);
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.map-hero-heading p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.map-hero-actions {
+  position: absolute;
+  z-index: 900;
   top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.map-hero-action {
   display: inline-flex;
-  min-height: 42px;
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.76);
   border-radius: var(--radius-pill);
   color: #ffffff;
-  padding: 0 16px;
+  padding: 0 13px;
   box-shadow: 0 12px 28px rgba(33, 44, 25, 0.22);
   backdrop-filter: blur(10px);
   font-weight: 800;
+  white-space: nowrap;
+  transition:
+    width 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.apiary-map-add-button {
-  right: 20px;
+.map-hero-action svg {
+  flex: 0 0 auto;
+}
+
+.map-hero-action-primary {
   background: rgba(75, 112, 54, 0.92);
 }
 
-.farmer-map-export-button {
-  right: 182px;
+.map-hero-action-secondary {
   background: rgba(85, 70, 42, 0.82);
 }
 
-.apiary-map-add-button:hover,
-.farmer-map-export-button:hover {
+.map-hero-action:hover,
+.map-hero-action:focus-visible {
+  width: var(--map-action-expanded-width, 178px);
+  gap: 8px;
   transform: translateY(-1px);
+}
+
+.map-hero-action-secondary:hover,
+.map-hero-action-secondary:focus-visible {
+  --map-action-expanded-width: 154px;
+}
+
+.map-hero-action:hover {
+  border-color: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 15px 34px rgba(33, 44, 25, 0.28);
+}
+
+.map-hero-action:focus-visible {
+  outline: 3px solid rgba(255, 240, 197, 0.92);
+  outline-offset: 3px;
+}
+
+.map-hero-action-label {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-5px);
+  transition:
+    max-width 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 140ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.map-hero-action:hover .map-hero-action-label,
+.map-hero-action:focus-visible .map-hero-action-label {
+  max-width: 145px;
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .apiary-map-count {
@@ -75,6 +187,13 @@
   backdrop-filter: blur(10px);
   font-size: 12px;
   font-weight: 800;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-hero-action,
+  .map-hero-action-label {
+    transition: none;
+  }
 }
 
 .apiary-map-marker {

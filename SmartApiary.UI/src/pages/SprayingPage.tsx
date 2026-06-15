@@ -24,6 +24,7 @@ import {
   type ParcelDto,
   type SprayingAnnouncementDto,
 } from '../api/apiClient';
+import pesticideBanner from '../assets/banners/pesticide-banner.png';
 import DataTable, { type DataTableColumn } from '../components/DataTable';
 import CompleteSprayingModal from '../components/CompleteSprayingModal';
 import PageHeader from '../components/PageHeader';
@@ -502,23 +503,28 @@ export default function SprayingPage() {
   ];
 
   return (
-    <div className="page-stack resource-page farmer-page spraying-page">
+    <div className="page-stack resource-page farmer-page spraying-page banner-page">
       <PageHeader
+        bannerImage={pesticideBanner}
         title="Tretiranja pesticidima"
         subtitle="Planirajte tretmane, pratite obaveštenja pčelarima i vodite digitalni karton prskanja."
         action={
-          <div className="row-actions">
+          <div className="row-actions page-banner-actions">
             <button
-              className="secondary-action-button"
+              aria-label={pdfLoading ? 'Generisanje PDF kartona' : 'Preuzmi PDF karton'}
+              className="secondary-action-button page-banner-action page-banner-action-secondary"
               disabled={!selectedParcelId || totalCount === 0 || pdfLoading}
               onClick={handleExportPdf}
               type="button"
             >
-              <FileDown size={18} />
-              {pdfLoading ? 'PDF...' : 'PDF karton'}
+              <FileDown aria-hidden="true" size={19} />
+              <span className="page-banner-action-label">
+                {pdfLoading ? 'PDF...' : 'PDF karton'}
+              </span>
             </button>
             <button
-              className="primary-button orange-button"
+              aria-label="Zakaži tretiranje"
+              className="primary-button orange-button page-banner-action"
               disabled={!selectedParcelId}
               onClick={() => {
                 setSuccessMessage(null);
@@ -528,8 +534,8 @@ export default function SprayingPage() {
               }}
               type="button"
             >
-              <Plus size={18} />
-              Zakaži tretiranje
+              <Plus aria-hidden="true" size={20} />
+              <span className="page-banner-action-label">Zakaži tretiranje</span>
             </button>
           </div>
         }

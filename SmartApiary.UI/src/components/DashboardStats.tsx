@@ -21,7 +21,6 @@ export default function DashboardStats({ apiaries, hives, alerts, deviceCount }:
           <span className="dashboard-section-kicker">Sažetak</span>
           <h2 id="dashboard-summary-title">Stanje sistema</h2>
         </div>
-        <span className="dashboard-section-note">Trenutni pregled</span>
       </div>
 
       <div className="stats-grid dashboard-stats-grid">

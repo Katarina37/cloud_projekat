@@ -14,6 +14,7 @@ import defaultCropImage from '../assets/card_backgrounds/default-card-background
 import lavenderImage from '../assets/card_backgrounds/lavender-card-background.png';
 import rapeseedImage from '../assets/card_backgrounds/rapeseed-card-background.png';
 import sunflowerImage from '../assets/card_backgrounds/sunflower-card-background.png';
+import cropsBanner from '../assets/banners/crops-banner.png';
 import CropFormModal from '../components/CropFormModal';
 import PageHeader from '../components/PageHeader';
 
@@ -149,13 +150,15 @@ export default function CropsPage() {
   };
 
   return (
-    <div className="page-stack resource-page farmer-page crops-page">
+    <div className="page-stack resource-page farmer-page crops-page banner-page">
       <PageHeader
+        bannerImage={cropsBanner}
         title="Kulture"
         subtitle="Pratite period cvetanja, površinu i beleške za svaku parcelu."
         action={
           <button
-            className="primary-button"
+            aria-label="Dodaj kulturu"
+            className="primary-button page-banner-action"
             disabled={!selectedParcelId}
             onClick={() => {
               setSuccessMessage(null);
@@ -163,8 +166,8 @@ export default function CropsPage() {
             }}
             type="button"
           >
-            <Plus aria-hidden="true" size={18} />
-            Dodaj kulturu
+            <Plus aria-hidden="true" size={20} />
+            <span className="page-banner-action-label">Dodaj kulturu</span>
           </button>
         }
       />

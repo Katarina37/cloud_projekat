@@ -6,7 +6,6 @@ import {
   BellRing,
   CalendarClock,
   CheckCircle2,
-  Eye,
   Inbox,
   LoaderCircle,
   MailOpen,
@@ -22,11 +21,12 @@ import {
   type AlertSettingsDto,
   type NotificationDto,
 } from '../api/apiClient';
+import alertsBanner from '../assets/banners/alerts-banner.png';
 import EmptyState from '../components/EmptyState';
 import PageHeader from '../components/PageHeader';
 import SectionCard from '../components/SectionCard';
 import SettingsModal from '../components/SettingsModal';
-import StatusBadge, { type StatusTone } from '../components/StatusBadge';
+import StatusBadge from '../components/StatusBadge';
 
 const loadingMessage = 'Učitavanje obavještenja...';
 const loadErrorMessage = 'Greška pri učitavanju obavještenja.';
@@ -137,13 +137,15 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="page-stack alerts-page">
+    <div className="page-stack alerts-page banner-page">
       <PageHeader
+        bannerImage={alertsBanner}
         title="Upozorenja"
         subtitle="Brz pregled važnih događaja i promjena u vašim pčelinjacima"
         action={
           <button
-            className="alerts-settings-link"
+            aria-label={settingsLoading ? 'Učitavanje pragova upozorenja' : 'Pragovi upozorenja'}
+            className="alerts-settings-link page-banner-action page-banner-action-secondary"
             disabled={settingsLoading}
             onClick={() => void handleOpenSettings()}
             type="button"
@@ -153,7 +155,9 @@ export default function AlertsPage() {
             ) : (
               <SlidersHorizontal size={18} aria-hidden="true" />
             )}
-            {settingsLoading ? 'Učitavanje pragova...' : 'Pragovi upozorenja'}
+            <span className="page-banner-action-label">
+              {settingsLoading ? 'Učitavanje pragova...' : 'Pragovi upozorenja'}
+            </span>
           </button>
         }
       />
@@ -238,20 +242,19 @@ export default function AlertsPage() {
             {visibleNotifications.length > 0 ? (
               <div className="alert-list alerts-list">
                 {visibleNotifications.map((notification, index) => {
-                  const tone = getNotificationTone(notification);
-                  const Icon = notification.isRead ? CheckCircle2 : AlertTriangle;
+                  const Icon = notification.isRead ? CheckCircle2 : BellRing;
                   const key = notification.id || `${notification.title}-${notification.createdAt}-${index}`;
                   const isMarking = markingNotificationId === notification.id;
 
                   return (
                     <article
-                      className={`alert-card alerts-list-card ${tone} ${
+                      className={`alert-card alerts-list-card ${
                         notification.isRead ? 'is-read' : 'is-unread'
                       }`}
                       key={key}
                     >
                       <div className="alert-icon" aria-hidden="true">
-                        <Icon size={20} />
+                        <Icon size={28} strokeWidth={1.8} />
                       </div>
                       <div className="alert-content">
                         <div className="alerts-notification-header">
@@ -270,19 +273,14 @@ export default function AlertsPage() {
                             <h3>{notification.title}</h3>
                           </div>
                           <StatusBadge tone={notification.isRead ? 'good' : 'warning'}>
-                            {notification.isRead ? 'Pročitano' : 'Novo'}
+                            {notification.isRead ? 'Pročitano' : 'Nepročitano'}
                           </StatusBadge>
                         </div>
 
                         <p className="alerts-notification-message">{notification.message}</p>
 
-                        <div className="alert-meta">
-                          <span className={`alerts-priority ${tone}`}>
-                            <span aria-hidden="true" />
-                            {getToneLabel(tone)}
-                          </span>
-
-                          {!notification.isRead ? (
+                        {!notification.isRead ? (
+                          <div className="alerts-notification-action">
                             <button
                               className="alerts-read-button"
                               disabled={isMarking}
@@ -296,13 +294,8 @@ export default function AlertsPage() {
                               )}
                               {isMarking ? 'Označavanje...' : 'Označi kao pročitano'}
                             </button>
-                          ) : (
-                            <span className="alerts-read-confirmation">
-                              <Eye size={16} aria-hidden="true" />
-                              Pregledano
-                            </span>
-                          )}
-                        </div>
+                          </div>
+                        ) : null}
                       </div>
                     </article>
                   );
@@ -465,50 +458,6 @@ function getNotificationTypeLabel(type: string | number) {
   };
 
   return typeLabels[typeName] ?? typeName;
-}
-
-function getNotificationTone(notification: NotificationDto): StatusTone {
-  if (notification.isRead) {
-    return 'muted';
-  }
-
-  const typeName = String(notification.type);
-
-  if (
-    typeName === 'PesticideWarning'
-    || typeName === 'SprayingCancelled'
-    || typeName === '0'
-    || typeName === '4'
-  ) {
-    return 'critical';
-  }
-
-  if (
-    typeName === 'BatteryLow'
-    || typeName === 'WeightDrop'
-    || typeName === '1'
-    || typeName === '2'
-  ) {
-    return 'warning';
-  }
-
-  return 'info';
-}
-
-function getToneLabel(tone: StatusTone) {
-  if (tone === 'critical') {
-    return 'Visok prioritet';
-  }
-
-  if (tone === 'warning') {
-    return 'Potrebna pažnja';
-  }
-
-  if (tone === 'muted') {
-    return 'Arhivirano';
-  }
-
-  return 'Informativno';
 }
 
 function formatDate(value: string) {

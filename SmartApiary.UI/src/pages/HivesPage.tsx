@@ -21,6 +21,7 @@ import {
   type HiveDto,
   type HiveType,
 } from '../api/apiClient';
+import hivesBanner from '../assets/banners/hives-banner.png';
 import DataTable, { type DataTableColumn } from '../components/DataTable';
 import HiveFormModal from '../components/HiveFormModal';
 import PageHeader from '../components/PageHeader';
@@ -216,13 +217,15 @@ export default function HivesPage() {
   ];
 
   return (
-    <div className="page-stack resource-page hives-page">
+    <div className="page-stack resource-page hives-page banner-page">
       <PageHeader
+        bannerImage={hivesBanner}
         title="Košnice"
         subtitle="Organizujte košnice po pčelinjaku i održavajte njihove osnovne podatke na jednom mestu."
         action={
           <button
-            className="primary-button apiary-add-button"
+            aria-label="Dodaj košnicu"
+            className="primary-button apiary-add-button page-banner-action"
             disabled={!selectedApiaryId}
             onClick={() => {
               setSuccessMessage(null);
@@ -230,8 +233,8 @@ export default function HivesPage() {
             }}
             type="button"
           >
-            <Plus size={18} />
-            Dodaj košnicu
+            <Plus aria-hidden="true" size={20} />
+            <span className="page-banner-action-label">Dodaj košnicu</span>
           </button>
         }
       />

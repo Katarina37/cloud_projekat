@@ -125,9 +125,7 @@
   background: var(--soft-orange);
 }
 
-.metric-icon.green,
-.tone-hive .metric-icon,
-.tone-weight .metric-icon {
+.metric-icon.green {
   color: var(--green-dark);
   background: var(--soft-green);
 }
@@ -138,17 +136,39 @@
   background: var(--soft-danger);
 }
 
-.tone-apiary .metric-icon,
-.tone-battery .metric-icon {
-  color: var(--honey-dark);
-  background: var(--soft-honey);
+.tone-apiary .metric-icon {
+  color: #a6630b;
+  background: #fff0c5;
 }
 
-.tone-device .metric-icon,
-.tone-humidity .metric-icon,
-.tone-time .metric-icon {
+.tone-hive .metric-icon {
+  color: #3f6f3a;
+  background: #e8f3e4;
+}
+
+.tone-device .metric-icon {
   color: var(--blue);
   background: var(--soft-blue);
+}
+
+.tone-weight .metric-icon {
+  color: #28766e;
+  background: #e3f4f1;
+}
+
+.tone-humidity .metric-icon {
+  color: #5868b5;
+  background: #eceefd;
+}
+
+.tone-battery .metric-icon {
+  color: #8b6a00;
+  background: #fff6cf;
+}
+
+.tone-time .metric-icon {
+  color: #7b4f92;
+  background: #f3eafb;
 }
 
 .stat-card-split {

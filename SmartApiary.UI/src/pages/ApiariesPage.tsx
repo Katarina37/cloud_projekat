@@ -19,7 +19,6 @@ import {
 import { getCurrentUserId } from "../auth/authStorage";
 import ApiaryFormModal from "../components/ApiaryFormModal";
 import MapView, { type MapItem } from "../components/MapView";
-import PageHeader from "../components/PageHeader";
 
 export default function ApiariesPage() {
   const [apiaries, setApiaries] = useState<ApiaryDto[]>([]);
@@ -161,34 +160,43 @@ export default function ApiariesPage() {
   }
 
   return (
-    <div className="page-stack">
-      <PageHeader
-        title="Pčelinjaci"
-        subtitle="Lokacije i osnovni podaci pčelinjaka"
-        action={
+    <div className="page-stack apiaries-page map-hero-page">
+      <section className="apiary-map-panel" aria-label="Mapa pčelinjaka">
+        <MapView
+          className="apiary-map-canvas"
+          items={displayedMapItems}
+          height="100%"
+          zoom={10}
+          onSelect={(it) =>
+            alert(`${it.name} — ${it.latitude}, ${it.longitude}`)
+          }
+        />
+
+        <div className="map-hero-heading">
+          <span>Pregled lokacija</span>
+          <h1>Pčelinjaci</h1>
+          <p>Lokacije i osnovni podaci pčelinjaka</p>
+        </div>
+
+        <div className="map-hero-actions">
           <button
-            className="primary-button apiary-add-button"
+            aria-label="Dodaj pčelinjak"
+            className="map-hero-action map-hero-action-primary"
             type="button"
             onClick={() => {
               setSuccessMessage(null);
               setIsCreateModalOpen(true);
             }}
           >
-            <Plus size={18} />
-            Dodaj pčelinjak
+            <Plus aria-hidden="true" size={20} />
+            <span className="map-hero-action-label">Dodaj pčelinjak</span>
           </button>
-        }
-      />
+        </div>
 
-      <section className="section-card">
-        <MapView
-          items={displayedMapItems}
-          height={360}
-          zoom={10}
-          onSelect={(it) =>
-            alert(`${it.name} — ${it.latitude}, ${it.longitude}`)
-          }
-        />
+        <div className="apiary-map-count" aria-live="polite">
+          <MapPinned aria-hidden="true" size={15} />
+          <span>{formatApiaryCount(apiaries.length)}</span>
+        </div>
       </section>
 
       {loading ? (
@@ -367,6 +375,14 @@ function formatCompactDate(value: string) {
         month: "2-digit",
         year: "numeric",
       });
+}
+
+function formatApiaryCount(count: number) {
+  if (count === 1) {
+    return "1 pčelinjak";
+  }
+
+  return `${count} pčelinjaka`;
 }
 
 function isApiaryOwnedByAnotherUser(

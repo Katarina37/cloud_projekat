@@ -119,29 +119,6 @@
   text-transform: uppercase;
 }
 
-.dashboard-section-note {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.dashboard-live-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--green-dark);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.dashboard-live-status > span {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #4f9a48;
-  box-shadow: 0 0 0 5px rgba(79, 154, 72, 0.14);
-}
-
 .dashboard-stats-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }

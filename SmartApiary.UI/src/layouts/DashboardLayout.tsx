@@ -6,13 +6,27 @@ import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function DashboardLayout() {
   const location = useLocation();
-  const isWideContentPage = ['/pcelinjaci', '/parcele'].includes(location.pathname);
+  const isWideContentPage = location.pathname === '/parcele';
+  const isEdgeContentPage = [
+    '/pcelinjaci',
+    '/kosnice',
+    '/uredjaji',
+    '/upozorenja',
+    '/kulture',
+    '/tretiranja',
+  ].includes(location.pathname);
 
   return (
     <div className="app-shell">
       <Sidebar />
       <div className="app-main">
-        <main className={`content-shell${isWideContentPage ? ' content-shell-wide' : ''}`}>
+        <main
+          className={[
+            'content-shell',
+            isWideContentPage ? 'content-shell-wide' : '',
+            isEdgeContentPage ? 'content-shell-edge' : '',
+          ].filter(Boolean).join(' ')}
+        >
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>

@@ -154,9 +154,7 @@ export default function ParcelsPage() {
     : [];
 
   return (
-    <div className="page-stack apiaries-page farmer-parcels-page">
-      <h1 className="visually-hidden">Parcele i mapa</h1>
-
+    <div className="page-stack apiaries-page farmer-parcels-page map-hero-page">
       <section className="apiary-map-panel" aria-label="Mapa parcela">
         <MapView
           className="apiary-map-canvas"
@@ -173,29 +171,37 @@ export default function ParcelsPage() {
           }}
         />
 
-        <button
-          aria-label="Izvezi mapu u PDF"
-          className="farmer-map-export-button"
-          onClick={handleExportMap}
-          type="button"
-        >
-          <FileDown aria-hidden="true" size={19} />
-          <span>Izvezi mapu</span>
-        </button>
+        <div className="map-hero-heading">
+          <span>Pregled zemljišta</span>
+          <h1>Parcele</h1>
+          <p>Lokacije parcela i pregled evidentiranih kultura</p>
+        </div>
 
-        <button
-          aria-label="Dodaj parcelu"
-          className="apiary-map-add-button"
-          onClick={() => {
-            setError(null);
-            setSuccessMessage(null);
-            setCreateModalOpen(true);
-          }}
-          type="button"
-        >
-          <Plus aria-hidden="true" size={20} />
-          <span>Dodaj parcelu</span>
-        </button>
+        <div className="map-hero-actions">
+          <button
+            aria-label="Izvezi mapu u PDF"
+            className="map-hero-action map-hero-action-secondary"
+            onClick={handleExportMap}
+            type="button"
+          >
+            <FileDown aria-hidden="true" size={19} />
+            <span className="map-hero-action-label">PDF izveštaj</span>
+          </button>
+
+          <button
+            aria-label="Dodaj parcelu"
+            className="map-hero-action map-hero-action-primary"
+            onClick={() => {
+              setError(null);
+              setSuccessMessage(null);
+              setCreateModalOpen(true);
+            }}
+            type="button"
+          >
+            <Plus aria-hidden="true" size={20} />
+            <span className="map-hero-action-label">Dodaj parcelu</span>
+          </button>
+        </div>
 
         <div className="apiary-map-count" aria-live="polite">
           <MapPinned aria-hidden="true" size={15} />

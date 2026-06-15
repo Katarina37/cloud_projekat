@@ -18,10 +18,6 @@ export default function DashboardStatus({ latestStatus }: DashboardStatusProps) 
           <span className="dashboard-section-kicker">Telemetrija</span>
           <h2 id="dashboard-status-title">Posljednje mjerenje</h2>
         </div>
-        <span className="dashboard-live-status">
-          <span aria-hidden="true" />
-          Podaci senzora
-        </span>
       </div>
 
       <div className="stats-grid dashboard-status-grid">
