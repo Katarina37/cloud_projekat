@@ -1,3 +1,5 @@
+// HTTP rute za Spraying. Glavni posao prosledjujemo handlerima.
+
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

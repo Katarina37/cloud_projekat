@@ -1,3 +1,5 @@
+// GeoLocation drzi povezane vrednosti i njihove provere na jednom mestu.
+
 namespace SmartApiary.Domain.ValueObjects;
 
 public sealed class GeoLocation : IEquatable<GeoLocation>

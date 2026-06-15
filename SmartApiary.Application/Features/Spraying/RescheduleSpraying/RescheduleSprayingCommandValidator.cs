@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto pomeramo termin prskanja.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Spraying.RescheduleSpraying;

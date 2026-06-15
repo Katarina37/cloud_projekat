@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto ucitavamo poslednje stanje kosnice.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Telemetry.GetLatestHiveStatus;

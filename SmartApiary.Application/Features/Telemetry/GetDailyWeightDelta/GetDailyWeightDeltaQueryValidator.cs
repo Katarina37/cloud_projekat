@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto racunamo dnevnu promenu tezine.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Telemetry.GetDailyWeightDelta;

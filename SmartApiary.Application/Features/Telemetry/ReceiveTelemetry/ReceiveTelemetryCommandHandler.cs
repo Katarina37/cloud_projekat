@@ -1,3 +1,6 @@
+// Ovde obradjujemo novo merenje sa uredjaja.
+// Specifikacija - IoT telemetrija.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Features.Telemetry;
@@ -51,6 +54,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
 
     public async Task<Result> Handle(ReceiveTelemetryCommand request, CancellationToken cancellationToken)
     {
+        // Token nam govori koji uredjaj salje merenje.
         var device = await _deviceRepository.GetByAccessTokenAsync(request.DeviceAccessToken, cancellationToken);
         if (device is null)
         {
@@ -74,11 +78,13 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
             return Result.Failure("Apiary was not found.", ErrorType.NotFound);
         }
 
+        // Prethodno merenje nam treba za proveru pada tezine.
         var previousReading = await _telemetryRepository.GetPreviousAsync(
             device.Id,
             request.Timestamp,
             cancellationToken);
 
+        // Novo merenje ide u Table Storage.
         var reading = new TelemetryReading(
             device.HiveId,
             device.Id,
@@ -90,6 +96,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
 
         await _telemetryRepository.AddAsync(reading, cancellationToken);
 
+        // Proverimo alarme iz specifikacije.
         await CreateWeightDropNotificationIfNeededAsync(
             apiary.BeekeeperId,
             hive.Label,
@@ -106,6 +113,8 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Queue dalje vodi do worker-a i SignalR-a. Ako Queue ne radi,
+        // merenje je vec sacuvano pa ga ne gubimo.
         try
         {
             await _telemetryQueueService.EnqueueAsync(
@@ -140,6 +149,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
             return;
         }
 
+        // Ako korisnik nije menjao prag, koristimo 10 kg.
         var settings = await _userAlertSettingsRepository.GetByUserIdAsync(beekeeperId, cancellationToken);
         var thresholdKg = settings?.WeightDropThresholdKg ?? DefaultWeightDropThresholdKg;
         var weightDropKg = previousReading.WeightKg - currentReading.WeightKg;
@@ -169,6 +179,7 @@ public sealed class ReceiveTelemetryCommandHandler : IRequestHandler<ReceiveTele
     {
         if (reading.BatteryPercent < LowBatteryThresholdPercent)
         {
+            // Ne saljemo isti alarm za svako sledece merenje.
             if (device.BatteryAlertSent)
                 return;
 

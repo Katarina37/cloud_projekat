@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: TelemetryCharts.
+
 import {
   Bar,
   BarChart,
@@ -29,6 +31,7 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
   }));
   const deltaChartData = dailyDeltas.map((delta) => ({
     date: formatDate(delta.date),
+    fullDate: formatFullDate(delta.date),
     deltaKg: delta.deltaKg,
   }));
 
@@ -87,8 +90,8 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
             <BarChart data={deltaChartData} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
               <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
               <XAxis dataKey="date" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} unit=" kg" />
-              <Tooltip />
+              <YAxis tickLine={false} axisLine={false} unit="%" />
+              <Tooltip content={<WeightDeltaTooltip />} cursor={{ fill: 'rgba(217, 150, 31, 0.08)' }} />
               <Bar dataKey="deltaKg" name="Promena" radius={[8, 8, 0, 0]}>
                 {/* Zelena boja oznacava rast, a crvena pad tezine. */}
                 {deltaChartData.map((item, index) => (
@@ -108,6 +111,34 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
         )}
       </ChartCard>
     </>
+  );
+}
+
+type WeightDeltaTooltipProps = {
+  active?: boolean;
+  payload?: Array<{
+    payload?: {
+      deltaKg?: number;
+      fullDate?: string;
+    };
+  }>;
+};
+
+function WeightDeltaTooltip({ active, payload }: WeightDeltaTooltipProps) {
+  const point = payload?.[0]?.payload;
+
+  if (!active || !point || typeof point.deltaKg !== 'number') {
+    return null;
+  }
+
+  return (
+    <div className="chart-delta-tooltip">
+      <span className="chart-delta-tooltip-date">{point.fullDate}</span>
+      <div className="chart-delta-tooltip-value">
+        <span>Promena</span>
+        <strong>{formatPercent(point.deltaKg)}</strong>
+      </div>
+    </div>
   );
 }
 
@@ -137,4 +168,25 @@ function formatDate(value: string) {
     day: '2-digit',
     month: '2-digit',
   });
+}
+
+function formatFullDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString('sr-Latn-RS', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function formatPercent(value: number) {
+  return `${value.toLocaleString('sr-Latn-RS', {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  })}%`;
 }

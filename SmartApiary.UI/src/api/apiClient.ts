@@ -1,3 +1,5 @@
+// API pozivi koje koristi apiClient.
+
 // Stranice i komponente i dalje uvoze sve API funkcije iz jednog mesta.
 export * from './adminUsersApi';
 export * from './apiariesApi';

@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: ParcelCropsOverview.
+
 import { useEffect, useState } from 'react';
 import { Wheat } from 'lucide-react';
 import {

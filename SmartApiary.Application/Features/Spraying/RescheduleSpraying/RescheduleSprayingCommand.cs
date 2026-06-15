@@ -1,3 +1,5 @@
+// Podaci koji stizu kada pomeramo termin prskanja.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

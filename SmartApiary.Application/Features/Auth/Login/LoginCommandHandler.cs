@@ -1,3 +1,6 @@
+// Ovde prijavljujemo korisnika.
+// Specifikacija - prijava, JWT i aktivacija naloga.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;
@@ -24,6 +27,7 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, Result<L
 
     public async Task<Result<LoginResponseDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
+        // Namerno je ista greska i za los email i za losu lozinku.
         var user = await _userRepository.GetByEmailAsync(request.Email.Trim(), cancellationToken);
         if (user is null || string.IsNullOrWhiteSpace(user.PasswordHash))
         {
@@ -35,11 +39,13 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, Result<L
             return Result<LoginResponseDto>.Failure("Account is not active.", ErrorType.Unauthorized);
         }
 
+        // Poredimo hash, ne obican tekst lozinke.
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
             return Result<LoginResponseDto>.Failure("Invalid email or password.", ErrorType.Unauthorized);
         }
 
+        // Posle ovoga front salje JWT uz svaki zahtev.
         var token = _jwtTokenGenerator.GenerateToken(user);
 
         return Result<LoginResponseDto>.Success(new LoginResponseDto

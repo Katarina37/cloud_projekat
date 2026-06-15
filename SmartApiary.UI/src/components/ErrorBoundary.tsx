@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: ErrorBoundary.
+
 import React from 'react';
 
 type State = {

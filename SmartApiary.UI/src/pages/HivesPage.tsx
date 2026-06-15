@@ -1,5 +1,17 @@
+// Stranica za kosnice.
+
 import { type ChangeEvent, useEffect, useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  AlertCircle,
+  Boxes,
+  CheckCircle2,
+  Crown,
+  MapPinned,
+  PackageOpen,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import {
   deleteHive,
   getApiaries,
@@ -8,7 +20,6 @@ import {
   type ApiaryDto,
   type HiveDto,
   type HiveType,
-  type HiveTypeValue,
 } from '../api/apiClient';
 import DataTable, { type DataTableColumn } from '../components/DataTable';
 import HiveFormModal from '../components/HiveFormModal';
@@ -24,6 +35,11 @@ export default function HivesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingHive, setEditingHive] = useState<HiveDto | null>(null);
   const [deletingHiveId, setDeletingHiveId] = useState<string | null>(null);
+  const selectedApiary = apiaries.find((apiary) => apiary.id === selectedApiaryId);
+  const averageQueenAge =
+    hives.length > 0
+      ? hives.reduce((total, hive) => total + hive.queenAgeYears, 0) / hives.length
+      : 0;
 
   async function loadHives(apiaryId: string) {
     const hives = await getHivesByApiary(apiaryId);
@@ -139,24 +155,33 @@ export default function HivesPage() {
 
   const columns: DataTableColumn<HiveDto>[] = [
     {
-      header: 'Label',
+      header: 'Košnica',
       render: (hive) => (
         <div className="table-title">
           <strong>{hive.label}</strong>
+          <span>Dodato {formatDate(hive.createdAt)}</span>
         </div>
       ),
     },
-    { header: 'Type', render: (hive) => formatHiveType(hive.type) },
-    { header: 'BoxColor', render: (hive) => hive.boxColor },
-    { header: 'QueenAgeYears', render: (hive) => hive.queenAgeYears },
     {
-      header: 'Notes',
+      header: 'Tip',
+      render: (hive) => <span className="hive-type-pill">{formatHiveType(hive.type)}</span>,
+    },
+    {
+      header: 'Boja sanduka',
+      render: (hive) => hive.boxColor,
+    },
+    {
+      header: 'Starost matice',
+      render: (hive) => formatQueenAge(hive.queenAgeYears),
+    },
+    {
+      header: 'Beleške',
       render: (hive) => {
         const notes = hive.notes ? hive.notes.trim() : '';
-        return notes ? notes : <span className="muted-text">-</span>;
+        return notes ? notes : <span className="muted-text">Nema beleški</span>;
       },
     },
-    { header: 'CreatedAt', render: (hive) => formatDate(hive.createdAt) },
     {
       header: 'Akcije',
       className: 'table-actions-cell',
@@ -191,10 +216,10 @@ export default function HivesPage() {
   ];
 
   return (
-    <div className="page-stack">
+    <div className="page-stack resource-page hives-page">
       <PageHeader
         title="Košnice"
-        subtitle="Oznaka, tip, boja sanduka i osnovni podaci"
+        subtitle="Organizujte košnice po pčelinjaku i održavajte njihove osnovne podatke na jednom mestu."
         action={
           <button
             className="primary-button apiary-add-button"
@@ -211,11 +236,59 @@ export default function HivesPage() {
         }
       />
 
+      {!loading && apiaries.length > 0 ? (
+        <section className="resource-summary-grid" aria-label="Pregled košnica">
+          <article className="resource-summary-card resource-tone-hive">
+            <div className="resource-summary-icon">
+              <Boxes size={22} />
+            </div>
+            <div>
+              <span>Ukupno košnica</span>
+              <strong>{hives.length}</strong>
+              <small>u izabranom pčelinjaku</small>
+            </div>
+          </article>
+          <article className="resource-summary-card resource-tone-apiary">
+            <div className="resource-summary-icon">
+              <MapPinned size={22} />
+            </div>
+            <div>
+              <span>Aktivni pčelinjak</span>
+              <strong className="resource-summary-name">{selectedApiary?.name ?? 'Nije izabran'}</strong>
+              <small>
+                {apiaries.length} {apiaries.length === 1 ? 'pčelinjak' : 'pčelinjaka'} ukupno
+              </small>
+            </div>
+          </article>
+          <article className="resource-summary-card resource-tone-queen">
+            <div className="resource-summary-icon">
+              <Crown size={22} />
+            </div>
+            <div>
+              <span>Prosečna starost matice</span>
+              <strong>
+                {averageQueenAge.toLocaleString('sr-Latn-RS', { maximumFractionDigits: 1 })}
+              </strong>
+              <small>godina po košnici</small>
+            </div>
+          </article>
+        </section>
+      ) : null}
+
       {apiaries.length > 0 ? (
-        <section className="section-card">
-          <div className="filter-row">
+        <section className="section-card resource-filter-card">
+          <div className="resource-filter-heading">
+            <div className="resource-filter-icon">
+              <MapPinned size={19} />
+            </div>
+            <div>
+              <h2>Izaberite pčelinjak</h2>
+              <p>Prikazane su samo košnice koje pripadaju izabranom pčelinjaku.</p>
+            </div>
+          </div>
+          <div className="filter-row resource-filter-control">
             <label>
-              Pčelinjak
+              Pčelinjak za pregled
               <select disabled={loading} onChange={handleApiaryChange} value={selectedApiaryId}>
                 {apiaries.map((apiary) => (
                   <option key={apiary.id} value={apiary.id}>
@@ -228,27 +301,67 @@ export default function HivesPage() {
         </section>
       ) : null}
 
-      {loading ? <section className="section-card">Učitavanje košnica...</section> : null}
+      {loading ? (
+        <section className="section-card resource-loading" aria-busy="true" aria-live="polite">
+          <span className="resource-spinner" />
+          <div>
+            <strong>Učitavanje košnica</strong>
+            <p>Pripremamo podatke za izabrani pčelinjak.</p>
+          </div>
+        </section>
+      ) : null}
 
-      {successMessage ? <section className="section-card message-card success">{successMessage}</section> : null}
+      {successMessage ? (
+        <section className="section-card message-card success resource-feedback" role="status">
+          <CheckCircle2 size={20} />
+          <strong>{successMessage}</strong>
+        </section>
+      ) : null}
 
       {error ? (
-        <section className="section-card message-card error" role="alert">
-          {error}
+        <section className="section-card message-card error resource-feedback" role="alert">
+          <AlertCircle size={20} />
+          <strong>{error}</strong>
         </section>
       ) : null}
 
       {!loading && !error && apiaries.length === 0 ? (
-        <section className="section-card">Prvo dodajte pčelinjak da biste mogli dodati košnice.</section>
+        <section className="section-card resource-empty-state">
+          <div className="resource-empty-icon">
+            <MapPinned size={28} />
+          </div>
+          <h2>Najpre dodajte pčelinjak</h2>
+          <p>Košnice se uvek vezuju za pčelinjak, pa je potrebno da prvo kreirate njegovu lokaciju.</p>
+        </section>
       ) : null}
 
       {!loading && !error && selectedApiaryId && hives.length === 0 ? (
-        <section className="section-card">Nema unetih košnica za ovaj pčelinjak.</section>
+        <section className="section-card resource-empty-state">
+          <div className="resource-empty-icon">
+            <PackageOpen size={28} />
+          </div>
+          <h2>Još nema košnica</h2>
+          <p>
+            Dodajte prvu košnicu za pčelinjak „{selectedApiary?.name}“ i počnite da pratite njene
+            podatke.
+          </p>
+          <button className="primary-button" onClick={() => setIsCreateModalOpen(true)} type="button">
+            <Plus size={18} />
+            Dodaj prvu košnicu
+          </button>
+        </section>
       ) : null}
 
       {!loading && !error && selectedApiaryId && hives.length > 0 ? (
-        <section className="section-card table-card">
-          <DataTable columns={columns} rows={hives} getRowKey={(hive) => hive.id} minWidth={1120} />
+        <section className="section-card table-card resource-table-card">
+          <div className="resource-table-header">
+            <div>
+              <span className="resource-eyebrow">Evidencija</span>
+              <h2>Košnice u pčelinjaku</h2>
+              <p>{selectedApiary?.name} · {formatHiveCount(hives.length)}</p>
+            </div>
+          </div>
+          <DataTable columns={columns} rows={hives} getRowKey={(hive) => hive.id} minWidth={960} />
         </section>
       ) : null}
 
@@ -289,11 +402,55 @@ function formatHiveType(type: HiveType) {
     return 'Poloska';
   }
 
-  return 'Other';
+  return 'Ostalo';
 }
 
 function formatDate(value: string) {
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString('sr-Latn-RS', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+}
+
+function formatQueenAge(value: number) {
+  const lastTwoDigits = value % 100;
+  const lastDigit = value % 10;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return `${value} godina`;
+  }
+
+  if (lastDigit === 1) {
+    return `${value} godina`;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return `${value} godine`;
+  }
+
+  return `${value} godina`;
+}
+
+function formatHiveCount(value: number) {
+  const lastTwoDigits = value % 100;
+  const lastDigit = value % 10;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return `${value} košnica`;
+  }
+
+  if (lastDigit === 1) {
+    return `${value} košnica`;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return `${value} košnice`;
+  }
+
+  return `${value} košnica`;
 }

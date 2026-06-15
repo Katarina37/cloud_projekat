@@ -1,3 +1,5 @@
+// Jedan mali deo simulatora: TelemetryGenerator.
+
 using SmartApiary.Simulator.Models;
 
 namespace SmartApiary.Simulator.Services;

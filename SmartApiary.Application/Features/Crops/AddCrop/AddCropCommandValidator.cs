@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto dodajemo kulturu na parcelu.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Crops.AddCrop;

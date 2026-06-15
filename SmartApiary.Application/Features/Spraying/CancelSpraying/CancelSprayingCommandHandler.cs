@@ -1,3 +1,6 @@
+// Ovde otkazujemo prskanje.
+// Specifikacija - prskanje i digitalni karton.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Features.Spraying;

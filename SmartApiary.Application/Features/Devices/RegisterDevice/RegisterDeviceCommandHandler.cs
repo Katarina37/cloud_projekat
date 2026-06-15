@@ -1,3 +1,6 @@
+// Ovde registrujemo uredjaj.
+// Specifikacija - registracija i aktivacija uredjaja.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;
@@ -30,6 +33,7 @@ public sealed class RegisterDeviceCommandHandler : IRequestHandler<RegisterDevic
 
     public async Task<Result<Guid>> Handle(RegisterDeviceCommand request, CancellationToken cancellationToken)
     {
+        // Pcelar moze da doda uredjaj samo na svoju kosnicu.
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } beekeeperId)
         {
             return Result<Guid>.Failure("User is not authenticated.", ErrorType.Unauthorized);
@@ -52,6 +56,7 @@ public sealed class RegisterDeviceCommandHandler : IRequestHandler<RegisterDevic
             return Result<Guid>.Failure("Hive does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
+        // Serijski broj je jedinstven, a kosnica moze imati samo jedan uredjaj.
         var existingDeviceWithSerialNumber = await _deviceRepository.GetBySerialNumberAsync(
             request.SerialNumber,
             cancellationToken);
@@ -66,6 +71,7 @@ public sealed class RegisterDeviceCommandHandler : IRequestHandler<RegisterDevic
             return Result<Guid>.Failure("Hive already has a registered device.", ErrorType.Conflict);
         }
 
+        // Za sada je samo registrovan, aktivacija dolazi posle.
         var device = new Device(request.HiveId, request.SerialNumber);
 
         await _deviceRepository.AddAsync(device, cancellationToken);

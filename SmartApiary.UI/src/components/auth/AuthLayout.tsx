@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: AuthLayout.
+
 import type { ReactNode } from 'react';
 import './AuthLayout.css';
 

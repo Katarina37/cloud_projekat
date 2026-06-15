@@ -1,3 +1,5 @@
+// Podaci koji stizu kada postavljamo novu lozinku.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

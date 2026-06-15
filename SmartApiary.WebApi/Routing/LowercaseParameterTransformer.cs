@@ -1,3 +1,5 @@
+// Sredjuje da URL rute budu malim slovima.
+
 using Microsoft.AspNetCore.Routing;
 
 namespace SmartApiary.WebApi.Routing;

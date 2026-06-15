@@ -1,3 +1,5 @@
+// Pomocni Web API servis: CurrentUserService.
+
 using System.Security.Claims;
 using SmartApiary.Application.Interfaces.Services;
 

@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// Ovo EF koristi kada pravimo migracije bez pokrenutog Web API-ja.
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace SmartApiary.Infrastructure.Persistence;

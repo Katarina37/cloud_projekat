@@ -1,3 +1,5 @@
+// SQL citanje i upis za UserAlertSettings.
+
 using Microsoft.EntityFrameworkCore;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Domain.Models;

@@ -1,3 +1,6 @@
+// Ovde pravimo obavestenja za pcelare blizu parcele.
+// Specifikacija - prskanje i digitalni karton.
+
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Enums;
@@ -37,6 +40,7 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
         SprayingNotificationMessage notificationMessage,
         CancellationToken cancellationToken = default)
     {
+        // Koordinate iz Queue poruke pretvaramo u lokaciju.
         var parcelLocation = new GeoLocation(
             notificationMessage.Latitude,
             notificationMessage.Longitude);
@@ -46,6 +50,7 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
             NotificationRadiusKm,
             cancellationToken);
 
+        // Jedan pcelar dobija jedno obavestenje za sve svoje ugrozene pcelinjake.
         var apiariesByBeekeeper = nearbyApiaries
             .GroupBy(apiary => apiary.BeekeeperId)
             .ToList();
@@ -61,6 +66,7 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
                 notificationMessage.FarmerId,
                 cancellationToken);
 
+        // Prvo sacuvamo obavestenja.
         foreach (var apiaryGroup in apiariesByBeekeeper)
         {
             var message = BuildMessage(
@@ -79,6 +85,7 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Tek posle cuvanja ih stvarno saljemo.
         foreach (var apiaryGroup in apiariesByBeekeeper)
         {
             var message = BuildMessage(

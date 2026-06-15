@@ -1,3 +1,6 @@
+// Ovde oznacavamo obavestenje kao procitano.
+// Specifikacija - obavestenja.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;

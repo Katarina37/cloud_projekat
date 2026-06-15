@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: EmptyState.
+
 import type { ReactNode } from 'react';
 
 type EmptyStateProps = {

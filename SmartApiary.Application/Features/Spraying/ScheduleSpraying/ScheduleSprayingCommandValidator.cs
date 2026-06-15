@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto zakazujemo prskanje.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Spraying.ScheduleSpraying;

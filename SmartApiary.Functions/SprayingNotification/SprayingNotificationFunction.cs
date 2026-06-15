@@ -1,3 +1,7 @@
+// Ova Function se sama pali kada u Queue stigne najava prskanja.
+// Specifikacija - obavestenje pcelarima u krugu od 5 km.
+// Vezbe 5 - Queue trigger.
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Azure.Functions.Worker;
@@ -24,9 +28,11 @@ public sealed class SprayingNotificationFunction
         [QueueTrigger("spraying-notifications")] string messageText,
         CancellationToken cancellationToken)
     {
+        // Vezbe 5: Queue trigger sam pozove ovu metodu.
         var message = JsonSerializer.Deserialize<SprayingNotificationMessage>(messageText, _jsonOptions)
             ?? throw new InvalidOperationException("Failed to deserialize spraying notification queue message.");
 
+        // Posle trazimo pcelinjake u krugu od 5 km.
         await _sprayingNotificationService.NotifyNearbyBeekeepersAsync(
             message,
             cancellationToken);

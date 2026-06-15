@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za DeviceDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class DeviceDto

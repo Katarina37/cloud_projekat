@@ -1,3 +1,5 @@
+// Podaci koji su potrebni kada ucitavamo parcele prijavljenog farmera.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

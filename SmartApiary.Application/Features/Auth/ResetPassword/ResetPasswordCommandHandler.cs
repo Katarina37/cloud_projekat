@@ -1,3 +1,6 @@
+// Ovde postavljamo novu lozinku.
+// Specifikacija - prijava, JWT i aktivacija naloga.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;

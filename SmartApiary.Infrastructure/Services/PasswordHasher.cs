@@ -1,3 +1,5 @@
+// Ovde hesujemo lozinku i kasnije proveravamo unetu lozinku.
+
 using System.Security.Cryptography;
 using SmartApiary.Application.Interfaces.Services;
 

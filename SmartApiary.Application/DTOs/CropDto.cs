@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za CropDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class CropDto

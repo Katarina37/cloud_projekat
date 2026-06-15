@@ -1,3 +1,5 @@
+// Jedan mali deo simulatora: TelemetryPayload.
+
 namespace SmartApiary.Simulator.Models;
 
 public sealed record TelemetryPayload(

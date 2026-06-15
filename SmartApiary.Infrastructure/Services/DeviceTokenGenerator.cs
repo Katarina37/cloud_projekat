@@ -1,3 +1,5 @@
+// Ovde pravimo nasumican token (DeviceTokenGenerator).
+
 using SmartApiary.Application.Interfaces.Services;
 
 namespace SmartApiary.Infrastructure.Services;

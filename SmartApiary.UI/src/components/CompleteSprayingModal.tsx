@@ -1,3 +1,5 @@
+// Modal za unos i izmenu podataka (CompleteSprayingModal).
+
 import { type FormEvent, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import {

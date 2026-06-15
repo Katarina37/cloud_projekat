@@ -1,3 +1,5 @@
+// Kako se Apiary cuva u SQL tabeli.
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NetTopologySuite.Geometries;

@@ -1,3 +1,5 @@
+// API pozivi koje koristi hivesApi.
+
 import type { ResultResponse } from './apiResult';
 import apiClient from './httpClient';
 

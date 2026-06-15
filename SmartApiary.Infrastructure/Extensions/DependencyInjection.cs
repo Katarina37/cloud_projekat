@@ -1,3 +1,6 @@
+// Ovde povezujemo interfejse sa bazom, repozitorijumima i servisima.
+// Vezbe 6 - dependency injection za Web API.
+
 using Azure.Data.Tables;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -22,11 +25,13 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
 
+        // Glavni podaci idu u SQL, a geography nam treba za udaljenost na mapi.
         services.AddDbContext<SmartApiaryDbContext>(options =>
             options.UseSqlServer(
                 connectionString,
                 sqlServerOptions => sqlServerOptions.UseNetTopologySuite()));
 
+        // Povezujemo interfejse sa pravim repozitorijumima.
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IApiaryRepository, ApiaryRepository>();
         services.AddScoped<IHiveRepository, HiveRepository>();
@@ -36,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<ICropRepository, CropRepository>();
         services.AddScoped<ISprayingAnnouncementRepository, SprayingAnnouncementRepository>();
 
+        // Vezbe 4: telemetrija ide u Table Storage i deli se po uredjaju.
         services.Configure<AzureTableOptions>(
             configuration.GetSection(AzureTableOptions.SectionName));
 
@@ -45,6 +51,8 @@ public static class DependencyInjection
                 $"{AzureTableOptions.SectionName}:ConnectionString is not configured.");
 
         services.AddSingleton(new TableServiceClient(storageConnectionString));
+
+        // Mapiranje i kljucevi za Table Storage.
         services.AddSingleton<
             ITableMapper<TelemetryReading, TelemetryTableEntity>,
             TelemetryTableMapper>();
@@ -55,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserAlertSettingsRepository, UserAlertSettingsRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        // Ostali servisi koje koristimo kroz aplikaciju.
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<IDeviceTokenGenerator, DeviceTokenGenerator>();

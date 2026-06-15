@@ -1,3 +1,6 @@
+// Ovde menjamo pcelinjak.
+// Specifikacija - pcelinjaci i mapa.
+
 using MediatR;
 using Microsoft.Extensions.Logging;
 using SmartApiary.Application.Common.Results;

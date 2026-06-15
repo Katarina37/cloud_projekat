@@ -1,3 +1,6 @@
+// Ovde ucitavamo kulture sa parcele.
+// Specifikacija - kulture na parcelama.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

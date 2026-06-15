@@ -1,3 +1,5 @@
+// Podaci koji stizu kada prijavljujemo korisnika.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

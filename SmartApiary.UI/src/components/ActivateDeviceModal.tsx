@@ -1,3 +1,5 @@
+// Modal za unos i izmenu podataka (ActivateDeviceModal).
+
 import { type FormEvent, useState } from 'react';
 import { X } from 'lucide-react';
 import { activateDevice, getApiErrorMessage, type ActivateDeviceRequest } from '../api/apiClient';

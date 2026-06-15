@@ -1,9 +1,12 @@
+// Stranica za prijavu.
+
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { CircleAlert, Info, LoaderCircle, Lock, LogIn, Mail } from 'lucide-react';
 import { getApiErrorMessage, login } from '../api/apiClient';
 import { setAuthToken, setCurrentUserEmail } from '../auth/authStorage';
 import BrandLogo from '../components/BrandLogo';
+import AuthField from '../components/auth/AuthField';
 import AuthLayout from '../components/auth/AuthLayout';
 import loginVideo from '../assets/auth/LoginVideo.mp4';
 
@@ -38,59 +41,74 @@ export default function LoginPage() {
 
   return (
     <AuthLayout videoSrc={loginVideo}>
-      <section className="auth-layout-card">
+      <>
         <header className="auth-layout-card-header">
           <div className="auth-layout-brand">
             <BrandLogo />
             <div className="auth-layout-brand-copy">
-              <span className="auth-layout-eyebrow">Prijava</span>
-              <h1>SmartApiary</h1>
+              <span className="auth-layout-eyebrow">SmartApiary</span>
+              <h1>Dobrodošli nazad</h1>
             </div>
           </div>
-          <p className="auth-layout-subtitle">Dobrodošli nazad u pametni pčelinjak</p>
+          <p className="auth-layout-subtitle">
+            Prijavite se i nastavite upravljati svojim pametnim pčelinjakom.
+          </p>
         </header>
 
-        <p className="auth-layout-note">
-          Prijava radi nakon aktivacije naloga. Ako prvi put ulazis u sistem, otvori aktivacioni link iz pozivnice i
-          postavi lozinku.
-        </p>
+        <div className="auth-layout-note">
+          <Info size={18} aria-hidden="true" />
+          <p>
+            Prvi put ulazite u sistem? Otvorite aktivacioni link iz pozivnice i prvo postavite lozinku.
+          </p>
+        </div>
 
         <form className="auth-layout-form" onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              autoComplete="email"
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              type="email"
-              value={email}
-            />
-          </label>
+          <AuthField
+            autoComplete="email"
+            icon={<Mail size={19} />}
+            id="login-email"
+            label="Email adresa"
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="ime@primjer.com"
+            required
+            type="email"
+            value={email}
+          />
 
-          <label>
-            Lozinka
-            <input
-              autoComplete="current-password"
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              type="password"
-              value={password}
-            />
-          </label>
+          <AuthField
+            autoComplete="current-password"
+            icon={<Lock size={19} />}
+            id="login-password"
+            label="Lozinka"
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Unesite lozinku"
+            required
+            type="password"
+            value={password}
+          />
 
-          {error ? <p className="form-error">{error}</p> : null}
+          {error ? (
+            <p className="form-error auth-layout-message" role="alert">
+              <CircleAlert size={17} aria-hidden="true" />
+              {error}
+            </p>
+          ) : null}
 
-          <button className="primary-button auth-layout-submit" disabled={isSubmitting} type="submit">
-            <LogIn size={18} />
-            {isSubmitting ? 'Prijava...' : 'Prijavi se'}
+          <button className="auth-layout-submit" disabled={isSubmitting} type="submit">
+            <span className="auth-layout-submit-icon" aria-hidden="true">
+              {isSubmitting ? <LoaderCircle className="auth-layout-spinner" size={18} /> : <LogIn size={18} />}
+            </span>
+            <span>{isSubmitting ? 'Prijava...' : 'Prijavi se'}</span>
           </button>
         </form>
 
         <div className="auth-layout-links">
-          <Link to="/forgot-password">Zaboravljena lozinka</Link>
-          <Link to="/activate">Novi korisnik? Aktiviraj nalog</Link>
+          <Link to="/forgot-password">Zaboravili ste lozinku?</Link>
+          <Link className="auth-layout-switch-link" to="/activate">
+            Novi korisnik? <span>Aktivirajte nalog</span>
+          </Link>
         </div>
-      </section>
+      </>
     </AuthLayout>
   );
 }

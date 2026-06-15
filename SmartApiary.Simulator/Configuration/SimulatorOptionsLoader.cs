@@ -1,3 +1,5 @@
+// Jedan mali deo simulatora: SimulatorOptionsLoader.
+
 using System.Text.Json;
 
 namespace SmartApiary.Simulator.Configuration;

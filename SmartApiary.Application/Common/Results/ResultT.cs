@@ -1,3 +1,5 @@
+// Zajednicki format za uspeh ili gresku (ResultT).
+
 namespace SmartApiary.Application.Common.Results;
 
 public class Result<T> : Result

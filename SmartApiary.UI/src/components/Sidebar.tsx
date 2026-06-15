@@ -1,10 +1,13 @@
+// Zajednicka UI komponenta: Sidebar.
+
 import {
   Bell,
+  Boxes,
   CalendarClock,
+  Cpu,
   LayoutDashboard,
   LogOut,
   MapPinned,
-  Settings,
   Sprout,
   Users,
   Wheat,
@@ -12,7 +15,7 @@ import {
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   clearAuthToken,
-  getCurrentUserDisplayName,
+  getCurrentUserEmail,
   getCurrentUserRole,
 } from '../auth/authStorage';
 import BrandLogo from './BrandLogo';
@@ -21,8 +24,9 @@ import './Sidebar.css';
 const beekeeperNavigation = [
   { path: '/pregled', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/pcelinjaci', label: 'Pčelinjaci', icon: MapPinned },
+  { path: '/kosnice', label: 'Košnice', icon: Boxes },
+  { path: '/uredjaji', label: 'Uređaji', icon: Cpu },
   { path: '/upozorenja', label: 'Upozorenja', icon: Bell },
-  { path: '/podesavanja', label: 'Podešavanja', icon: Settings },
 ];
 
 const farmerNavigation = [
@@ -39,13 +43,8 @@ export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const role = getCurrentUserRole();
-  const displayName = getCurrentUserDisplayName();
-  const initials = displayName
-    .split(' ')
-    .filter((part) => part.length > 0)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('');
+  const email = getCurrentUserEmail() ?? '';
+  const initials = email.charAt(0).toUpperCase();
   const currentPath = `${location.pathname}${location.hash}`;
   let items = beekeeperNavigation;
 
@@ -104,7 +103,7 @@ export default function Sidebar() {
         </div>
         <div className="sidebar-profile-content">
           <div className="sidebar-profile-copy">
-            <strong title={displayName}>{displayName}</strong>
+            <strong title={email}>{email}</strong>
             <span>{roleLabel}</span>
           </div>
           <button

@@ -1,3 +1,5 @@
+// Konkretna implementacija servisa JwtOptions.
+
 namespace SmartApiary.Infrastructure.Services;
 
 public sealed class JwtOptions

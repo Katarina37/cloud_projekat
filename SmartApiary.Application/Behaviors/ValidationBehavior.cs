@@ -1,3 +1,5 @@
+// Ovde se automatski pokrecu validatori pre svakog handlera.
+
 using FluentValidation;
 using MediatR;
 using SmartApiary.Application.Common.Results;

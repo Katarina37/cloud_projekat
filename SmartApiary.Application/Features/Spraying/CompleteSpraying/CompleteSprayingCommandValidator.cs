@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto zavrsavamo prskanje i upisujemo karton.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Spraying.CompleteSpraying;

@@ -1,3 +1,6 @@
+// Slanje i citanje telemetrije preko Queue Storage-a.
+// Vezbe 5 i 6 - Queue poruke i SignalR tok.
+
 using System.Text.Json;
 using Azure.Storage.Queues;
 using Azure.Storage.Queues.Models;
@@ -33,6 +36,7 @@ public sealed class TelemetryQueueService : ITelemetryQueueService
     {
         await EnsureQueueCreatedAsync(cancellationToken);
 
+        // Queue poruku saljemo kao JSON.
         var json = JsonSerializer.Serialize(message, _jsonOptions);
         await _queueClient.SendMessageAsync(json, cancellationToken);
     }
@@ -42,6 +46,7 @@ public sealed class TelemetryQueueService : ITelemetryQueueService
     {
         await EnsureQueueCreatedAsync(cancellationToken);
 
+        // Uzimamo jednu poruku i sakrijemo je dok je worker obradjuje.
         var response = await _queueClient.ReceiveMessagesAsync(
             maxMessages: 1,
             visibilityTimeout: TimeSpan.FromSeconds(30),
@@ -66,6 +71,7 @@ public sealed class TelemetryQueueService : ITelemetryQueueService
             return null;
         }
 
+        // Cuvamo i podatke potrebne za kasnije brisanje poruke.
         return new ReceivedTelemetryQueueMessage(
             _queueClient,
             message.MessageId,
@@ -107,6 +113,7 @@ public sealed class TelemetryQueueService : ITelemetryQueueService
 
         public Task CompleteAsync(CancellationToken cancellationToken = default)
         {
+            // Gotovo je, brisemo poruku.
             return _queueClient.DeleteMessageAsync(
                 _messageId,
                 _popReceipt,

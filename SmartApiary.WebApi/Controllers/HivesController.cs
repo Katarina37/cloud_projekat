@@ -1,3 +1,5 @@
+// HTTP rute za Hives. Glavni posao prosledjujemo handlerima.
+
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

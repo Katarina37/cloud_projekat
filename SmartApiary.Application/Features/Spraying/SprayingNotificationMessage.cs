@@ -1,3 +1,5 @@
+// Poruka koju saljemo za SprayingNotificationMessage.
+
 using SmartApiary.Domain.Enums;
 
 namespace SmartApiary.Application.Features.Spraying;

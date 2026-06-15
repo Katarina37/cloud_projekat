@@ -1,3 +1,5 @@
+// Podaci koji su potrebni kada proveravamo da li pcelinjak pripada prijavljenom pcelaru.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

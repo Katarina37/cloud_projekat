@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto registrujemo uredjaj.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Devices.RegisterDevice;

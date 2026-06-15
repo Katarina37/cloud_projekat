@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za HiveDto.
+
 using SmartApiary.Domain.Enums;
 
 namespace SmartApiary.Application.DTOs;

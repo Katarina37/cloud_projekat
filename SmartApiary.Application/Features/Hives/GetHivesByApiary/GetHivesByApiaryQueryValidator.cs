@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto ucitavamo kosnice iz pcelinjaka.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Hives.GetHivesByApiary;

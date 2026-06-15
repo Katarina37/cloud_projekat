@@ -1,3 +1,6 @@
+// Ovde ucitavamo obavestenja prijavljenog korisnika.
+// Specifikacija - obavestenja.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

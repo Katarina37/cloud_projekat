@@ -1,5 +1,7 @@
+// Stranica za kulture na parcelama.
+
 import { type ChangeEvent, useEffect, useState } from 'react';
-import { Pencil, Plus, Trash2, Wheat } from 'lucide-react';
+import { CalendarRange, MapPinned, Pencil, Plus, Ruler, Trash2, Wheat } from 'lucide-react';
 import {
   deleteCrop,
   getApiErrorMessage,
@@ -8,6 +10,10 @@ import {
   type CropDto,
   type ParcelDto,
 } from '../api/apiClient';
+import defaultCropImage from '../assets/card_backgrounds/default-card-background.png';
+import lavenderImage from '../assets/card_backgrounds/lavender-card-background.png';
+import rapeseedImage from '../assets/card_backgrounds/rapeseed-card-background.png';
+import sunflowerImage from '../assets/card_backgrounds/sunflower-card-background.png';
 import CropFormModal from '../components/CropFormModal';
 import PageHeader from '../components/PageHeader';
 
@@ -26,10 +32,12 @@ export default function CropsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCrop, setEditingCrop] = useState<CropDto | null>(null);
   const [deletingCropId, setDeletingCropId] = useState<string | null>(null);
+  const selectedParcel = parcels.find((parcel) => parcel.id === selectedParcelId);
+  const totalArea = crops.reduce((sum, crop) => sum + (crop.area ?? 0), 0);
 
   async function loadCropsForParcel(parcelId: string) {
-    const crops = await getCropsByParcel(parcelId);
-    setCrops(crops);
+    const loadedCrops = await getCropsByParcel(parcelId);
+    setCrops(loadedCrops);
   }
 
   async function fetchCropsForParcel(parcelId: string) {
@@ -53,10 +61,10 @@ export default function CropsPage() {
     setError(null);
 
     try {
-      const parcels = await getParcels();
-      const nextParcelId = parcels.length > 0 ? parcels[0].id : '';
+      const loadedParcels = await getParcels();
+      const nextParcelId = loadedParcels.length > 0 ? loadedParcels[0].id : '';
 
-      setParcels(parcels);
+      setParcels(loadedParcels);
       setSelectedParcelId(nextParcelId);
 
       if (nextParcelId) {
@@ -133,21 +141,21 @@ export default function CropsPage() {
           setSuccessMessage('Kultura je uspešno obrisana.');
         }
       }
-    } catch (error) {
-      setError(getApiErrorMessage(error, 'Greška pri brisanju kulture.'));
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'Greška pri brisanju kulture.'));
     } finally {
       setDeletingCropId(null);
     }
   };
 
   return (
-    <div className="page-stack">
+    <div className="page-stack resource-page farmer-page crops-page">
       <PageHeader
         title="Kulture"
-        subtitle="Kulture za izabranu parcelu"
+        subtitle="Pratite period cvetanja, površinu i beleške za svaku parcelu."
         action={
           <button
-            className="primary-button apiary-add-button"
+            className="primary-button"
             disabled={!selectedParcelId}
             onClick={() => {
               setSuccessMessage(null);
@@ -155,15 +163,49 @@ export default function CropsPage() {
             }}
             type="button"
           >
-            <Plus size={18} />
+            <Plus aria-hidden="true" size={18} />
             Dodaj kulturu
           </button>
         }
       />
 
+      <section className="farmer-summary-grid" aria-label="Pregled kultura">
+        <article className="farmer-summary-card farmer-tone-land">
+          <span className="farmer-summary-icon"><MapPinned aria-hidden="true" size={22} /></span>
+          <div>
+            <span>Izabrana parcela</span>
+            <strong className="farmer-summary-name">{selectedParcel?.name ?? 'Nema parcele'}</strong>
+            <small>{parcels.length} ukupno evidentirano</small>
+          </div>
+        </article>
+        <article className="farmer-summary-card farmer-tone-crop">
+          <span className="farmer-summary-icon"><Wheat aria-hidden="true" size={22} /></span>
+          <div>
+            <span>Kulture</span>
+            <strong>{crops.length}</strong>
+            <small>Na izabranoj parceli</small>
+          </div>
+        </article>
+        <article className="farmer-summary-card farmer-tone-area">
+          <span className="farmer-summary-icon"><Ruler aria-hidden="true" size={22} /></span>
+          <div>
+            <span>Ukupna površina</span>
+            <strong>{formatArea(totalArea)}</strong>
+            <small>Prema unetim kulturama</small>
+          </div>
+        </article>
+      </section>
+
       {parcels.length > 0 ? (
-        <section className="section-card">
-          <div className="filter-row">
+        <section className="section-card farmer-filter-card">
+          <div className="farmer-filter-heading">
+            <span className="farmer-filter-icon"><MapPinned aria-hidden="true" size={20} /></span>
+            <div>
+              <h2>Izaberite parcelu</h2>
+              <p>Prikazane kartice se automatski osvežavaju za odabranu parcelu.</p>
+            </div>
+          </div>
+          <div className="farmer-filter-control">
             <label>
               Parcela
               <select disabled={loading} onChange={handleParcelChange} value={selectedParcelId}>
@@ -178,9 +220,21 @@ export default function CropsPage() {
         </section>
       ) : null}
 
-      {loading ? <section className="section-card">{loadingMessage}</section> : null}
+      {loading ? (
+        <section className="section-card resource-loading">
+          <span className="resource-spinner" aria-hidden="true" />
+          <div>
+            <strong>{loadingMessage}</strong>
+            <p>Pripremamo podatke o cvetanju i površinama.</p>
+          </div>
+        </section>
+      ) : null}
 
-      {successMessage ? <section className="section-card message-card success">{successMessage}</section> : null}
+      {successMessage ? (
+        <section className="section-card message-card success" role="status">
+          {successMessage}
+        </section>
+      ) : null}
 
       {error ? (
         <section className="section-card message-card error" role="alert">
@@ -189,69 +243,87 @@ export default function CropsPage() {
       ) : null}
 
       {!loading && !error && parcels.length === 0 ? (
-        <section className="section-card">{noParcelsMessage}</section>
+        <section className="section-card resource-empty-state">
+          <span className="resource-empty-icon"><MapPinned aria-hidden="true" size={27} /></span>
+          <h2>Nema parcela</h2>
+          <p>{noParcelsMessage}</p>
+        </section>
       ) : null}
 
       {!loading && !error && selectedParcelId && crops.length === 0 ? (
-        <section className="section-card">{emptyCropsMessage}</section>
+        <section className="section-card resource-empty-state">
+          <span className="resource-empty-icon"><Wheat aria-hidden="true" size={27} /></span>
+          <h2>Nema kultura na ovoj parceli</h2>
+          <p>{emptyCropsMessage}</p>
+          <button className="primary-button" onClick={() => setIsCreateModalOpen(true)} type="button">
+            <Plus aria-hidden="true" size={18} />
+            Dodaj kulturu
+          </button>
+        </section>
       ) : null}
 
       {!loading && !error && selectedParcelId && crops.length > 0 ? (
-        <section className="card-grid three">
+        <section className="card-grid three farmer-entity-grid">
           {crops.map((crop) => (
-            <article className="section-card crop-card" key={crop.id}>
-              <div className="card-topline">
-                <div className="section-icon">
-                  <Wheat size={18} />
+            <article
+              className={`farmer-entity-card crop-entity-card ${getCropTone(crop.name)}`}
+              key={crop.id}
+              tabIndex={0}
+            >
+              <div className="farmer-card-hero">
+                <img alt="" aria-hidden="true" loading="lazy" src={getCropImage(crop.name)} />
+                <span className="farmer-card-kicker">Kultura</span>
+                <div className="apiary-card-actions">
+                  <button
+                    aria-label="Izmeni kulturu"
+                    className="apiary-overlay-action"
+                    disabled={deletingCropId === crop.id}
+                    onClick={() => {
+                      setSuccessMessage(null);
+                      setEditingCrop(crop);
+                    }}
+                    title="Izmeni kulturu"
+                    type="button"
+                  >
+                    <Pencil aria-hidden="true" size={15} />
+                  </button>
+                  <button
+                    aria-label={deletingCropId === crop.id ? 'Brisanje kulture' : 'Obriši kulturu'}
+                    className="apiary-overlay-action apiary-overlay-action-danger"
+                    disabled={deletingCropId === crop.id}
+                    onClick={() => handleDeleteCrop(crop)}
+                    title={deletingCropId === crop.id ? 'Brisanje kulture' : 'Obriši kulturu'}
+                    type="button"
+                  >
+                    <Trash2 aria-hidden="true" size={15} />
+                  </button>
                 </div>
               </div>
 
-              <div>
+              <div className="farmer-card-body">
                 <h2>{crop.name}</h2>
-                {crop.notes ? <p>{crop.notes}</p> : null}
-              </div>
+                <p className="farmer-card-description">
+                  {crop.notes || 'Nema dodatne beleške za ovu kulturu.'}
+                </p>
 
-              <div className="detail-grid">
-                <div>
-                  <span>ExpectedBloomingStart</span>
-                  <strong>{formatDate(crop.expectedBloomingStart)}</strong>
-                </div>
-                <div>
-                  <span>ExpectedBloomingEnd</span>
-                  <strong>{formatDate(crop.expectedBloomingEnd)}</strong>
-                </div>
-                {crop.area !== null && crop.area !== undefined ? (
+                <div className="farmer-metric-grid">
                   <div>
-                    <span>Area</span>
-                    <strong>{crop.area}</strong>
+                    <span><CalendarRange aria-hidden="true" size={13} /> Početak cvetanja</span>
+                    <strong>{formatDate(crop.expectedBloomingStart)}</strong>
                   </div>
-                ) : null}
-              </div>
-
-              <div className="card-action-row">
-                <button
-                  aria-label="Izmeni kulturu"
-                  className="secondary-action-button icon-action-button"
-                  disabled={deletingCropId === crop.id}
-                  onClick={() => {
-                    setSuccessMessage(null);
-                    setEditingCrop(crop);
-                  }}
-                  title="Izmeni kulturu"
-                  type="button"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  aria-label={deletingCropId === crop.id ? 'Brisanje kulture' : 'Obriši kulturu'}
-                  className="danger-action-button icon-action-button"
-                  disabled={deletingCropId === crop.id}
-                  onClick={() => handleDeleteCrop(crop)}
-                  title={deletingCropId === crop.id ? 'Brisanje kulture' : 'Obriši kulturu'}
-                  type="button"
-                >
-                  <Trash2 size={16} />
-                </button>
+                  <div>
+                    <span><CalendarRange aria-hidden="true" size={13} /> Kraj cvetanja</span>
+                    <strong>{formatDate(crop.expectedBloomingEnd)}</strong>
+                  </div>
+                  <div>
+                    <span><Ruler aria-hidden="true" size={13} /> Površina</span>
+                    <strong>
+                      {crop.area !== null && crop.area !== undefined
+                        ? formatArea(crop.area)
+                        : 'Nije uneta'}
+                    </strong>
+                  </div>
+                </div>
               </div>
             </article>
           ))}
@@ -286,4 +358,40 @@ function formatDate(value: string) {
   }
 
   return date.toLocaleDateString('sr-Latn-RS');
+}
+
+function formatArea(value: number) {
+  return `${new Intl.NumberFormat('sr-Latn-RS', { maximumFractionDigits: 2 }).format(value)} ha`;
+}
+
+function getCropImage(name: string) {
+  switch (name.trim().toLowerCase()) {
+    case 'suncokret':
+    case 'sunflower':
+      return sunflowerImage;
+    case 'uljana repica':
+    case 'rapeseed':
+      return rapeseedImage;
+    case 'lavanda':
+    case 'lavender':
+      return lavenderImage;
+    default:
+      return defaultCropImage;
+  }
+}
+
+function getCropTone(name: string) {
+  switch (name.trim().toLowerCase()) {
+    case 'lavanda':
+    case 'lavender':
+      return 'crop-tone-lavender';
+    case 'uljana repica':
+    case 'rapeseed':
+      return 'crop-tone-rapeseed';
+    case 'suncokret':
+    case 'sunflower':
+      return 'crop-tone-sunflower';
+    default:
+      return 'crop-tone-default';
+  }
 }

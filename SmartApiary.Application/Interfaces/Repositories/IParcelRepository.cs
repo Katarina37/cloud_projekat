@@ -1,3 +1,5 @@
+// Ovde su metode koje IParcelRepository repozitorijum mora da ima.
+
 using SmartApiary.Domain.Models;
 using SmartApiary.Domain.ValueObjects;
 

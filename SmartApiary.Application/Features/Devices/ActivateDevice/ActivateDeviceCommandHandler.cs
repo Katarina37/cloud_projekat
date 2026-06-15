@@ -1,3 +1,6 @@
+// Ovde aktiviramo uredjaj.
+// Specifikacija - registracija i aktivacija uredjaja.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;
@@ -24,6 +27,7 @@ public sealed class ActivateDeviceCommandHandler : IRequestHandler<ActivateDevic
 
     public async Task<Result<string>> Handle(ActivateDeviceCommand request, CancellationToken cancellationToken)
     {
+        // Trazimo uredjaj koji je pcelar ranije registrovao.
         var device = await _deviceRepository.GetBySerialNumberAsync(request.SerialNumber, cancellationToken);
         if (device is null)
         {
@@ -35,6 +39,7 @@ public sealed class ActivateDeviceCommandHandler : IRequestHandler<ActivateDevic
             return Result<string>.Failure("Device is already paired.", ErrorType.Conflict);
         }
 
+        // Specifikacija: uredjaj dobija svoj nasumican access token.
         var accessToken = _deviceTokenGenerator.GenerateToken();
 
         device.Pair(request.DeviceIdentifier, accessToken);

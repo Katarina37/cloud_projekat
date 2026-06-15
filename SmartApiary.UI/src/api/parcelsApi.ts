@@ -1,3 +1,5 @@
+// API pozivi koje koristi parcelsApi.
+
 import type { ResultResponse } from './apiResult';
 import apiClient from './httpClient';
 

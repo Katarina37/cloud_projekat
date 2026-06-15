@@ -1,3 +1,5 @@
+// Podaci koji stizu kada brisemo parcelu.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

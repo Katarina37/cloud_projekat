@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: PageHeader.
+
 import type { ReactNode } from 'react';
 
 type PageHeaderProps = {

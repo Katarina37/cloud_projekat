@@ -1,3 +1,5 @@
+// Moguce vrednosti za UserRole.
+
 namespace SmartApiary.Domain.Enums;
 
 public enum UserRole

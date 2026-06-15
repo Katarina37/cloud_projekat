@@ -1,3 +1,5 @@
+// Konkretna implementacija servisa NoopNotificationSender.
+
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;
 

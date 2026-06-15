@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: StatusBadge.
+
 import type { ReactNode } from 'react';
 
 export type StatusTone = 'good' | 'warning' | 'critical' | 'muted' | 'info';

@@ -1,3 +1,5 @@
+// Podaci koji stizu kada menjamo kulturu.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

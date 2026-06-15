@@ -1,3 +1,5 @@
+// Ovde povezujemo URL adrese sa stranicama i proveravamo uloge.
+
 import type { ReactElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import ActivateAccountPage from '../pages/ActivateAccountPage';
@@ -14,7 +16,6 @@ import HivesPage from '../pages/HivesPage';
 import LoginPage from '../pages/LoginPage';
 import ParcelsPage from '../pages/ParcelsPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
-import SettingsPage from '../pages/SettingsPage';
 import SprayingPage from '../pages/SprayingPage';
 import TelemetryPage from '../pages/TelemetryPage';
 import {
@@ -24,6 +25,7 @@ import {
 } from '../auth/authStorage';
 
 export default function AppRouter() {
+  // Svaka adresa otvara svoju stranicu.
   return (
     <BrowserRouter>
       <Routes>
@@ -72,7 +74,6 @@ export default function AppRouter() {
           <Route path="/kulture" element={<RoleRoute roles={['Farmer']}><CropsPage /></RoleRoute>} />
           <Route path="/tretiranja" element={<RoleRoute roles={['Farmer']}><SprayingPage /></RoleRoute>} />
           <Route path="/dnevnik" element={<RoleRoute roles={['Beekeeper']}><BeekeepingDiaryPage /></RoleRoute>} />
-          <Route path="/podesavanja" element={<RoleRoute roles={['Beekeeper']}><SettingsPage /></RoleRoute>} />
           <Route path="/admin/korisnici" element={<RoleRoute roles={['Admin']}><AdminUsersPage /></RoleRoute>} />
           <Route path="*" element={<DefaultRoute />} />
         </Route>
@@ -82,6 +83,7 @@ export default function AppRouter() {
 }
 
 function ProtectedLayout() {
+  // Bez tokena vracamo korisnika na login.
   if (hasValidSession()) {
     return <DashboardLayout />;
   }
@@ -102,6 +104,7 @@ function hasValidSession() {
 }
 
 function RoleRoute({ children, roles }: { children: ReactElement; roles: UserRole[] }) {
+  // Front proveri ulogu zbog navigacije, backend je svakako proverava opet.
   const role = getCurrentUserRole();
 
   if (role && roles.includes(role)) {

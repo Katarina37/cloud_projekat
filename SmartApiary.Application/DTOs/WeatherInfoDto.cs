@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za WeatherInfoDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class WeatherInfoDto

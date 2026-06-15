@@ -1,3 +1,5 @@
+// Podaci koji stizu kada registrujemo uredjaj.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

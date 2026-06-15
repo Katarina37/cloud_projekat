@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za Hive.
+
 using SmartApiary.Domain.Enums;
 
 namespace SmartApiary.Domain.Models;

@@ -1,3 +1,6 @@
+// Ovde zakazujemo prskanje.
+// Specifikacija - prskanje i digitalni karton.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Features.Spraying;
@@ -40,6 +43,7 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
 
     public async Task<Result<Guid>> Handle(ScheduleSprayingCommand request, CancellationToken cancellationToken)
     {
+        // Farmer moze da zakaze prskanje samo na svojoj parceli.
         if (!_currentUserService.IsAuthenticated || _currentUserService.UserId is not { } farmerId)
         {
             return Result<Guid>.Failure("User is not authenticated.", ErrorType.Unauthorized);
@@ -56,6 +60,7 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
             return Result<Guid>.Failure("Parcel does not belong to the current farmer.", ErrorType.Unauthorized);
         }
 
+        // Pre cuvanja proverimo kisu i vetar.
         var weatherWarning = await GetWeatherWarningAsync(parcel, request.StartTime, cancellationToken);
 
         var announcement = new SprayingAnnouncement(
@@ -64,6 +69,7 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
             request.DurationHours,
             request.PreparationType);
 
+        // Pcelinjaci do 5 km dobijaju obavestenje.
         var nearbyApiaries = await _apiaryRepository.FindWithinRadiusAsync(
             parcel.Location, NotificationRadiusKm, cancellationToken);
         var notifiedBeekeepersCount = nearbyApiaries.Select(a => a.BeekeeperId).Distinct().Count();
@@ -72,6 +78,7 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
 
         var title = "Pesticide spraying scheduled";
 
+        // Queue trigger ce odraditi slanje obavestenja.
         await _sprayingQueueService.EnqueueAsync(new SprayingNotificationMessage(
             announcement.Id,
             parcel.Id,

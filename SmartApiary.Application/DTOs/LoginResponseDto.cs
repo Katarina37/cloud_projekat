@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za LoginResponseDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class LoginResponseDto

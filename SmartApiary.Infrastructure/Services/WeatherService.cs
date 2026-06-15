@@ -1,3 +1,6 @@
+// Ovde zovemo OpenWeatherMap i uzimamo prognozu najblizu terminu prskanja.
+// Specifikacija - upozorenje za kisu i jak vetar.
+
 using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -28,6 +31,7 @@ public sealed class WeatherService : IWeatherService
         DateTime dateTime,
         CancellationToken cancellationToken = default)
     {
+        // Bez API kljuca samo preskacemo vremensku prognozu.
         if (string.IsNullOrWhiteSpace(_apiKey))
         {
             return null;
@@ -35,6 +39,7 @@ public sealed class WeatherService : IWeatherService
 
         try
         {
+            // OpenWeather vraca prognozu u vremenskim intervalima.
             var forecast = await _httpClient.GetFromJsonAsync<OpenWeatherForecastResponse>(
                 BuildForecastUrl(latitude, longitude, _apiKey.Trim()),
                 cancellationToken);
@@ -85,6 +90,7 @@ public sealed class WeatherService : IWeatherService
 
         var timezoneOffsetSeconds = forecast.City?.TimezoneOffsetSeconds ?? 0;
         var requestedLocalTime = ToLocationLocalTime(requestedDateTime, timezoneOffsetSeconds);
+        // Uzimamo termin koji je najblizi trazenom, do tri sata razlike.
         var closest = forecast.Items
             .Select(item => new
             {
@@ -132,6 +138,7 @@ public sealed class WeatherService : IWeatherService
 
     private static bool HasRain(OpenWeatherForecastItem forecastItem)
     {
+        // Kisu proveravamo i po kolicini i po opisu.
         return forecastItem.Rain?.LastThreeHours > 0
             || forecastItem.Conditions?.Any(IsRainCondition) == true;
     }

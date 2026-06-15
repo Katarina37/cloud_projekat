@@ -1,3 +1,5 @@
+// Konkretna implementacija servisa DateTimeProvider.
+
 using SmartApiary.Application.Interfaces.Services;
 
 namespace SmartApiary.Infrastructure.Services;

@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto postavljamo novu lozinku.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Auth.ResetPassword;

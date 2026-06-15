@@ -1,3 +1,5 @@
+// Pomocna UI funkcija: cropMarkerIcons.
+
 import L from 'leaflet';
 import defaultCropIconUrl from '../assets/crops/default.svg';
 import lavenderIconUrl from '../assets/crops/lavender.svg';

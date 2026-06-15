@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za NotificationDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class NotificationDto

@@ -1,3 +1,5 @@
+// Podaci koje worker salje frontu preko SignalR-a.
+
 namespace SmartApiary.WebApi.DTOs;
 
 public sealed class TelemetryUpdateDto

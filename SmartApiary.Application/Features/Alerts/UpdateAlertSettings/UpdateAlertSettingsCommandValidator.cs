@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto menjamo podesavanja alarma.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Alerts.UpdateAlertSettings;

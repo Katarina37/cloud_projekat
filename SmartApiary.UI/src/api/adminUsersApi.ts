@@ -1,3 +1,5 @@
+// API pozivi koje koristi adminUsersApi.
+
 import type { ResultResponse } from './apiResult';
 import type { UserRole } from './authApi';
 import apiClient from './httpClient';

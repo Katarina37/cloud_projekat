@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto oznacavamo obavestenje kao procitano.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Notifications.MarkNotificationAsRead;

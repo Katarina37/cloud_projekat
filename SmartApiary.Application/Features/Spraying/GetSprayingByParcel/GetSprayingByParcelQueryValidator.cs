@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto ucitavamo prskanja za parcelu.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Spraying.GetSprayingByParcel;

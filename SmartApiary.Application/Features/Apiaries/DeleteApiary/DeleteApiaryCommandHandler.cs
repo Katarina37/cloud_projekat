@@ -1,3 +1,6 @@
+// Ovde brisemo pcelinjak.
+// Specifikacija - pcelinjaci i mapa.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;

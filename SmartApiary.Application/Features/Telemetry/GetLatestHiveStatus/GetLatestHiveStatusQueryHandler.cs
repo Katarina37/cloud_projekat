@@ -1,3 +1,6 @@
+// Ovde ucitavamo poslednje stanje kosnice.
+// Specifikacija - IoT telemetrija.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

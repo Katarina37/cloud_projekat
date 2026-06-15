@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto aktiviramo korisnicki nalog.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Auth.ActivateAccount;

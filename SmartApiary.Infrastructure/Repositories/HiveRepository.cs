@@ -1,3 +1,5 @@
+// SQL citanje i upis za Hive.
+
 using Microsoft.EntityFrameworkCore;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Domain.Models;

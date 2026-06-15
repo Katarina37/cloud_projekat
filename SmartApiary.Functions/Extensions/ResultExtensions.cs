@@ -1,3 +1,5 @@
+// Pomocni kod za Functions: ResultExtensions.
+
 using System.Net;
 using SmartApiary.Application.Common.Results;
 

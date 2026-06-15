@@ -1,3 +1,5 @@
+// Podaci koji su potrebni kada racunamo dnevnu promenu tezine.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

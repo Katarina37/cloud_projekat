@@ -1,3 +1,6 @@
+// Ovde dodajemo parcelu.
+// Specifikacija - parcele i njihove lokacije.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;

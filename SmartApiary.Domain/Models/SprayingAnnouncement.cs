@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za SprayingAnnouncement.
+
 using SmartApiary.Domain.Enums;
 using SmartApiary.Domain.Exceptions;
 using System.Data;

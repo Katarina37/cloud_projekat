@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto ucitavamo preglede kosnice.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.HiveInspections.GetHiveInspectionsByHiveId;

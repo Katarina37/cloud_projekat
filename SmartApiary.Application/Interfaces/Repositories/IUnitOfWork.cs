@@ -1,3 +1,5 @@
+// Ovde su metode koje IUnitOfWork repozitorijum mora da ima.
+
 namespace SmartApiary.Application.Interfaces.Repositories;
 
 public interface IUnitOfWork

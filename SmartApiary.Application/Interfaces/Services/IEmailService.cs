@@ -1,3 +1,5 @@
+// Ovde su metode koje IEmailService servis mora da ima.
+
 namespace SmartApiary.Application.Interfaces.Services;
 
 public interface IEmailService

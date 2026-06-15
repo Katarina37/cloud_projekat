@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: AlertCard.
+
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import StatusBadge, { type StatusTone } from './StatusBadge';
 

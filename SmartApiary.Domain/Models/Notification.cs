@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za Notification.
+
 using SmartApiary.Domain.Enums;
 
 namespace SmartApiary.Domain.Models;

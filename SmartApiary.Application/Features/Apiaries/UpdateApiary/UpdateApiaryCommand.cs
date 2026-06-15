@@ -1,3 +1,5 @@
+// Podaci koji stizu kada menjamo pcelinjak.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

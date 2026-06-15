@@ -1,3 +1,5 @@
+// API pozivi koje koristi devicesApi.
+
 import { getApiErrorMessage, type ResultResponse } from './apiResult';
 import apiClient from './httpClient';
 

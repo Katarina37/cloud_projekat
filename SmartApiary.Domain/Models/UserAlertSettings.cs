@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za UserAlertSettings.
+
 namespace SmartApiary.Domain.Models;
 
 public class UserAlertSettings

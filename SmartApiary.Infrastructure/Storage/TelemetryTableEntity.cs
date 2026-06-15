@@ -1,3 +1,7 @@
+// Jedan deo podrske za Table Storage: TelemetryTableEntity.
+// Specifikacija - telemetriju drzimo van SQL baze.
+// Vezbe 4 - PartitionKey, RowKey i mapiranje Table entiteta.
+
 namespace SmartApiary.Infrastructure.TableStorage;
 
 internal sealed class TelemetryTableEntity : BaseTableEntity

@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto dodajemo parcelu.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Parcels.CreateParcel;

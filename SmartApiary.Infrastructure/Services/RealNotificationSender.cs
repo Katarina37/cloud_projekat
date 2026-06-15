@@ -1,3 +1,5 @@
+// Konkretna implementacija servisa RealNotificationSender.
+
 using Microsoft.Extensions.Logging;
 using SmartApiary.Application.Interfaces.Repositories;
 using SmartApiary.Application.Interfaces.Services;

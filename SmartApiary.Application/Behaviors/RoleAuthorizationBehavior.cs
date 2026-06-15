@@ -1,3 +1,5 @@
+// Ovde se pre handlera proverava da li korisnik ima dobru ulogu.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Services;
@@ -20,12 +22,15 @@ public sealed class RoleAuthorizationBehavior<TRequest, TResponse> : IPipelineBe
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
+        // Potrebna uloga se odredjuje iz feature namespace-a, na primer
+        // Admin, Apiaries ili Spraying. Tako pravilo vazi za sve handlere tog feature-a.
         var requiredRole = GetRequiredRole(typeof(TRequest));
         if (requiredRole is null)
         {
             return next(cancellationToken);
         }
 
+        // Ako feature nema ogranicenje, zahtev odmah nastavlja do handlera.
         if (!_currentUserService.IsAuthenticated)
         {
             return Task.FromResult(CreateFailure("User is not authenticated."));
@@ -36,6 +41,7 @@ public sealed class RoleAuthorizationBehavior<TRequest, TResponse> : IPipelineBe
             return Task.FromResult(CreateFailure($"User is not authorized for {requiredRole} resources."));
         }
 
+        // next je sledeci korak u MediatR pipeline-u, najcesce pravi handler.
         return next(cancellationToken);
     }
 

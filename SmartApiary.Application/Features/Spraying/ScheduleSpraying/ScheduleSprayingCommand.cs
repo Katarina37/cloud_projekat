@@ -1,3 +1,5 @@
+// Podaci koji stizu kada zakazujemo prskanje.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

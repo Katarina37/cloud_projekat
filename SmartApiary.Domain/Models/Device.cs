@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za Device.
+
 using SmartApiary.Domain.Enums;
 using SmartApiary.Domain.Exceptions;
 

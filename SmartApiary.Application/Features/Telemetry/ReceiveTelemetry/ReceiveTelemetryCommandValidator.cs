@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto obradjujemo novo merenje sa uredjaja.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Telemetry.ReceiveTelemetry;

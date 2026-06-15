@@ -1,3 +1,5 @@
+// Podaci koji su potrebni kada trazimo parcele u blizini pcelinjaka.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

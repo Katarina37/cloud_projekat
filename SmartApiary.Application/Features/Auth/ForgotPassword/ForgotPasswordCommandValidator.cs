@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto saljemo link za zaboravljenu lozinku.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Auth.ForgotPassword;

@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto pravimo novog korisnika.
+
 using FluentValidation;
 using SmartApiary.Domain.Enums;
 

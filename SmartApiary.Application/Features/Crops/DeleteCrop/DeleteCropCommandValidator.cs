@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto brisemo kulturu.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Crops.DeleteCrop;

@@ -1,3 +1,5 @@
+// Podaci koji stizu kada deaktiviramo korisnika.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

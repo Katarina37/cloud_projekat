@@ -1,3 +1,6 @@
+// Ovde trazimo parcele u blizini pcelinjaka.
+// Specifikacija - parcele u krugu od 5 km.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;
@@ -51,6 +54,7 @@ public sealed class GetNearbyParcelsQueryHandler
             return Result<IReadOnlyList<MapParcelDto>>.Failure("Apiary does not belong to the current beekeeper.", ErrorType.Unauthorized);
         }
 
+        // Specifikacija: samo parcele u krugu od 5 km.
         var parcels = await _parcelRepository.FindWithinRadiusAsync(
             apiary.Location,
             DefaultRadiusKm,
@@ -58,6 +62,7 @@ public sealed class GetNearbyParcelsQueryHandler
 
         var parcelDtos = new List<MapParcelDto>();
 
+        // Za marker dodamo kulture i kontakt farmera.
         foreach (var parcel in parcels)
         {
             var crops = await _cropRepository.GetByParcelIdAsync(parcel.Id, cancellationToken);

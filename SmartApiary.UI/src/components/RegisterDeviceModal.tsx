@@ -1,3 +1,5 @@
+// Modal za unos i izmenu podataka (RegisterDeviceModal).
+
 import { type FormEvent, useState } from 'react';
 import { X } from 'lucide-react';
 import { getApiErrorMessage, registerDevice, type RegisterDeviceRequest } from '../api/apiClient';

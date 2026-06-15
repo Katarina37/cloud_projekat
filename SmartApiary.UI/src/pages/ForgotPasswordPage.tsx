@@ -1,3 +1,5 @@
+// Stranica za slanje linka za novu lozinku.
+
 import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';

@@ -1,3 +1,6 @@
+// Ovde trazimo uredjaj povezan sa kosnicom.
+// Specifikacija - registracija i aktivacija uredjaja.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

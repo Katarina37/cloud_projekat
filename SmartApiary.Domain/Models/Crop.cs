@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za Crop.
+
 namespace SmartApiary.Domain.Models;
 
 public class Crop

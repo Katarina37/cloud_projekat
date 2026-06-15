@@ -1,3 +1,5 @@
+// Kako se Notification cuva u SQL tabeli.
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SmartApiary.Domain.Models;

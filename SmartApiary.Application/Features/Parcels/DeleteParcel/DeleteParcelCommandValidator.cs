@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto brisemo parcelu.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Parcels.DeleteParcel;

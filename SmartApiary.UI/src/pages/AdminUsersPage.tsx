@@ -1,3 +1,5 @@
+// Stranica za administraciju korisnika.
+
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, UserX, Users } from 'lucide-react';
 import {

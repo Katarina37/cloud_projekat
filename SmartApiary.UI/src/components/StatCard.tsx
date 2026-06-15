@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: StatCard.
+
 import type { ReactNode } from 'react';
 
 type StatCardProps = {

@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za DailyWeightDeltaDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class DailyWeightDeltaDto

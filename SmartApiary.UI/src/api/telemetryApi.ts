@@ -1,3 +1,5 @@
+// API pozivi koje koristi telemetryApi.
+
 import { getApiErrorMessage, type ResultResponse } from './apiResult';
 import apiClient from './httpClient';
 

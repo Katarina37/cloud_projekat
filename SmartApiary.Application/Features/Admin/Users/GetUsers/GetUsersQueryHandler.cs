@@ -1,3 +1,6 @@
+// Ovde ucitavamo korisnike.
+// Specifikacija - administracija korisnika.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

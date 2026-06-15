@@ -1,3 +1,5 @@
+// Zajednicke stvari za sve kontrolere, najvise pretvaranje Result-a u HTTP odgovor.
+
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +14,7 @@ namespace SmartApiary.WebApi.Controllers;
 [Route("api/[controller]")]
 public abstract class BaseController : ControllerBase
 {
+    // Svi kontroleri koriste isti Mediator i isti format odgovora.
     protected BaseController(IMediator mediator)
     {
         Mediator = mediator;
@@ -65,6 +68,7 @@ public abstract class BaseController : ControllerBase
 
         var errorResponse = CreateErrorResponse(error);
 
+        // Ovde biramo HTTP status za vrstu greske.
         return error.Type switch
         {
             ErrorType.Validation => BadRequest(errorResponse),

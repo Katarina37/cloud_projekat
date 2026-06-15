@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za Parcel.
+
 using SmartApiary.Domain.ValueObjects;
 
 namespace SmartApiary.Domain.Models;

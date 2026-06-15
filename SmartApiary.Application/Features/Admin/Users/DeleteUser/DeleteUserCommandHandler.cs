@@ -1,3 +1,6 @@
+// Ovde brisemo korisnika.
+// Specifikacija - administracija korisnika.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;

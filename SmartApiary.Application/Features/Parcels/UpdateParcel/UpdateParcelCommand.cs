@@ -1,3 +1,5 @@
+// Podaci koji stizu kada menjamo parcelu.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

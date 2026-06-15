@@ -1,3 +1,5 @@
+// Jedan poziv za cuvanje svih SQL izmena iz trenutnog zahteva.
+
 using SmartApiary.Application.Interfaces.Repositories;
 
 namespace SmartApiary.Infrastructure.Persistence;

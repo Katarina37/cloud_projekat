@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: MapView.
+
 import { Fragment, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';

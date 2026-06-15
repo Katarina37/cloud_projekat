@@ -1,3 +1,5 @@
+// Pocetni pregled stanja pcelinjaka.
+
 import { type ChangeEvent, useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import {

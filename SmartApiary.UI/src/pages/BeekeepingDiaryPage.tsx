@@ -1,3 +1,5 @@
+// Stranica sa pcelarskim dnevnikom.
+
 import { type ChangeEvent, useEffect, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import {

@@ -1,5 +1,20 @@
+// Stranica za prskanje i digitalni karton.
+
 import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react';
-import { AlertTriangle, Bell, CalendarClock, CheckCircle2, FileDown, Plus, RotateCw, UsersRound, XCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  Bell,
+  CalendarClock,
+  CheckCircle2,
+  FileDown,
+  Filter,
+  History,
+  MapPinned,
+  Plus,
+  RotateCw,
+  UsersRound,
+  XCircle,
+} from 'lucide-react';
 import {
   cancelSpraying,
   getApiErrorMessage,
@@ -23,6 +38,7 @@ const noParcelsMessage = 'Prvo dodajte parcelu da biste mogli zakazati tretiranj
 const emptyMessage = 'Nema zakazanih tretiranja za ovu parcelu.';
 
 export default function SprayingPage() {
+  // Ovde drzimo filtere, stranice tabele, modale i poruke.
   const [parcels, setParcels] = useState<ParcelDto[]>([]);
   const [selectedParcelId, setSelectedParcelId] = useState('');
   const [announcements, setAnnouncements] = useState<SprayingAnnouncementDto[]>([]);
@@ -44,6 +60,9 @@ export default function SprayingPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [notificationLoadingId, setNotificationLoadingId] = useState<string | null>(null);
   const [notificationCounts, setNotificationCounts] = useState<{ [id: string]: number }>({});
+  const selectedParcel = parcels.find((parcel) => parcel.id === selectedParcelId);
+  const scheduledOnPage = announcements.filter((item) => isScheduledSprayingStatus(item.status)).length;
+  const completedOnPage = announcements.filter((item) => isCompletedSprayingStatus(item.status)).length;
 
   async function loadSprayingForParcel(
     parcelId: string,
@@ -52,6 +71,7 @@ export default function SprayingPage() {
     nextFromDate: string,
     nextToDate: string,
   ) {
+    // Backend vrati jednu stranicu rezultata.
     const result = await getSprayingByParcel(
       parcelId,
       toFromDateParameter(nextFromDate),
@@ -303,6 +323,7 @@ export default function SprayingPage() {
       let exportPageNumber = 1;
       let exportTotalPages = 1;
 
+      // Za PDF ucitamo sve stranice zavrsenih tretmana.
       while (exportPageNumber <= exportTotalPages) {
         const result = await getSprayingByParcel(
           selectedParcelId,
@@ -325,6 +346,7 @@ export default function SprayingPage() {
       }
 
       const selectedParcel = parcels.find((parcel) => parcel.id === selectedParcelId);
+      // PDF helper od ovoga pravi karton prskanja.
       await exportSprayingHistoryPdf(
         selectedParcel ? selectedParcel.name : 'Parcela',
         completedTreatments,
@@ -348,9 +370,9 @@ export default function SprayingPage() {
         </span>
       ),
     },
-    { header: 'DurationHours', render: (item) => `${item.durationHours} h` },
+    { header: 'Trajanje', render: (item) => `${item.durationHours} h` },
     {
-      header: 'PreparationType',
+      header: 'Preparat',
       render: (item) => item.preparationType || <span className="muted-text">-</span>,
     },
     {
@@ -362,7 +384,7 @@ export default function SprayingPage() {
       render: (item) => <StatusBadge tone={getSprayingStatusTone(item.status)}>{item.status || '-'}</StatusBadge>,
     },
     {
-      header: 'NotifiedBeekeepersCount',
+      header: 'Obavešteni pčelari',
       render: (item) => (
         <span className="inline-metric">
           <UsersRound size={15} />
@@ -370,7 +392,7 @@ export default function SprayingPage() {
         </span>
       ),
     },
-    { header: 'CreatedAt', render: (item) => formatDateTime(item.createdAt) },
+    { header: 'Evidentirano', render: (item) => formatDateTime(item.createdAt) },
     {
       header: 'Stvarni početak',
       render: (item) => (
@@ -392,11 +414,11 @@ export default function SprayingPage() {
       render: (item) => item.note || <span className="muted-text">-</span>,
     },
     {
-      header: 'Weather snapshot',
+      header: 'Vremenski uslovi',
       render: (item) => formatWeather(item),
     },
     {
-      header: 'CancelledAt',
+      header: 'Otkazano',
       render: (item) => (item.cancelledAt ? formatDateTime(item.cancelledAt) : <span className="muted-text">-</span>),
     },
     {
@@ -480,10 +502,10 @@ export default function SprayingPage() {
   ];
 
   return (
-    <div className="page-stack">
+    <div className="page-stack resource-page farmer-page spraying-page">
       <PageHeader
         title="Tretiranja pesticidima"
-        subtitle="Najave i digitalni karton prskanja za izabranu parcelu"
+        subtitle="Planirajte tretmane, pratite obaveštenja pčelarima i vodite digitalni karton prskanja."
         action={
           <div className="row-actions">
             <button
@@ -513,9 +535,43 @@ export default function SprayingPage() {
         }
       />
 
+      <section className="farmer-summary-grid" aria-label="Pregled tretiranja">
+        <article className="farmer-summary-card farmer-tone-land">
+          <span className="farmer-summary-icon"><MapPinned aria-hidden="true" size={22} /></span>
+          <div>
+            <span>Izabrana parcela</span>
+            <strong className="farmer-summary-name">{selectedParcel?.name ?? 'Nema parcele'}</strong>
+            <small>{totalCount} tretiranja u rezultatu</small>
+          </div>
+        </article>
+        <article className="farmer-summary-card farmer-tone-scheduled">
+          <span className="farmer-summary-icon"><CalendarClock aria-hidden="true" size={22} /></span>
+          <div>
+            <span>Zakazana</span>
+            <strong>{scheduledOnPage}</strong>
+            <small>Na trenutno prikazanoj strani</small>
+          </div>
+        </article>
+        <article className="farmer-summary-card farmer-tone-completed">
+          <span className="farmer-summary-icon"><CheckCircle2 aria-hidden="true" size={22} /></span>
+          <div>
+            <span>Završena</span>
+            <strong>{completedOnPage}</strong>
+            <small>Na trenutno prikazanoj strani</small>
+          </div>
+        </article>
+      </section>
+
       {parcels.length > 0 ? (
-        <section className="section-card">
-          <form className="filter-row" onSubmit={handleFilterSubmit}>
+        <section className="section-card farmer-filter-card farmer-spraying-filter-card">
+          <div className="farmer-filter-heading">
+            <span className="farmer-filter-icon"><Filter aria-hidden="true" size={20} /></span>
+            <div>
+              <h2>Filter tretiranja</h2>
+              <p>Sužite prikaz po parceli i periodu izvođenja.</p>
+            </div>
+          </div>
+          <form className="farmer-filter-grid" onSubmit={handleFilterSubmit}>
             <label>
               Parcela
               <select disabled={loading} onChange={handleParcelChange} value={selectedParcelId}>
@@ -562,7 +618,15 @@ export default function SprayingPage() {
         </section>
       ) : null}
 
-      {loading ? <section className="section-card">{loadingMessage}</section> : null}
+      {loading ? (
+        <section className="section-card resource-loading">
+          <span className="resource-spinner" aria-hidden="true" />
+          <div>
+            <strong>{loadingMessage}</strong>
+            <p>Učitavamo termine, statuse i podatke o obaveštenjima.</p>
+          </div>
+        </section>
+      ) : null}
 
       {successMessage ? <section className="section-card message-card success">{successMessage}</section> : null}
 
@@ -587,15 +651,38 @@ export default function SprayingPage() {
         </section>
       ) : null}
 
-      {!loading && !error && parcels.length === 0 ? <section className="section-card">{noParcelsMessage}</section> : null}
+      {!loading && !error && parcels.length === 0 ? (
+        <section className="section-card resource-empty-state">
+          <span className="resource-empty-icon"><MapPinned aria-hidden="true" size={27} /></span>
+          <h2>Nema parcela</h2>
+          <p>{noParcelsMessage}</p>
+        </section>
+      ) : null}
 
       {!loading && !error && selectedParcelId && announcements.length === 0 ? (
-        <section className="section-card">{emptyMessage}</section>
+        <section className="section-card resource-empty-state">
+          <span className="resource-empty-icon"><CalendarClock aria-hidden="true" size={27} /></span>
+          <h2>Nema tretiranja u izabranom periodu</h2>
+          <p>{emptyMessage}</p>
+          <button className="primary-button" onClick={() => setIsCreateModalOpen(true)} type="button">
+            <Plus aria-hidden="true" size={18} />
+            Zakaži tretiranje
+          </button>
+        </section>
       ) : null}
 
       {!loading && !error && selectedParcelId && announcements.length > 0 ? (
-        <section className="section-card table-card">
-          <div className="filter-row">
+        <section className="section-card table-card farmer-table-card">
+          <div className="farmer-table-header">
+            <div>
+              <span className="resource-eyebrow">Digitalni karton</span>
+              <h2>Istorija tretiranja</h2>
+              <p>Planirani i realizovani termini sa statusima obaveštavanja.</p>
+            </div>
+            <History aria-hidden="true" size={24} />
+          </div>
+
+          <div className="farmer-table-toolbar">
             <label>
               Broj zapisa po strani
               <select disabled={loading} onChange={handlePageSizeChange} value={pageSize}>
@@ -631,7 +718,7 @@ export default function SprayingPage() {
             </div>
           </div>
 
-          <DataTable columns={columns} rows={announcements} getRowKey={(item) => item.id} minWidth={1500} />
+          <DataTable columns={columns} rows={announcements} getRowKey={(item) => item.id} minWidth={1580} />
         </section>
       ) : null}
 

@@ -1,3 +1,5 @@
+// Zajednicki format za uspeh ili gresku (ErrorType).
+
 namespace SmartApiary.Application.Common.Results;
 
 public enum ErrorType

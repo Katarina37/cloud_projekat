@@ -1,3 +1,5 @@
+// Podaci koji stizu kada dodajemo kulturu na parcelu.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

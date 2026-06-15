@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za ParcelDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class ParcelDto

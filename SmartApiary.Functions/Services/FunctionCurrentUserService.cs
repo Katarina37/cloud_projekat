@@ -1,3 +1,5 @@
+// Pomocni kod za Functions: FunctionCurrentUserService.
+
 using SmartApiary.Application.Interfaces.Services;
 
 namespace SmartApiary.Functions.Services;

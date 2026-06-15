@@ -1,3 +1,5 @@
+// Ovde cuvamo JWT i citamo podatke prijavljenog korisnika.
+
 const authTokenKey = 'smartapiary.authToken';
 const currentUserEmailKey = 'smartapiary.currentUserEmail';
 
@@ -16,6 +18,7 @@ export function getAuthToken() {
 }
 
 export function setAuthToken(token: string) {
+  // localStorage ostaje i posle refresh-a.
   window.localStorage.setItem(authTokenKey, token);
 }
 
@@ -33,6 +36,7 @@ export function hasAuthToken() {
 }
 
 export function getCurrentUserRole(): UserRole | null {
+  // Ulogu iz tokena koristimo za meni i rute.
   const payload = getTokenPayload();
 
   return payload ? payload.Role : null;
@@ -44,36 +48,7 @@ export function getCurrentUserId() {
   return payload ? payload.UserId : null;
 }
 
-export function getCurrentUserDisplayName() {
-  const email = getCurrentUserEmail();
-
-  if (!email) {
-    const role = getCurrentUserRole();
-
-    if (role === 'Admin') {
-      return 'Administrator';
-    }
-
-    if (role === 'Farmer') {
-      return 'Poljoprivrednik';
-    }
-
-    return 'Pčelar';
-  }
-
-  const emailName = email.split('@')[0];
-  const nameParts = emailName.split(/[._-]+/).filter((part) => part.length > 0);
-
-  if (nameParts.length === 0) {
-    return email;
-  }
-
-  return nameParts
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`)
-    .join(' ');
-}
-
-function getCurrentUserEmail() {
+export function getCurrentUserEmail() {
   const savedEmail = window.localStorage.getItem(currentUserEmailKey);
 
   if (savedEmail) {
@@ -115,6 +90,7 @@ function getTokenPayload(): TokenPayload | null {
       '=',
     );
 
+    // Front samo cita payload, potpis proverava backend.
     return JSON.parse(window.atob(paddedPayload)) as TokenPayload;
   } catch {
     return null;

@@ -1,3 +1,7 @@
+// HTTP Function koja prima merenje sa uredjaja.
+// Specifikacija - IoT telemetrija i X-Device-Token.
+// Vezbe 2 - HTTP trigger.
+
 using System.Net;
 using System.Text.Json;
 using MediatR;
@@ -23,6 +27,7 @@ public sealed class TelemetryIngestionFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "telemetry")] HttpRequestData req,
         CancellationToken cancellationToken)
     {
+        // Uredjaj mora da posalje svoj token u header-u.
         if (!req.Headers.TryGetValues("X-Device-Token", out var tokenValues))
         {
             var unauthorized = req.CreateResponse(HttpStatusCode.Unauthorized);
@@ -38,6 +43,7 @@ public sealed class TelemetryIngestionFunction
             return unauthorized;
         }
 
+        // JSON iz body-ja pretvaramo u C# objekat.
         TelemetryIngestionRequest? request;
         try
         {
@@ -60,6 +66,7 @@ public sealed class TelemetryIngestionFunction
             return badRequest;
         }
 
+        // Ostatak posla radi ReceiveTelemetry handler.
         var result = await _mediator.Send(
             new ReceiveTelemetryCommand(
                 deviceAccessToken.Trim(),
@@ -77,6 +84,7 @@ public sealed class TelemetryIngestionFunction
             return response;
         }
 
+        // 201 = novo merenje je primljeno.
         var success = req.CreateResponse(HttpStatusCode.Created);
         await success.WriteAsJsonAsync(new { message = "Telemetry ingested." }, cancellationToken);
         return success;

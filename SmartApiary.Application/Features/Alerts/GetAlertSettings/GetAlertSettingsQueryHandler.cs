@@ -1,3 +1,6 @@
+// Ovde ucitavamo podesavanja alarma.
+// Specifikacija - alarmi i podesavanja upozorenja.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

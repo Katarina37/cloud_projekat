@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: DashboardStats.
+
 import { AlertTriangle, Cpu, Hexagon, MapPinned } from 'lucide-react';
 import type { AlertDto, ApiaryDto, HiveDto } from '../api/apiClient';
 import StatCard from './StatCard';

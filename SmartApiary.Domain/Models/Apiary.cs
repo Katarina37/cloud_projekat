@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za Apiary.
+
 using SmartApiary.Domain.ValueObjects;
 
 namespace SmartApiary.Domain.Models;

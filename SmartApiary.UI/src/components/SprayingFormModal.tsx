@@ -1,3 +1,5 @@
+// Modal za unos i izmenu podataka (SprayingFormModal).
+
 import { type FormEvent, useState } from 'react';
 import { X } from 'lucide-react';
 import { createSpraying, getApiErrorMessage, type CreateSprayingRequest } from '../api/apiClient';

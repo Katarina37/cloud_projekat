@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za HiveInspectionDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class HiveInspectionDto

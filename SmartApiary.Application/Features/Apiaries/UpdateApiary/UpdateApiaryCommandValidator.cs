@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto menjamo pcelinjak.
+
 using FluentValidation;
 using SmartApiary.Application.Features.Apiaries;
 

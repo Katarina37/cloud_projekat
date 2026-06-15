@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto aktiviramo uredjaj.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Devices.ActivateDevice;

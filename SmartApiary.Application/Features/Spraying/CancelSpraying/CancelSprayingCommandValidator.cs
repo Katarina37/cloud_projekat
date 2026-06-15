@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto otkazujemo prskanje.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Spraying.CancelSpraying;

@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za AlertSettingsDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class AlertSettingsDto

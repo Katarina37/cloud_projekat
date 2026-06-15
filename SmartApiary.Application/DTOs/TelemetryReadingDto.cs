@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za TelemetryReadingDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class TelemetryReadingDto

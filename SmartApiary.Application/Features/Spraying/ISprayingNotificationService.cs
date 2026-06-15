@@ -1,3 +1,5 @@
+// Ovde samo kazemo sta ISprayingNotificationService servis mora da podrzi.
+
 namespace SmartApiary.Application.Features.Spraying;
 
 public interface ISprayingNotificationService

@@ -1,3 +1,5 @@
+// Ovde su metode koje ICurrentUserService servis mora da ima.
+
 namespace SmartApiary.Application.Interfaces.Services;
 
 public interface ICurrentUserService

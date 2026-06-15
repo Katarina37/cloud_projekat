@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za SprayingAnnouncementDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class SprayingAnnouncementDto

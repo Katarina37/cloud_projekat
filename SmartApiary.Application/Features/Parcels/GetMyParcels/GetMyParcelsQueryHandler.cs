@@ -1,3 +1,6 @@
+// Ovde ucitavamo parcele prijavljenog farmera.
+// Specifikacija - parcele i njihove lokacije.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.DTOs;

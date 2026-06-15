@@ -1,3 +1,5 @@
+// API pozivi koje koristi apiResult.
+
 import axios from 'axios';
 
 type ErrorResponse = {

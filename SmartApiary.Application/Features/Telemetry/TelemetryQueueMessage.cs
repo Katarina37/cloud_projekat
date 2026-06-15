@@ -1,3 +1,5 @@
+// Poruka koju saljemo za TelemetryQueueMessage.
+
 namespace SmartApiary.Application.Features.Telemetry;
 
 public sealed record TelemetryQueueMessage(

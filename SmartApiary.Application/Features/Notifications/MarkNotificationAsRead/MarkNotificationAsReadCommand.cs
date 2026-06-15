@@ -1,3 +1,5 @@
+// Podaci koji stizu kada oznacavamo obavestenje kao procitano.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

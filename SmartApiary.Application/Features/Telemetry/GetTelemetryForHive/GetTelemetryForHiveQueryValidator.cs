@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto ucitavamo telemetriju kosnice.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Telemetry.GetTelemetryForHive;

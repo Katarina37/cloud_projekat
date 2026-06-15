@@ -1,3 +1,7 @@
+// HTTP Function za prvo povezivanje uredjaja i dobijanje access tokena.
+// Specifikacija - handshake uredjaja.
+// Vezbe 2 - HTTP trigger.
+
 using System.Net;
 using System.Text.Json;
 using MediatR;
@@ -23,6 +27,7 @@ public sealed class DeviceActivationFunction
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "devices/activate")] HttpRequestData req,
         CancellationToken cancellationToken)
     {
+        // Handshake: uredjaj prvi put salje serijski broj i svoj id.
         DeviceActivationRequest? request;
         try
         {
@@ -47,6 +52,7 @@ public sealed class DeviceActivationFunction
             return badRequest;
         }
 
+        // Handler proverava uredjaj i pravi access token.
         var result = await _mediator.Send(
             new ActivateDeviceCommand(request.SerialNumber, request.DeviceIdentifier),
             cancellationToken);
@@ -58,6 +64,7 @@ public sealed class DeviceActivationFunction
             return response;
         }
 
+        // Uredjaj cuva ovaj token za sledeca merenja.
         var success = req.CreateResponse(HttpStatusCode.OK);
         await success.WriteAsJsonAsync(new DeviceActivationResponse(result.Value!, result.Warning), cancellationToken);
         return success;

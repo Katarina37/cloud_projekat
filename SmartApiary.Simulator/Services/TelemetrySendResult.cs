@@ -1,3 +1,5 @@
+// Jedan mali deo simulatora: TelemetrySendResult.
+
 using System.Net;
 
 namespace SmartApiary.Simulator.Services;

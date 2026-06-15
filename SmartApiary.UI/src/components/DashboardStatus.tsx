@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: DashboardStatus.
+
 import { Battery, Clock, Droplets, Scale, Thermometer } from 'lucide-react';
 import type { LatestHiveStatusDto } from '../api/apiClient';
 import StatCard from './StatCard';

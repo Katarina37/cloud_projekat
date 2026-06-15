@@ -1,3 +1,7 @@
+// Ovde upisujemo i citamo telemetriju iz Table Storage-a.
+// Specifikacija - cuvanje IoT merenja.
+// Vezbe 4 - Table Storage repozitorijum.
+
 using Azure.Data.Tables;
 using Microsoft.Extensions.Options;
 using SmartApiary.Application.Interfaces.Repositories;
@@ -21,6 +25,8 @@ internal sealed class TelemetryRepository : ITelemetryRepository
         _keyProvider = keyProvider;
         _mapper = mapper;
         _tableClient = tableServiceClient.GetTableClient(options.Value.TelemetryTable);
+
+        // Napravi tabelu ako vec ne postoji.
         _tableClient.CreateIfNotExists();
     }
 
@@ -28,6 +34,7 @@ internal sealed class TelemetryRepository : ITelemetryRepository
         TelemetryReading reading,
         CancellationToken cancellationToken = default)
     {
+        // Pre upisa pravimo Table entitet i njegove kljuceve.
         var entity = _mapper.ToEntity(reading);
         entity.PartitionKey = _keyProvider.GetPartitionKey(reading);
         entity.RowKey = _keyProvider.GetRowKey(reading);
@@ -39,7 +46,9 @@ internal sealed class TelemetryRepository : ITelemetryRepository
         Guid deviceId,
         CancellationToken cancellationToken = default)
     {
+        // PartitionKey je uredjaj, a najnoviji RowKey dolazi prvi.
         var partitionKey = deviceId.ToString();
+        // Trazimo samo merenja ovog uredjaja.
         var entities = _tableClient.QueryAsync<TelemetryTableEntity>(
             entity => entity.PartitionKey == partitionKey,
             maxPerPage: 1,

@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za UserDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class UserDto

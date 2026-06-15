@@ -1,3 +1,5 @@
+// Ovde pravimo nasumican token (AccountTokenGenerator).
+
 using System.Security.Cryptography;
 using SmartApiary.Application.Interfaces.Services;
 

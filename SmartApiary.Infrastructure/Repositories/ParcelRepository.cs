@@ -1,3 +1,5 @@
+// SQL citanje i upis za Parcel.
+
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using SmartApiary.Application.Interfaces.Repositories;
@@ -36,12 +38,14 @@ public class ParcelRepository : IParcelRepository
         double radiusKm,
         CancellationToken cancellationToken = default)
     {
+        // Geography tacka za SQL upit.
         var searchPoint = new Point(location.Longitude, location.Latitude)
         {
             SRID = 4326
         };
         var radiusMeters = radiusKm * 1000d;
 
+        // SQL racuna metre, zato km pretvaramo u metre.
         return await _context.Parcels
             .Where(parcel =>
                 EF.Property<Point>(parcel, "LocationPoint").Distance(searchPoint) <= radiusMeters)

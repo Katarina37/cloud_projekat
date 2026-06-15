@@ -1,3 +1,5 @@
+// Jedan mali deo simulatora: SimulatorModeParser.
+
 namespace SmartApiary.Simulator.Models;
 
 public static class SimulatorModeParser

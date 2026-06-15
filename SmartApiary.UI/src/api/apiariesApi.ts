@@ -1,3 +1,5 @@
+// API pozivi koje koristi apiariesApi.
+
 import type { ResultResponse } from './apiResult';
 import apiClient from './httpClient';
 

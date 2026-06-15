@@ -1,3 +1,6 @@
+// Ovde pravimo JWT koji korisnik dobije posle prijave.
+// Specifikacija - JWT autentifikacija.
+
 using System.Security.Claims;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
@@ -25,6 +28,7 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
         }
 
         var now = DateTime.UtcNow;
+        // U token ubacujemo id, email i ulogu.
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -42,9 +46,11 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
         };
 
         var secretBytes = Encoding.UTF8.GetBytes(_options.Secret);
+        // Potpis sprecava menjanje tokena na klijentu.
         var signingCredentials = new SigningCredentials(
             new SymmetricSecurityKey(secretBytes),
             SecurityAlgorithms.HmacSha256);
+        // Rok trajanja uzimamo iz JwtOptions.
         var token = new JwtSecurityToken(
             _options.Issuer,
             _options.Audience,

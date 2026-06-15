@@ -1,3 +1,6 @@
+// Ovde menjamo kulturu.
+// Specifikacija - kulture na parcelama.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;

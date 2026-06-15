@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto menjamo kosnicu.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Hives.UpdateHive;

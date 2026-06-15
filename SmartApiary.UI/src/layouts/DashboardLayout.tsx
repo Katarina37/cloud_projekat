@@ -1,10 +1,12 @@
+// Zajednicki raspored za prijavljeni deo aplikacije.
+
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ErrorBoundary from '../components/ErrorBoundary';
 
 export default function DashboardLayout() {
   const location = useLocation();
-  const isWideContentPage = location.pathname === '/pcelinjaci';
+  const isWideContentPage = ['/pcelinjaci', '/parcele'].includes(location.pathname);
 
   return (
     <div className="app-shell">

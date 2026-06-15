@@ -1,4 +1,16 @@
+// Pomocni kod za pravljenje PDF-a (exportSprayingHistoryPdf).
+
 import type { SprayingAnnouncementDto } from '../api/apiClient';
+import {
+  addReportFooters,
+  addReportHeader,
+  drawStatCard,
+  hasPageSpace,
+  PDF_COLORS,
+  PDF_LAYOUT,
+  sanitizePdfFileName,
+  toPdfText,
+} from './pdfReport';
 
 export async function exportSprayingHistoryPdf(
   parcelName: string,
@@ -8,44 +20,111 @@ export async function exportSprayingHistoryPdf(
 ) {
   const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
-  const margin = 14;
-  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = PDF_LAYOUT.margin;
   const contentWidth = pdf.internal.pageSize.getWidth() - margin * 2;
-  let cursorY = margin;
+  const cardGap = 4;
+  const statCardWidth = (contentWidth - cardGap) / 2;
+  const reportTitle = 'Digitalni karton prskanja';
+  const reportSubtitle = `Parcela: ${toPdfText(parcelName)}`;
+  let cursorY = addReportHeader(pdf, reportTitle, reportSubtitle, 'Evidencija tretmana');
 
-  function addLine(text: string, bold = false) {
-    pdf.setFont('helvetica', bold ? 'bold' : 'normal');
-    pdf.setFontSize(bold ? 14 : 10);
-    const lines = pdf.splitTextToSize(text, contentWidth);
+  drawStatCard(pdf, margin, cursorY, statCardWidth, 'Parcela', parcelName);
+  drawStatCard(
+    pdf,
+    margin + statCardWidth + cardGap,
+    cursorY,
+    statCardWidth,
+    'Farmer',
+    formatText(treatments[0]?.farmerName),
+  );
+  cursorY += 22;
+  drawStatCard(pdf, margin, cursorY, statCardWidth, 'Period', formatPeriod(fromDate, toDate));
+  drawStatCard(
+    pdf,
+    margin + statCardWidth + cardGap,
+    cursorY,
+    statCardWidth,
+    'Zavrseni tretmani',
+    String(treatments.length),
+  );
+  cursorY += 27;
 
-    if (cursorY + lines.length * 6 > pageHeight - margin) {
-      pdf.addPage();
-      cursorY = margin;
-    }
-
-    pdf.text(lines, margin, cursorY);
-    cursorY += lines.length * 6;
-  }
-
-  addLine('Digitalni karton prskanja', true);
-  addLine(`Parcela: ${parcelName}`);
-  addLine(`Farmer: ${formatText(treatments[0]?.farmerName)}`);
-  addLine(`Period: ${formatPeriod(fromDate, toDate)}`);
-  addLine(`Broj zavrsenih tretmana: ${treatments.length}`);
-  cursorY += 4;
+  pdf.setTextColor(...PDF_COLORS.text);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(12);
+  pdf.text('Pregled zavrsenih tretmana', margin, cursorY);
+  pdf.setDrawColor(...PDF_COLORS.honey);
+  pdf.setLineWidth(0.8);
+  pdf.line(margin, cursorY + 3, margin + 24, cursorY + 3);
+  cursorY += 9;
 
   treatments.forEach((treatment, index) => {
-    addLine(`${index + 1}. Preparat: ${formatText(treatment.preparationType)}`, true);
-    addLine(`Kultura: ${formatText(treatment.cropName)}`);
-    addLine(`Stvarni pocetak: ${formatDateTime(treatment.actualStartTime)}`);
-    addLine(`Stvarni kraj: ${formatDateTime(treatment.actualEndTime)}`);
-    addLine(`Status: ${formatText(treatment.status)}`);
-    addLine(`Vreme: ${formatWeather(treatment)}`);
-    addLine(`Napomena: ${formatText(treatment.note)}`);
-    cursorY += 3;
+    const rows = [
+      ['Kultura', formatText(treatment.cropName)],
+      ['Stvarni pocetak', formatDateTime(treatment.actualStartTime)],
+      ['Stvarni kraj', formatDateTime(treatment.actualEndTime)],
+      ['Status', formatText(treatment.status)],
+      ['Vremenski uslovi', formatWeather(treatment)],
+      ['Napomena', formatText(treatment.note)],
+    ];
+    const title = formatText(treatment.preparationType);
+    const rowMeasurements = rows.map(([, value]) =>
+      pdf.splitTextToSize(toPdfText(value), contentWidth - 54),
+    );
+    const titleLines = pdf.splitTextToSize(toPdfText(title), contentWidth - 23);
+    const cardHeight = 15
+      + titleLines.length * 4.5
+      + rowMeasurements.reduce((height, lines) => height + Math.max(6, lines.length * 4), 0);
+
+    if (!hasPageSpace(pdf, cursorY, cardHeight + 4)) {
+      pdf.addPage();
+      cursorY = addReportHeader(
+        pdf,
+        reportTitle,
+        `${reportSubtitle} - nastavak`,
+        'Evidencija tretmana',
+      );
+    }
+
+    pdf.setFillColor(...PDF_COLORS.white);
+    pdf.setDrawColor(...PDF_COLORS.border);
+    pdf.roundedRect(margin, cursorY, contentWidth, cardHeight, 2.5, 2.5, 'FD');
+
+    pdf.setFillColor(...PDF_COLORS.green);
+    pdf.roundedRect(margin, cursorY, 8, cardHeight, 2.5, 2.5, 'F');
+
+    pdf.setTextColor(...PDF_COLORS.white);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.text(String(index + 1), margin + 4, cursorY + 8, { align: 'center' });
+
+    let rowY = cursorY + 7;
+    pdf.setTextColor(...PDF_COLORS.text);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text(titleLines, margin + 13, rowY);
+    rowY += titleLines.length * 4.5 + 4;
+
+    rows.forEach(([label, value], rowIndex) => {
+      const valueLines = rowMeasurements[rowIndex];
+
+      pdf.setTextColor(...PDF_COLORS.mutedText);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.text(toPdfText(label).toUpperCase(), margin + 13, rowY);
+
+      pdf.setTextColor(...PDF_COLORS.text);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.text(valueLines, margin + 50, rowY);
+      rowY += Math.max(6, valueLines.length * 4);
+    });
+
+    cursorY += cardHeight + 4;
   });
 
-  pdf.save(`karton-prskanja-${sanitizeFileName(parcelName)}.pdf`);
+  addReportFooters(pdf);
+  pdf.save(`karton-prskanja-${sanitizePdfFileName(parcelName)}.pdf`);
 }
 
 function formatWeather(treatment: SprayingAnnouncementDto) {
@@ -57,7 +136,7 @@ function formatWeather(treatment: SprayingAnnouncementDto) {
 
   const description = formatText(weather.description);
   const rain = weather.hasRain ? 'da' : 'ne';
-  return `${description}; vetar ${weather.windSpeed.toFixed(1)} m/s; kisa ${rain}`;
+  return `${description}; vjetar ${weather.windSpeed.toFixed(1)} m/s; kisa ${rain}`;
 }
 
 function formatDateTime(value?: string | null) {
@@ -66,21 +145,17 @@ function formatDateTime(value?: string | null) {
   }
 
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('sr-Latn-RS');
+  return Number.isNaN(date.getTime()) ? toPdfText(value) : date.toLocaleString('sr-Latn-BA');
 }
 
 function formatPeriod(fromDate?: string, toDate?: string) {
   if (!fromDate && !toDate) {
-    return 'svi zapisi';
+    return 'Svi zapisi';
   }
 
   return `${fromDate || 'pocetak'} - ${toDate || 'danas'}`;
 }
 
 function formatText(value?: string | null) {
-  return value && value.trim() ? value.trim() : '-';
-}
-
-function sanitizeFileName(value: string) {
-  return value.replace(/[^a-z0-9_-]+/gi, '-').replace(/^-|-$/g, '') || 'parcela';
+  return toPdfText(value);
 }

@@ -1,3 +1,5 @@
+// Pomocni Web API servis: DevelopmentUserSeeder.
+
 using Microsoft.EntityFrameworkCore;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.Domain.Enums;

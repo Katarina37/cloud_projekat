@@ -1,3 +1,5 @@
+// SQL citanje i upis za Apiary.
+
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using SmartApiary.Application.Interfaces.Repositories;
@@ -36,12 +38,14 @@ public class ApiaryRepository : IApiaryRepository
         double radiusKm,
         CancellationToken cancellationToken = default)
     {
+        // Geography tacka za SQL upit.
         var searchPoint = new Point(location.Longitude, location.Latitude)
         {
             SRID = 4326
         };
         var radiusMeters = radiusKm * 1000d;
 
+        // EF ovo prevodi u SQL STDistance.
         return await _context.Apiaries
             .Where(apiary =>
                 EF.Property<Point>(apiary, "LocationPoint").Distance(searchPoint) <= radiusMeters)

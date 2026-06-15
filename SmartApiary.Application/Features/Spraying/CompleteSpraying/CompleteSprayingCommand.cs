@@ -1,3 +1,5 @@
+// Podaci koji stizu kada zavrsavamo prskanje i upisujemo karton.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

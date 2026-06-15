@@ -1,3 +1,5 @@
+// Stranica za postavljanje nove lozinke.
+
 import { type FormEvent, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { KeyRound } from 'lucide-react';

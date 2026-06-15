@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: TelemetryFilters.
+
 import type { ApiaryDto, HiveDto } from '../api/apiClient';
 import SectionCard from './SectionCard';
 

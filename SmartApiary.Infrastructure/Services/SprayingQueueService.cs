@@ -1,3 +1,6 @@
+// Najave prskanja ovde stavljamo u Queue da ih Function obradi.
+// Vezbe 5 - Queue Storage.
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Storage.Queues;
@@ -32,6 +35,7 @@ public sealed class SprayingQueueService : ISprayingQueueService
 
     public async Task EnqueueAsync(SprayingNotificationMessage message, CancellationToken cancellationToken = default)
     {
+        // Najava prvo ide u Queue, a Function posle obavestava pcelare.
         await _queueClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
         var json = JsonSerializer.Serialize(message, _jsonOptions);
         await _queueClient.SendMessageAsync(json, cancellationToken);

@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: ChartCard.
+
 import type { ReactNode } from 'react';
 
 type ChartCardProps = {

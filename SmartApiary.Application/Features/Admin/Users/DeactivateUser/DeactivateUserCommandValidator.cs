@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto deaktiviramo korisnika.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Admin.Users.DeactivateUser;

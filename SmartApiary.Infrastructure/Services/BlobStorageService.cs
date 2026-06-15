@@ -1,4 +1,8 @@
-﻿using Azure.Storage.Blobs;
+﻿// Ovde kacimo slike pcelinjaka na Blob i pravimo manju sliku za prikaz.
+// Specifikacija - slika i thumbnail pcelinjaka.
+// Vezbe 5 - Blob Storage.
+
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
 using SixLabors.ImageSharp;
@@ -30,9 +34,11 @@ public sealed class BlobStorageService : IFileStorageService
         string contentType,
         CancellationToken cancellationToken = default)
     {
+        // Napravi Blob container ako ga jos nema.
         var containerClient = _blobServiceClient.GetBlobContainerClient(ContainerName);
         await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob, cancellationToken: cancellationToken);
 
+        // Guid sprecava sudar dva ista imena fajla.
         var blobName = $"{Guid.NewGuid()}_{fileName}";
         var blobClient = containerClient.GetBlobClient(blobName);
 
@@ -50,6 +56,7 @@ public sealed class BlobStorageService : IFileStorageService
         string contentType,
         CancellationToken cancellationToken = default)
     {
+        // Treba nam kopija i za original i za thumbnail.
         await using var originalStream = new MemoryStream();
         await imageStream.CopyToAsync(originalStream, cancellationToken);
         originalStream.Position = 0;
@@ -72,6 +79,7 @@ public sealed class BlobStorageService : IFileStorageService
                 throw new InvalidDataException("Supported image formats are JPG, PNG and WEBP.");
             }
 
+            // Ispravi rotaciju slike sa telefona.
             image.Mutate(context => context.AutoOrient());
 
             if (image.Width > ThumbnailMaxWidth || image.Height > ThumbnailMaxHeight)
@@ -96,6 +104,7 @@ public sealed class BlobStorageService : IFileStorageService
 
             try
             {
+                // Manju sliku cuvamo kao PNG za listu i mapu.
                 thumbnailStream.Position = 0;
                 var thumbnailFileName = $"thumb_{Path.GetFileNameWithoutExtension(safeFileName)}.png";
                 var thumbnailUrl = await UploadAsync(
@@ -108,6 +117,7 @@ public sealed class BlobStorageService : IFileStorageService
             }
             catch
             {
+                // Ako thumbnail pukne, sklanjamo i vec dodat original.
                 await DeleteAsync(imageUrl, cancellationToken);
                 throw;
             }

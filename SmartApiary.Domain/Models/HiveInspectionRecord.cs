@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za HiveInspectionRecord.
+
 namespace SmartApiary.Domain.Models;
 
 public class HiveInspectionRecord

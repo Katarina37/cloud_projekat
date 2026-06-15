@@ -1,3 +1,5 @@
+// API pozivi koje koristi authApi.
+
 import type { ResultResponse } from './apiResult';
 import type { UserRole } from '../auth/authStorage';
 import apiClient from './httpClient';

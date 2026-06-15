@@ -1,3 +1,5 @@
+// Jedan mali deo simulatora: TelemetrySender.
+
 using System.Net.Http.Headers;
 using System.Text.Json;
 using SmartApiary.Simulator.Models;

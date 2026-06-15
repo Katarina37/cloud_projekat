@@ -1,3 +1,5 @@
+// Podaci koji stizu kada saljemo link za zaboravljenu lozinku.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

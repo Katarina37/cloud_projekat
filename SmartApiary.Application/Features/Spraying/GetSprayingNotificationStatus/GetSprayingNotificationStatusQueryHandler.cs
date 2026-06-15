@@ -1,3 +1,6 @@
+// Ovde proveravamo koliko je pcelara obavesteno.
+// Specifikacija - prskanje i digitalni karton.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;

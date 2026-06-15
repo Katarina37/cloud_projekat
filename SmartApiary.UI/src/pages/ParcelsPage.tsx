@@ -1,14 +1,37 @@
+// Stranica za parcele i mapu.
+
 import { useEffect, useState } from 'react';
-import { Leaf, Pencil, Plus, Trash2 } from 'lucide-react';
-import { deleteParcel, getApiErrorMessage, getParcels, getCropsByParcel, type ParcelDto, type CropDto } from '../api/apiClient';
-import PageHeader from '../components/PageHeader';
-import ParcelFormModal from '../components/ParcelFormModal';
+import {
+  CalendarDays,
+  FileDown,
+  MapPinned,
+  Pencil,
+  Plus,
+  Sprout,
+  Trash2,
+  Wheat,
+} from 'lucide-react';
+import {
+  deleteParcel,
+  getApiErrorMessage,
+  getCropsByParcel,
+  getParcels,
+  type CropDto,
+  type ParcelDto,
+} from '../api/apiClient';
+import parcelCardBackground from '../assets/card_backgrounds/parcelaBackground.png';
 import MapView, { type MapItem } from '../components/MapView';
+import ParcelFormModal from '../components/ParcelFormModal';
 import { exportMapPdf } from '../utils/exportMapPdf';
+
+type ParcelWithCrops = {
+  parcel: ParcelDto;
+  crops: CropDto[];
+};
 
 export default function ParcelsPage() {
   const [parcels, setParcels] = useState<ParcelDto[]>([]);
-  const [parcelsWithCrops, setParcelsWithCrops] = useState<{ parcel: ParcelDto; crops: CropDto[] }[]>([]);
+  const [parcelsWithCrops, setParcelsWithCrops] = useState<ParcelWithCrops[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -22,21 +45,20 @@ export default function ParcelsPage() {
     setError(null);
 
     try {
-      const parcels = await getParcels();
-      setParcels(parcels);
+      const loadedParcels = await getParcels();
+      const loadedParcelsWithCrops = await Promise.all(
+        loadedParcels.map(async (parcel) => ({
+          parcel,
+          crops: await getCropsByParcel(parcel.id),
+        })),
+      );
 
-      // Ucitavanje kultura koje se prikazuju uz svaku parcelu na mapi.
-      const loadedParcelsWithCrops: { parcel: ParcelDto; crops: CropDto[] }[] = [];
-
-      for (const parcel of parcels) {
-        const crops = await getCropsByParcel(parcel.id);
-        loadedParcelsWithCrops.push({ parcel, crops });
-      }
-
+      setParcels(loadedParcels);
       setParcelsWithCrops(loadedParcelsWithCrops);
       return true;
     } catch {
       setParcels([]);
+      setParcelsWithCrops([]);
       setError('Greška pri učitavanju parcela.');
       return false;
     } finally {
@@ -45,7 +67,6 @@ export default function ParcelsPage() {
   }
 
   useEffect(() => {
-    // Ucitavanje podataka pri prvom otvaranju stranice.
     fetchParcels();
   }, []);
 
@@ -100,99 +121,103 @@ export default function ParcelsPage() {
 
     try {
       await exportMapPdf();
-    } catch (error) {
-      setError(getApiErrorMessage(error, 'Greska pri generisanju PDF-a.'));
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, 'Greška pri generisanju PDF-a.'));
     }
   };
 
-  // Priprema podataka u obliku koji komponenta mape ocekuje.
-  let mapItems: MapItem[];
+  const mapItems: MapItem[] = parcelsWithCrops.length > 0
+    ? parcelsWithCrops.map(({ parcel, crops }) => ({
+        id: parcel.id,
+        name: parcel.name,
+        latitude: parcel.latitude,
+        longitude: parcel.longitude,
+        type: 'parcel',
+        crops: crops.map((crop) => ({
+          name: crop.name,
+          expectedBloomingStart: crop.expectedBloomingStart,
+          expectedBloomingEnd: crop.expectedBloomingEnd,
+          area: crop.area,
+          notes: crop.notes,
+        })),
+      }))
+    : parcels.map((parcel) => ({
+        id: parcel.id,
+        name: parcel.name,
+        latitude: parcel.latitude,
+        longitude: parcel.longitude,
+        type: 'parcel',
+      }));
 
-  if (parcelsWithCrops.length > 0) {
-    mapItems = parcelsWithCrops.map(({ parcel, crops }) => ({
-      id: parcel.id,
-      name: parcel.name,
-      latitude: parcel.latitude,
-      longitude: parcel.longitude,
-      type: 'parcel',
-      crops: crops.map((crop) => ({
-        name: crop.name,
-        expectedBloomingStart: crop.expectedBloomingStart,
-        expectedBloomingEnd: crop.expectedBloomingEnd,
-        area: crop.area,
-        notes: crop.notes,
-      })),
-    }));
-  } else {
-    mapItems = parcels.map((parcel) => ({
-      id: parcel.id,
-      name: parcel.name,
-      latitude: parcel.latitude,
-      longitude: parcel.longitude,
-      type: 'parcel',
-    }));
-  }
-
-  let selectedParcelCrops: CropDto[] = [];
-
-  if (selectedParcel) {
-    const parcelWithCrops = parcelsWithCrops.find(
-      (item) => item.parcel.id === selectedParcel.id,
-    );
-
-    if (parcelWithCrops) {
-      selectedParcelCrops = parcelWithCrops.crops;
-    }
-  }
+  const selectedParcelCrops = selectedParcel
+    ? parcelsWithCrops.find((item) => item.parcel.id === selectedParcel.id)?.crops ?? []
+    : [];
 
   return (
-    <div className="page-stack">
-      <PageHeader
-        title="Parcele"
-        subtitle="Naziv, koordinate i kultura povezani sa okruženjem pčelinjaka"
-        action={
-          <>
-            <button
-              className="primary-button orange-button"
-              onClick={() => {
-                setError(null);
-                setSuccessMessage(null);
-                setCreateModalOpen(true);
-              }}
-              type="button"
-            >
-              <Plus size={18} />
-              Dodaj parcelu
-            </button>
-            <button
-              className="secondary-action-button"
-              onClick={handleExportMap}
-              type="button"
-            >
-              Export map to PDF
-            </button>
-          </>
-        }
-      />
+    <div className="page-stack apiaries-page farmer-parcels-page">
+      <h1 className="visually-hidden">Parcele i mapa</h1>
 
-      <section className="section-card">
+      <section className="apiary-map-panel" aria-label="Mapa parcela">
         <MapView
+          className="apiary-map-canvas"
           items={mapItems}
-          height={360}
+          height="100%"
           zoom={11}
-          onSelect={(it) => {
-            const found = parcels.find((p) => p.id === it.id) || null;
-            if (found) {
-              setSelectedParcel(found);
+          onSelect={(item) => {
+            const foundParcel = parcels.find((parcel) => parcel.id === item.id) ?? null;
+
+            if (foundParcel) {
+              setSelectedParcel(foundParcel);
               setEditModalOpen(true);
             }
           }}
         />
+
+        <button
+          aria-label="Izvezi mapu u PDF"
+          className="farmer-map-export-button"
+          onClick={handleExportMap}
+          type="button"
+        >
+          <FileDown aria-hidden="true" size={19} />
+          <span>Izvezi mapu</span>
+        </button>
+
+        <button
+          aria-label="Dodaj parcelu"
+          className="apiary-map-add-button"
+          onClick={() => {
+            setError(null);
+            setSuccessMessage(null);
+            setCreateModalOpen(true);
+          }}
+          type="button"
+        >
+          <Plus aria-hidden="true" size={20} />
+          <span>Dodaj parcelu</span>
+        </button>
+
+        <div className="apiary-map-count" aria-live="polite">
+          <MapPinned aria-hidden="true" size={15} />
+          <span>{formatParcelCount(parcels.length)}</span>
+        </div>
       </section>
 
-      {loading ? <section className="section-card">Učitavanje parcela...</section> : null}
+      {loading ? (
+        <section className="section-card resource-loading">
+          <span className="resource-spinner" aria-hidden="true" />
+          <div>
+            <strong>Učitavanje parcela</strong>
+            <p>Pripremamo mapu i podatke o kulturama.</p>
+          </div>
+        </section>
+      ) : null}
 
-      {successMessage ? <section className="section-card message-card success">{successMessage}</section> : null}
+      {successMessage ? (
+        <section className="section-card message-card success" role="status">
+          {successMessage}
+        </section>
+      ) : null}
 
       {error ? (
         <section className="section-card message-card error" role="alert">
@@ -201,63 +226,113 @@ export default function ParcelsPage() {
       ) : null}
 
       {!loading && !error && parcels.length === 0 ? (
-        <section className="section-card">Nema unetih parcela.</section>
+        <section className="section-card resource-empty-state">
+          <span className="resource-empty-icon">
+            <Sprout aria-hidden="true" size={27} />
+          </span>
+          <h2>Još nema parcela</h2>
+          <p>Dodajte prvu parcelu kako biste evidentirali kulture i planirali tretiranja.</p>
+          <button className="primary-button" onClick={() => setCreateModalOpen(true)} type="button">
+            <Plus aria-hidden="true" size={18} />
+            Dodaj parcelu
+          </button>
+        </section>
       ) : null}
 
       {!loading && !error && parcels.length > 0 ? (
         <section className="card-grid three">
-          {parcels.map((parcel) => (
-            <article className="section-card parcel-card" key={parcel.id}>
-              <div className="card-topline">
-                <div className="section-icon">
-                  <Leaf size={18} />
-                </div>
-              </div>
-              <h2>{parcel.name}</h2>
-              <div className="detail-grid">
-                <div>
-                  <span>Latitude</span>
-                  <strong>{parcel.latitude}</strong>
-                </div>
-                <div>
-                  <span>Longitude</span>
-                  <strong>{parcel.longitude}</strong>
-                </div>
-                <div>
-                  <span>CreatedAt</span>
-                  <strong>{formatDate(parcel.createdAt)}</strong>
-                </div>
-              </div>
+          {parcels.map((parcel) => {
+            const crops = parcelsWithCrops.find((item) => item.parcel.id === parcel.id)?.crops ?? [];
 
-              <div className="card-action-row">
-                <button
-                  aria-label="Izmeni parcelu"
-                  className="secondary-action-button orange-action-button icon-action-button"
-                  disabled={deletingParcelId === parcel.id}
-                  onClick={() => {
-                    setError(null);
-                    setSuccessMessage(null);
-                    setSelectedParcel(parcel);
-                    setEditModalOpen(true);
-                  }}
-                  title="Izmeni parcelu"
-                  type="button"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  aria-label={deletingParcelId === parcel.id ? 'Brisanje parcele' : 'Obriši parcelu'}
-                  className="danger-action-button icon-action-button"
-                  disabled={deletingParcelId === parcel.id}
-                  onClick={() => handleDeleteParcel(parcel)}
-                  title={deletingParcelId === parcel.id ? 'Brisanje parcele' : 'Obriši parcelu'}
-                  type="button"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </article>
-          ))}
+            return (
+              <article
+                aria-label={`Parcela ${parcel.name}`}
+                className="apiary-card parcel-visual-card"
+                key={parcel.id}
+                tabIndex={0}
+              >
+                <div className="apiary-hero parcel-card-hero">
+                  <img
+                    alt=""
+                    aria-hidden="true"
+                    className="apiary-hero-image"
+                    loading="lazy"
+                    src={parcelCardBackground}
+                  />
+
+                  <div className="parcel-hero-crops">
+                    <Wheat aria-hidden="true" size={16} />
+                    <span>{formatHeroCropSummary(crops)}</span>
+                  </div>
+
+                  <time className="apiary-date-badge" dateTime={parcel.createdAt}>
+                    <CalendarDays aria-hidden="true" size={11} />
+                    {formatCompactDate(parcel.createdAt)}
+                  </time>
+
+                  <div className="apiary-card-actions">
+                    <button
+                      aria-label="Izmeni parcelu"
+                      className="apiary-overlay-action"
+                      disabled={deletingParcelId === parcel.id}
+                      onClick={() => {
+                        setError(null);
+                        setSuccessMessage(null);
+                        setSelectedParcel(parcel);
+                        setEditModalOpen(true);
+                      }}
+                      title="Izmeni parcelu"
+                      type="button"
+                    >
+                      <Pencil aria-hidden="true" size={15} />
+                    </button>
+                    <button
+                      aria-label={deletingParcelId === parcel.id ? 'Brisanje parcele' : 'Obriši parcelu'}
+                      className="apiary-overlay-action apiary-overlay-action-danger"
+                      disabled={deletingParcelId === parcel.id}
+                      onClick={() => handleDeleteParcel(parcel)}
+                      title={deletingParcelId === parcel.id ? 'Brisanje parcele' : 'Obriši parcelu'}
+                      type="button"
+                    >
+                      <Trash2 aria-hidden="true" size={15} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="apiary-body apiary-info-panel parcel-info-panel">
+                  <div className="apiary-title-row">
+                    <h2>{parcel.name}</h2>
+                  </div>
+
+                  <p className="apiary-terrain">
+                    <Wheat aria-hidden="true" className="apiary-terrain-icon" size={13} />
+                    {formatCropSummary(crops)}
+                  </p>
+
+                  <div className="apiary-divider" />
+
+                  <div className="apiary-coordinate-grid">
+                    <div className="apiary-coord-cell">
+                      <span className="apiary-coord-label">Geografska širina</span>
+                      <strong className="apiary-coord-value">{parcel.latitude}</strong>
+                    </div>
+                    <div className="apiary-coord-cell">
+                      <span className="apiary-coord-label">Geografska dužina</span>
+                      <strong className="apiary-coord-value">{parcel.longitude}</strong>
+                    </div>
+                  </div>
+
+                  {crops.length > 0 ? (
+                    <div className="parcel-card-crop-list">
+                      {crops.slice(0, 3).map((crop) => (
+                        <span className="chip" key={crop.id}>{crop.name}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </article>
+            );
+          })}
         </section>
       ) : null}
 
@@ -267,18 +342,48 @@ export default function ParcelsPage() {
 
       {editModalOpen && selectedParcel ? (
         <ParcelFormModal
-          parcel={selectedParcel}
+          crops={selectedParcelCrops}
           onClose={handleEditModalClose}
           onSaved={handleParcelUpdated}
-          crops={selectedParcelCrops}
+          parcel={selectedParcel}
         />
       ) : null}
     </div>
   );
 }
 
-function formatDate(value: string) {
+function formatCompactDate(value: string) {
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString('sr-Latn-RS', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+}
+
+function formatCropSummary(crops: CropDto[]) {
+  if (crops.length === 0) {
+    return 'Kulture još nisu evidentirane';
+  }
+
+  return crops.length === 1 ? '1 evidentirana kultura' : `${crops.length} evidentirane kulture`;
+}
+
+function formatHeroCropSummary(crops: CropDto[]) {
+  if (crops.length === 0) {
+    return 'Nema kultura';
+  }
+
+  return crops.length === 1 ? crops[0].name : `${crops[0].name} +${crops.length - 1}`;
+}
+
+function formatParcelCount(count: number) {
+  if (count === 1) {
+    return '1 parcela';
+  }
+
+  return `${count} parcela`;
 }

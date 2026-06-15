@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto prijavljujemo korisnika.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Auth.Login;

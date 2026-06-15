@@ -1,3 +1,5 @@
+// Modal za unos i izmenu podataka (SettingsModal).
+
 import { type FormEvent, useState } from 'react';
 import { X } from 'lucide-react';
 import { getApiErrorMessage, updateAlertSettings } from '../api/apiClient';
@@ -62,8 +64,8 @@ export default function SettingsModal({
       >
         <div className="modal-header">
           <div>
-            <h2 id="settings-modal-title">Podešavanja upozorenja</h2>
-            <p>Unesite prag pada težine za upozorenja.</p>
+            <h2 id="settings-modal-title">Pragovi upozorenja</h2>
+            <p>Podesite kada će nagli pad težine pokrenuti upozorenje.</p>
           </div>
           <button
             aria-label="Zatvori modal"
@@ -78,7 +80,7 @@ export default function SettingsModal({
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            weightDropThreshold (kg)
+            Prag pada težine (kg)
             <input
               aria-invalid={error !== null}
               autoFocus
@@ -100,7 +102,7 @@ export default function SettingsModal({
           ) : null}
 
           <button className="primary-button apiary-submit-button" disabled={saving} type="submit">
-            {saving ? 'Čuvanje...' : 'Sačuvaj podešavanja'}
+            {saving ? 'Čuvanje...' : 'Sačuvaj prag'}
           </button>
         </form>
       </section>

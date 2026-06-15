@@ -1,3 +1,5 @@
+// Pomocni kod za Apiaries.
+
 namespace SmartApiary.Application.Features.Apiaries;
 
 public static class ApiaryImageConstraints

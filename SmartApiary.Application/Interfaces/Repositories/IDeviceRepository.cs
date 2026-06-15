@@ -1,3 +1,5 @@
+// Ovde su metode koje IDeviceRepository repozitorijum mora da ima.
+
 using SmartApiary.Domain.Models;
 
 namespace SmartApiary.Application.Interfaces.Repositories;

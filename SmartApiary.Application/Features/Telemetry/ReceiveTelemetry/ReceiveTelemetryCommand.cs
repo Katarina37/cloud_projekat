@@ -1,3 +1,5 @@
+// Podaci koji stizu kada obradjujemo novo merenje sa uredjaja.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

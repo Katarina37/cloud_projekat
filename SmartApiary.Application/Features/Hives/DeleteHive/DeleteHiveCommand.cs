@@ -1,3 +1,5 @@
+// Podaci koji stizu kada brisemo kosnicu.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

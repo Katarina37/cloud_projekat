@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: DataTable.
+
 import type { ReactNode } from 'react';
 
 // RowData predstavlja tip jednog reda koji tabela prikazuje.

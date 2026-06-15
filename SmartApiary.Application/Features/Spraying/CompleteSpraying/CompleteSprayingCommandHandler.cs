@@ -1,3 +1,6 @@
+// Ovde zavrsavamo prskanje i upisujemo karton.
+// Specifikacija - prskanje i digitalni karton.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;
@@ -75,6 +78,7 @@ public sealed class CompleteSprayingCommandHandler : IRequestHandler<CompleteSpr
             return Result.Failure("Selected crop does not belong to the spraying parcel.", ErrorType.Validation);
         }
 
+        // Cuvamo kakvo je vreme bilo kada je tretman zavrsen.
         var weatherDto = await _weatherService.GetWeatherAsync(
             parcel.Location.Latitude,
             parcel.Location.Longitude,
@@ -84,6 +88,7 @@ public sealed class CompleteSprayingCommandHandler : IRequestHandler<CompleteSpr
             ? "No weather data"
             : JsonSerializer.Serialize(weatherDto);
 
+        // Ovde status prelazi na Completed i popunjava se karton.
         announcement.Complete(
             request.ActualStartTime!.Value,
             request.ActualEndTime.Value,

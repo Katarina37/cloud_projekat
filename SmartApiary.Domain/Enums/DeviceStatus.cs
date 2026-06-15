@@ -1,3 +1,5 @@
+// Moguce vrednosti za DeviceStatus.
+
 namespace SmartApiary.Domain.Enums;
 
 public enum DeviceStatus

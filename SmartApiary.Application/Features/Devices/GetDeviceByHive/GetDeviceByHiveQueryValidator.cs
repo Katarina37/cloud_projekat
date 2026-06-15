@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto trazimo uredjaj povezan sa kosnicom.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Devices.GetDeviceByHive;

@@ -1,3 +1,5 @@
+// Ovde su metode koje IPasswordHasher servis mora da ima.
+
 namespace SmartApiary.Application.Interfaces.Services;
 
 public interface IPasswordHasher

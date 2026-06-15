@@ -1,3 +1,5 @@
+// Jedan mali deo simulatora: SimulatorMode.
+
 namespace SmartApiary.Simulator.Models;
 
 public enum SimulatorMode

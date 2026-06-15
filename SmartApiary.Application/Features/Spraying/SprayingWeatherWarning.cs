@@ -1,3 +1,5 @@
+// Pomocni kod za Spraying.
+
 using System.Globalization;
 using SmartApiary.Application.DTOs;
 

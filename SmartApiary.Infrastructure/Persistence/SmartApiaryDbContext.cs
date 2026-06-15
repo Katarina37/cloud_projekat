@@ -1,3 +1,6 @@
+// Ovde su sve SQL tabele koje koristi aplikacija.
+// Specifikacija - glavni podaci se cuvaju u Azure SQL bazi.
+
 using Microsoft.EntityFrameworkCore;
 using SmartApiary.Domain.Models;
 

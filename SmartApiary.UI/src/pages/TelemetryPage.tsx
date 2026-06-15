@@ -1,3 +1,6 @@
+// Stranica sa telemetrijom uzivo.
+// Vezbe 6 - React klijent za SignalR.
+
 import { HubConnectionBuilder, HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import { useEffect, useState } from 'react';
 import {
@@ -27,6 +30,7 @@ const telemetryToDate = formatApiDateTime(new Date());
 const telemetryFromDate = formatApiDateTime(addDays(new Date(), -7));
 
 export default function TelemetryPage() {
+  // Stanje stranice: izabrani pcelinjak/kosnica, merenja i SignalR veza.
   const [apiaries, setApiaries] = useState<ApiaryDto[]>([]);
   const [selectedApiaryId, setSelectedApiaryId] = useState('');
   const [hives, setHives] = useState<HiveDto[]>([]);
@@ -48,6 +52,7 @@ export default function TelemetryPage() {
   };
 
   async function loadTelemetryForHive(hiveId: string) {
+    // Ucitamo sve sto treba za izabranu kosnicu.
     const telemetryReadings = await getTelemetryForHive(
       hiveId,
       telemetryFromDate,
@@ -114,6 +119,7 @@ export default function TelemetryPage() {
   }, []);
 
   useEffect(() => {
+    // Vezbe 6: otvaramo SignalR vezu i saljemo JWT.
     const connection = new HubConnectionBuilder()
       .withUrl(CONFIG.HUB_URL, {
         accessTokenFactory: () => getAuthToken() ?? '',
@@ -166,6 +172,7 @@ export default function TelemetryPage() {
       return;
     }
 
+    // Slusamo samo trenutno izabrani pcelinjak.
     signalRConnection
       .invoke('JoinApiaryGroup', selectedApiaryId)
       .catch((connectionError) => {
@@ -188,6 +195,7 @@ export default function TelemetryPage() {
       return;
     }
 
+    // Worker ovo pozove kad stigne novo merenje.
     const receiveTelemetryUpdate = (update: TelemetryUpdateDto) => {
       if (update.apiaryId !== selectedApiaryId || update.hiveId !== selectedHiveId) {
         return;
@@ -202,6 +210,7 @@ export default function TelemetryPage() {
         batteryPercent: update.batteryLevel,
       });
 
+      // Dodamo novo merenje bez ponovnog ucitavanja stranice.
       setTelemetryReadings((currentReadings) => {
         const nextReading: TelemetryReadingDto = {
           id: `${update.deviceId}-${update.timestamp}`,

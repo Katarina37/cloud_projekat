@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: SectionCard.
+
 import type { ReactNode } from 'react';
 
 type SectionCardProps = {

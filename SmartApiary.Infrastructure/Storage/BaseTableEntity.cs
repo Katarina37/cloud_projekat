@@ -1,3 +1,7 @@
+// Jedan deo podrske za Table Storage: BaseTableEntity.
+// Specifikacija - telemetriju drzimo van SQL baze.
+// Vezbe 4 - PartitionKey, RowKey i mapiranje Table entiteta.
+
 using Azure;
 using Azure.Data.Tables;
 

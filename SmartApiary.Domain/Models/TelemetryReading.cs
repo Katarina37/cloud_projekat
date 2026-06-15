@@ -1,3 +1,5 @@
+// Podaci i osnovna pravila za TelemetryReading.
+
 namespace SmartApiary.Domain.Models;
 
 public class TelemetryReading

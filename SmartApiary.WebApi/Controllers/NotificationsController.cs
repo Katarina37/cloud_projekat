@@ -1,3 +1,5 @@
+// HTTP rute za Notifications. Glavni posao prosledjujemo handlerima.
+
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -1,3 +1,6 @@
+// Ovde dodajemo pregled kosnice.
+// Specifikacija - pcelarski dnevnik.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Application.Interfaces.Repositories;

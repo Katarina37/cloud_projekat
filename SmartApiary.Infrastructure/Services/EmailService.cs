@@ -1,3 +1,5 @@
+// Slanje mejla za aktivaciju naloga i promenu lozinke.
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SendGrid;

@@ -1,3 +1,7 @@
+// Worker uzima telemetriju iz Queue-a i gura je frontu preko SignalR-a.
+// Specifikacija - telemetrija uzivo.
+// Vezbe 6 - Background Worker i SignalR.
+
 using Microsoft.AspNetCore.SignalR;
 using SmartApiary.Application.Interfaces.Services;
 using SmartApiary.WebApi.DTOs;
@@ -14,12 +18,14 @@ internal sealed class TelemetryWorker(
     {
         logger.LogInformation("[WORKER] Telemetry Worker started listening...");
 
+        // Vrtimo petlju dok se Web API ne ugasi.
         while (!stoppingToken.IsCancellationRequested)
         {
             var foundMessage = false;
 
             try
             {
+                // Za svaki prolaz uzimamo novi scope.
                 using var scope = serviceProvider.CreateScope();
                 var queueService = scope.ServiceProvider
                     .GetRequiredService<ITelemetryQueueService>();
@@ -35,6 +41,7 @@ internal sealed class TelemetryWorker(
                         "[WORKER] Received telemetry update for hive: {HiveId}",
                         telemetry.HiveId);
 
+                    // Pakujemo poruku u format koji frontend ocekuje.
                     var telemetryDto = new TelemetryUpdateDto
                     {
                         ApiaryId = telemetry.ApiaryId,
@@ -47,6 +54,7 @@ internal sealed class TelemetryWorker(
                         BatteryLevel = telemetry.BatteryLevel
                     };
 
+                    // Saljemo samo grupi ovog pcelinjaka.
                     await hubContext.Clients
                         .Group(TelemetryHub.GetApiaryGroupName(telemetry.ApiaryId))
                         .SendAsync(
@@ -54,6 +62,7 @@ internal sealed class TelemetryWorker(
                             telemetryDto,
                             stoppingToken);
 
+                    // Posle slanja brisemo poruku iz Queue-a.
                     await message.CompleteAsync(stoppingToken);
 
                     logger.LogInformation(
@@ -69,6 +78,7 @@ internal sealed class TelemetryWorker(
                 logger.LogError(ex, "[ERROR] Error processing telemetry queue.");
             }
 
+            // Kad nema poruka, sacekamo dve sekunde.
             if (!foundMessage)
             {
                 await Task.Delay(2000, stoppingToken);

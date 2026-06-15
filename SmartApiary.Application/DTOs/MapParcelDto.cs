@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za MapParcelDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public sealed class MapParcelDto

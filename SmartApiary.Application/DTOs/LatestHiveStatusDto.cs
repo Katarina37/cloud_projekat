@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za LatestHiveStatusDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class LatestHiveStatusDto

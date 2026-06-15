@@ -1,3 +1,5 @@
+// Podaci koji stizu kada dodajemo kosnicu.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 using SmartApiary.Domain.Enums;

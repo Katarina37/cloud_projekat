@@ -1,3 +1,5 @@
+// Podaci koji stizu kada menjamo podesavanja alarma.
+
 using MediatR;
 using SmartApiary.Application.Common.Results;
 

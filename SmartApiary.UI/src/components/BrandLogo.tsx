@@ -1,3 +1,5 @@
+// Zajednicka UI komponenta: BrandLogo.
+
 import logoUrl from '../assets/logo.svg';
 
 export default function BrandLogo() {

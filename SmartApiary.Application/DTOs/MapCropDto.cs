@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za MapCropDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public sealed class MapCropDto

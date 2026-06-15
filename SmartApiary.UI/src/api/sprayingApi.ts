@@ -1,3 +1,5 @@
+// API pozivi koje koristi sprayingApi.
+
 import type { ResultResponse } from './apiResult';
 import type { PagedResult } from './hiveInspectionsApi';
 import apiClient from './httpClient';

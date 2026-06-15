@@ -1,3 +1,5 @@
+// Podaci koje saljemo frontu za ApiaryDto.
+
 namespace SmartApiary.Application.DTOs;
 
 public class ApiaryDto

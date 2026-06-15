@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto menjamo kulturu.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Crops.UpdateCrop;

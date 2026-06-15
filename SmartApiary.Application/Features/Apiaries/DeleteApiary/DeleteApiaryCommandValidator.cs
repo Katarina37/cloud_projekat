@@ -1,3 +1,5 @@
+// Provera podataka pre nego sto brisemo pcelinjak.
+
 using FluentValidation;
 
 namespace SmartApiary.Application.Features.Apiaries.DeleteApiary;

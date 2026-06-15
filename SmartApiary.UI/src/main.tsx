@@ -1,3 +1,5 @@
+// Odavde krece React aplikacija.
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';

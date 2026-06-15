@@ -1,3 +1,5 @@
+// Moguce vrednosti za SprayingStatus.
+
 namespace SmartApiary.Domain.Enums;
 
 public enum SprayingStatus

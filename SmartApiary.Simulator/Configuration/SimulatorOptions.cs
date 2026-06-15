@@ -1,3 +1,5 @@
+// Jedan mali deo simulatora: SimulatorOptions.
+
 using System.Diagnostics.CodeAnalysis;
 
 namespace SmartApiary.Simulator.Configuration;

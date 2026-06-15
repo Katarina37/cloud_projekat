@@ -1,3 +1,5 @@
+// Ovde su metode koje ITelemetryQueueService servis mora da ima.
+
 using SmartApiary.Application.Features.Telemetry;
 
 namespace SmartApiary.Application.Interfaces.Services;
