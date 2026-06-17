@@ -1,12 +1,18 @@
-# SmartApiary
+<h1 align="center">SmartApiary</h1>
 
-SmartApiary je studentski projekat za upravljanje pčelinjacima, košnicama, parcelama, uređajima i telemetrijom.
+<p align="center">
+  SmartApiary je studentski projekat za upravljanje pčelinjacima, košnicama, parcelama, uređajima i telemetrijom.
+</p>
+
+---
 
 ## 1. Naš tim
 
-- **Tim 13**
-- **Tema projekta:** SA
-- **Asistent:** Sandra
+> **Tim 13**
+>
+> **Tema projekta:** SA
+>
+> **Asistent:** Sandra
 
 | Ime i prezime | Broj indeksa | Grupa | Kontakt |
 |---|---:|---:|---|
@@ -17,6 +23,8 @@ SmartApiary je studentski projekat za upravljanje pčelinjacima, košnicama, par
 | Milica Ćurčić | PR11/2022 | 1 | milica.curcic12@gmail.com |
 | Katarina Luzić | PR62/2022 | 4 | katarinaluzic37@gmail.com |
 
+---
+
 ## 2. Kako pokrenuti projekat
 
 Projekat se sastoji iz tri dela:
@@ -25,7 +33,7 @@ Projekat se sastoji iz tri dela:
 - `SmartApiary.Functions` sadrži Azure Functions.
 - `SmartApiary.UI` je frontend.
 
-WebApi i Functions pokrećemo iz Visual Studio-a, a frontend iz posebnog terminala.
+> WebApi i Functions pokrećemo iz Visual Studio-a, a frontend iz posebnog terminala.
 
 ### 2.1. Šta treba instalirati
 
@@ -42,9 +50,9 @@ Kada se projekat preuzme sa GitHub-a, otvoriti fajl `SmartApiary.sln` u Visual S
 
 ### 2.2. Podešavanja koja se ne preuzimaju sa GitHub-a
 
-Ova podešavanja se čuvaju lokalno i zato ih svako mora dodati na svom računaru.
+> Ova podešavanja se čuvaju lokalno i zato ih svako mora dodati na svom računaru.
 
-U Visual Studio-u otvoriti:
+**U Visual Studio-u otvoriti:**
 
 `View -> Terminal`
 
@@ -61,7 +69,7 @@ dotnet user-secrets set "Email:FromName" "SmartApiary" --project .\SmartApiary.W
 
 `Jwt:Secret` i administratorska lozinka su potrebni za normalno pokretanje i prijavu.
 
-Eksterni API servisi:
+**Eksterni API servisi:**
 
 - **OpenWeatherMap API** koristi se na stranici za tretiranje useva. Proverava prognozu za lokaciju parcele, upozorava na kišu ili vetar jači od 5 m/s i čuva vremenske uslove u digitalnom kartonu tretiranja.
 - **SendGrid API** koristi se za slanje mejlova sa linkovima za aktivaciju naloga i promenu zaboravljene lozinke.
@@ -80,7 +88,7 @@ Zatim u folderu `SmartApiary.Functions`, pored fajla `host.json`, napraviti novi
 }
 ```
 
-Ovaj fajl se takođe ne šalje na GitHub, pa ga svako pravi samo jednom na svom računaru.
+> Ovaj fajl se takođe ne šalje na GitHub, pa ga svako pravi samo jednom na svom računaru.
 
 ### 2.3. Instalacija i pokretanje Azurite-a
 
@@ -98,17 +106,17 @@ Posle instalacije, iz glavnog foldera projekta pokrenuti:
 azurite --location azurite-data --debug azurite-debug.log
 ```
 
-Terminal u kojem je Azurite pokrenut treba ostaviti otvoren sve vreme dok koristimo aplikaciju. Kada u terminalu piše da Blob, Queue i Table servisi slušaju zahteve, Azurite je spreman.
+> Terminal u kojem je Azurite pokrenut treba ostaviti otvoren sve vreme dok koristimo aplikaciju. Kada u terminalu piše da Blob, Queue i Table servisi slušaju zahteve, Azurite je spreman.
 
 ### 2.4. Kreiranje baze
 
-Ovaj korak se radi samo prvi put, ili kada neko doda novu migraciju.
+> Ovaj korak se radi samo prvi put, ili kada neko doda novu migraciju.
 
-U Visual Studio-u otvoriti:
+**U Visual Studio-u otvoriti:**
 
 `Tools -> NuGet Package Manager -> Package Manager Console`
 
-Zatim pokrenuti:
+**Zatim pokrenuti:**
 
 ```powershell
 Update-Database -Project SmartApiary.Infrastructure -StartupProject SmartApiary.WebApi
@@ -141,11 +149,11 @@ Kada se projekti pokrenu:
 
 Ako Visual Studio pita da li verujemo lokalnom HTTPS sertifikatu, izabrati `Yes`.
 
-`SmartApiary.Simulator` se ne stavlja među startup projekte. On se pokreće posebno samo kada želimo da šaljemo lažne podatke sa uređaja.
+> `SmartApiary.Simulator` se ne stavlja među startup projekte. On se pokreće posebno samo kada želimo da šaljemo lažne podatke sa uređaja.
 
 ### 2.6. Pokretanje frontenda
 
-Frontend se pokreće u novom terminalu. Backend, Functions i Azurite treba ostaviti uključene.
+> Frontend se pokreće u novom terminalu. Backend, Functions i Azurite treba ostaviti uključene.
 
 Iz glavnog foldera projekta pokrenuti:
 
@@ -163,9 +171,11 @@ npm run dev
 
 Frontend će biti dostupan na:
 
-`http://localhost:5173`
+> `http://localhost:5173`
 
 Za lokalno pokretanje nije potrebno praviti `.env` fajl, jer su adrese backend-a i Functions već podešene u projektu.
+
+---
 
 ### Redosled svakog sledećeg pokretanja
 
@@ -176,9 +186,11 @@ Kada je sve jednom instalirano i podešeno, sledeći put je dovoljno:
 3. U drugom terminalu ući u `SmartApiary.UI` i pokrenuti `npm run dev`.
 4. Otvoriti `http://localhost:5173`.
 
+---
+
 ## 3. Kako izgleda tok prijave u aplikaciju
 
-Kod nas korisnik ne pravi sam nalog preko klasične registracije.
+> Kod nas korisnik ne pravi sam nalog preko klasične registracije.
 
 1. Prvo se administrator prijavljuje sa:
 
@@ -192,15 +204,17 @@ Kod nas korisnik ne pravi sam nalog preko klasične registracije.
 6. Posle aktivacije korisnik ide na login stranicu i prijavljuje se svojim mejlom i novom lozinkom.
 7. Nakon uspešne prijave backend vraća JWT token. Frontend ga čuva i šalje uz naredne zahteve, tako da sistem zna ko je prijavljen i koju ulogu ima.
 
-Znači, token koji stigne na mejl služi za **prvu aktivaciju naloga**, a posle toga se korisnik normalno prijavljuje mejlom i lozinkom.
+> Znači, token koji stigne na mejl služi za **prvu aktivaciju naloga**, a posle toga se korisnik normalno prijavljuje mejlom i lozinkom.
 
-Uloge u aplikaciji su:
+**Uloge u aplikaciji su:**
 
 - `Admin` upravlja korisnicima.
 - `Beekeeper` upravlja pčelinjacima, košnicama, uređajima i telemetrijom.
 - `Farmer` upravlja parcelama, kulturama i tretiranjima.
 
 Ako korisnik zaboravi lozinku, na login stranici bira opciju za zaboravljenu lozinku. Na mejl dobija novi link sa tokenom za promenu lozinke. Taj token važi jedan sat.
+
+---
 
 ## Ako nešto ne radi
 

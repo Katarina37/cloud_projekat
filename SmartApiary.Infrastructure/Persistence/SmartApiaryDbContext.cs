@@ -33,6 +33,7 @@ public class SmartApiaryDbContext : DbContext
 
     public DbSet<UserAlertSettings> UserAlertSettings => Set<UserAlertSettings>();
 
+    // TelemetryReading nije DbSet jer se IoT merenja cuvaju u Azure Table Storage-u.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SmartApiaryDbContext).Assembly);
