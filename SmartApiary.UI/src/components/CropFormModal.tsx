@@ -67,22 +67,22 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
     }
 
     if (!expectedBloomingStart) {
-      setError('ExpectedBloomingStart je obavezan.');
+      setError('Pocetak cvetanja je obavezan.');
       return;
     }
 
     if (!expectedBloomingEnd) {
-      setError('ExpectedBloomingEnd je obavezan.');
+      setError('Kraj cvetanja je obavezan.');
       return;
     }
 
     if (expectedBloomingEnd < expectedBloomingStart) {
-      setError('ExpectedBloomingEnd ne sme biti pre ExpectedBloomingStart.');
+      setError('Kraj cvetanja ne sme biti pre pocetka cvetanja.');
       return;
     }
 
     if (parsedArea !== null && (!Number.isFinite(parsedArea) || parsedArea < 0)) {
-      setError('Area ne sme biti negativna.');
+      setError('Povrsina ne sme biti negativna.');
       return;
     }
 
@@ -111,7 +111,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
       onClose();
     } catch (error) {
       setError(
-        getApiErrorMessage(error, isEditMode ? 'Greška pri izmeni kulture.' : 'Greška pri dodavanju kulture.'),
+        getApiErrorMessage(error, isEditMode ? 'Greska pri izmeni kulture.' : 'Greska pri dodavanju kulture.'),
       );
     } finally {
       setLoading(false);
@@ -144,8 +144,8 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
             aria-label="Zatvori modal"
             className="modal-close-button"
             disabled={loading}
-            type="button"
             onClick={handleClose}
+            type="button"
           >
             <X size={18} />
           </button>
@@ -182,7 +182,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
           ) : null}
 
           <label>
-            Početak cvetanja
+            Pocetak cvetanja
             <input
               onChange={(event) => setExpectedBloomingStart(event.target.value)}
               type="date"
@@ -200,7 +200,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
           </label>
 
           <label>
-            Površina
+            Povrsina
             <input
               min="0"
               onChange={(event) => setArea(event.target.value)}
@@ -212,7 +212,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
           </label>
 
           <label>
-            Beleška
+            Beleska
             <textarea
               onChange={(event) => setNotes(event.target.value)}
               placeholder="Napomena"
@@ -228,7 +228,7 @@ export default function CropFormModal({ selectedParcelId, crop, onClose, onSaved
           ) : null}
 
           <button className="primary-button apiary-submit-button" disabled={loading} type="submit">
-            {loading ? 'Čuvanje...' : title}
+            {loading ? 'Cuvanje...' : title}
           </button>
         </form>
       </section>

@@ -2,9 +2,12 @@
 
 import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail } from 'lucide-react';
+import { ArrowLeft, CircleAlert, CircleCheck, Info, LoaderCircle, Mail, Send } from 'lucide-react';
 import { forgotPassword, getApiErrorMessage } from '../api/apiClient';
 import BrandLogo from '../components/BrandLogo';
+import AuthField from '../components/auth/AuthField';
+import AuthLayout from '../components/auth/AuthLayout';
+import loginVideo from '../assets/auth/LoginVideo.mp4';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -29,41 +32,69 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="auth-shell">
-      <section className="auth-card">
-        <div className="brand auth-brand">
-          <BrandLogo />
-          <div>
-            <strong>Zaboravljena lozinka</strong>
-            <span>Smart Apiary</span>
+    <AuthLayout videoSrc={loginVideo}>
+      <>
+        <header className="auth-layout-card-header">
+          <div className="auth-layout-brand">
+            <BrandLogo />
+            <div className="auth-layout-brand-copy">
+              <span className="auth-layout-eyebrow">SmartApiary</span>
+              <h1>Zaboravljena lozinka</h1>
+            </div>
           </div>
+          <p className="auth-layout-subtitle">
+            Unesite email adresu naloga i poslacemo link za postavljanje nove lozinke.
+          </p>
+        </header>
+
+        <div className="auth-layout-note">
+          <Info size={18} aria-hidden="true" />
+          <p>
+            Link vazi ograniceno vreme. Ako poruka ne stigne odmah, proverite i spam folder.
+          </p>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              autoComplete="email"
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              type="email"
-              value={email}
-            />
-          </label>
+        <form className="auth-layout-form" onSubmit={handleSubmit}>
+          <AuthField
+            autoComplete="email"
+            icon={<Mail size={19} />}
+            id="forgot-password-email"
+            label="Email adresa"
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="ime@primer.com"
+            required
+            type="email"
+            value={email}
+          />
 
-          {successMessage ? <p className="form-success">{successMessage}</p> : null}
-          {error ? <p className="form-error">{error}</p> : null}
+          {successMessage ? (
+            <p className="form-success auth-layout-message" role="status">
+              <CircleCheck size={17} aria-hidden="true" />
+              {successMessage}
+            </p>
+          ) : null}
+          {error ? (
+            <p className="form-error auth-layout-message" role="alert">
+              <CircleAlert size={17} aria-hidden="true" />
+              {error}
+            </p>
+          ) : null}
 
-          <button className="primary-button orange-button" disabled={isSubmitting} type="submit">
-            <Mail size={18} />
-            {isSubmitting ? 'Slanje...' : 'Posalji link'}
+          <button className="auth-layout-submit" disabled={isSubmitting} type="submit">
+            <span className="auth-layout-submit-icon" aria-hidden="true">
+              {isSubmitting ? <LoaderCircle className="auth-layout-spinner" size={18} /> : <Send size={18} />}
+            </span>
+            <span>{isSubmitting ? 'Slanje...' : 'Posalji link'}</span>
           </button>
         </form>
 
-        <div className="auth-links">
-          <Link to="/login">Nazad na prijavu</Link>
+        <div className="auth-layout-links">
+          <Link className="auth-layout-switch-link" to="/login">
+            <ArrowLeft size={16} aria-hidden="true" />
+            <span>Nazad na prijavu</span>
+          </Link>
         </div>
-      </section>
-    </main>
+      </>
+    </AuthLayout>
   );
 }

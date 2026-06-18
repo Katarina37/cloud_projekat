@@ -1,5 +1,6 @@
 // Pomocni kod za pravljenje PDF-a (exportHiveInspectionsPdf).
 
+import { jsPDF } from 'jspdf';
 import type { HiveInspectionDto } from '../api/apiClient';
 import {
   addReportFooters,
@@ -18,7 +19,6 @@ export async function exportHiveInspectionsPdf(
   inspections: HiveInspectionDto[],
   totalCount: number,
 ) {
-  const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const margin = PDF_LAYOUT.margin;

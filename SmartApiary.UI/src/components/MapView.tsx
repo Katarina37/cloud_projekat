@@ -84,7 +84,7 @@ export default function MapView({ items, className, height = 380, zoom = 10, onS
   return (
     <div className={className} style={{ height }}>
       <MapContainer key={mapKey} center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer crossOrigin="anonymous" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <FitBoundsToItems items={items} />
         <MarkerClusterGroup>
           {items.map((it) => {

@@ -1,5 +1,6 @@
 // Pomocni kod za pravljenje PDF-a (exportSprayingHistoryPdf).
 
+import { jsPDF } from 'jspdf';
 import type { SprayingAnnouncementDto } from '../api/apiClient';
 import {
   addReportFooters,
@@ -18,7 +19,6 @@ export async function exportSprayingHistoryPdf(
   fromDate?: string,
   toDate?: string,
 ) {
-  const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
   const margin = PDF_LAYOUT.margin;
   const contentWidth = pdf.internal.pageSize.getWidth() - margin * 2;

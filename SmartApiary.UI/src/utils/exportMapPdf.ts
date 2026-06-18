@@ -1,5 +1,7 @@
 // Pomocni kod za pravljenje PDF-a (exportMapPdf).
 
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import {
   addReportFooters,
   addReportHeader,
@@ -11,17 +13,29 @@ export async function exportMapPdf() {
   const mapElement = document.querySelector('.leaflet-container');
 
   if (!(mapElement instanceof HTMLElement)) {
-    window.alert('Mapa nije pronadjena za export.');
-    return;
+    throw new Error('Mapa nije pronadjena za PDF export.');
   }
 
-  const { default: html2canvas } = await import('html2canvas');
-  const { jsPDF } = await import('jspdf');
+  await waitForMapTiles(mapElement);
+
   const canvas = await html2canvas(mapElement, {
     useCORS: true,
+    allowTaint: false,
     logging: false,
     backgroundColor: '#f7f9f7',
+    imageTimeout: 15000,
     scale: Math.min(window.devicePixelRatio || 1, 2),
+    scrollX: 0,
+    scrollY: 0,
+    onclone: (documentClone) => {
+      documentClone
+        .querySelectorAll('.leaflet-control-container, .leaflet-popup-pane')
+        .forEach((element) => {
+          if (element instanceof HTMLElement) {
+            element.style.display = 'none';
+          }
+        });
+    },
   });
   const image = canvas.toDataURL('image/png');
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -58,4 +72,30 @@ export async function exportMapPdf() {
 
   addReportFooters(pdf);
   pdf.save('mapa-parcela.pdf');
+}
+
+function waitForMapTiles(mapElement: HTMLElement) {
+  const tileImages = Array.from(
+    mapElement.querySelectorAll<HTMLImageElement>('.leaflet-tile'),
+  );
+
+  const pendingTiles = tileImages.filter((image) => !image.complete);
+
+  if (pendingTiles.length === 0) {
+    return Promise.resolve();
+  }
+
+  return Promise.race([
+    Promise.all(
+      pendingTiles.map((image) =>
+        new Promise<void>((resolve) => {
+          image.addEventListener('load', () => resolve(), { once: true });
+          image.addEventListener('error', () => resolve(), { once: true });
+        }),
+      ),
+    ).then(() => undefined),
+    new Promise<void>((resolve) => {
+      window.setTimeout(resolve, 2500);
+    }),
+  ]);
 }

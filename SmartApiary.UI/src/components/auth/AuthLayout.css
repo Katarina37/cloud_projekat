@@ -33,6 +33,9 @@
 }
 
 .auth-layout-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
   height: 100%;
   overflow-y: auto;
@@ -43,17 +46,25 @@
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+  padding: 36px clamp(24px, 2.5vw, 44px);
 }
 
 .auth-layout-panel-content {
   display: grid;
   width: 100%;
-  max-width: 540px;
-  min-height: 100%;
+  max-width: 430px;
   align-content: center;
-  gap: 22px;
-  margin: 0 auto;
-  padding: 36px clamp(24px, 2.5vw, 44px);
+  gap: 16px;
+  border: 1px solid rgba(213, 199, 173, 0.95);
+  border-radius: 20px;
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow:
+    0 26px 70px rgba(55, 43, 24, 0.22),
+    0 0 0 8px rgba(255, 255, 255, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  margin: auto;
+  padding: 30px;
+  backdrop-filter: blur(22px);
 }
 
 .auth-layout-card-header {
@@ -64,14 +75,14 @@
 .auth-layout-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .auth-layout-brand .brand-mark {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   border-color: rgba(217, 150, 31, 0.28);
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow:
     0 10px 24px rgba(36, 48, 37, 0.08),
     0 0 0 5px rgba(255, 255, 255, 0.45);
@@ -83,20 +94,20 @@
 
 .auth-layout-eyebrow {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   color: #3f7d58;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .auth-layout-card-header h1 {
   margin: 0;
   color: #243025;
-  font-size: clamp(28px, 2.25vw, 36px);
-  letter-spacing: -0.035em;
-  line-height: 1.08;
+  font-size: clamp(27px, 2.1vw, 34px);
+  letter-spacing: -0.02em;
+  line-height: 1.12;
 }
 
 .auth-layout-subtitle,
@@ -109,19 +120,19 @@
 .auth-layout-subtitle {
   max-width: 42ch;
   color: #596258;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .auth-layout-note {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  border: 1px solid #f0dfb3;
-  border-radius: 14px;
-  background: rgba(255, 248, 231, 0.78);
-  padding: 12px 14px;
-  font-size: 13px;
-  box-shadow: 0 8px 24px rgba(95, 57, 7, 0.04);
+  border: 1px solid rgba(240, 223, 179, 0.86);
+  border-radius: 12px;
+  background: rgba(255, 246, 224, 0.72);
+  padding: 10px 12px;
+  font-size: 12px;
+  box-shadow: none;
 }
 
 .auth-layout-note svg {
@@ -136,7 +147,7 @@
 
 .auth-layout-form {
   display: grid;
-  gap: 17px;
+  gap: 15px;
 }
 
 .auth-layout-field {
@@ -152,12 +163,12 @@
 
 .auth-layout-input-shell {
   display: flex;
-  min-height: 52px;
+  min-height: 50px;
   align-items: center;
-  border: 1px solid #ded7c9;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 6px 18px rgba(36, 48, 37, 0.05);
+  border: 1px solid #e2d8c7;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 5px 14px rgba(36, 48, 37, 0.045);
   transition:
     border-color 180ms ease,
     box-shadow 180ms ease,
@@ -173,7 +184,7 @@
   border-color: #d9961f;
   background: #ffffff;
   box-shadow:
-    0 0 0 4px rgba(217, 150, 31, 0.14),
+    0 0 0 3px rgba(217, 150, 31, 0.13),
     0 8px 22px rgba(36, 48, 37, 0.06);
 }
 
@@ -192,7 +203,7 @@
 
 .auth-layout-form input {
   min-width: 0;
-  min-height: 50px;
+  min-height: 48px;
   flex: 1;
   border: 0;
   outline: 0;
@@ -243,22 +254,22 @@
 .auth-layout-submit {
   display: inline-flex;
   width: 100%;
-  min-height: 54px;
+  min-height: 52px;
   align-items: center;
   justify-content: center;
   gap: 11px;
   margin-top: 3px;
   border: 1px solid #315f45;
-  border-radius: 16px;
+  border-radius: 12px;
   color: #ffffff;
   background: #356b4c;
   padding: 6px 18px;
   font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  font-weight: 800;
+  letter-spacing: 0;
   line-height: 1;
   box-shadow:
-    0 10px 24px rgba(36, 48, 37, 0.16),
+    0 12px 28px rgba(36, 48, 37, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition:
     border-color 180ms ease,
@@ -299,13 +310,14 @@
 
 .auth-layout-submit-icon {
   display: inline-flex;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   align-items: center;
   justify-content: center;
-  flex: 0 0 30px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.12);
+  flex: 0 0 28px;
+  border-radius: 9px;
+  color: #fff2c7;
+  background: rgba(255, 240, 197, 0.14);
 }
 
 .auth-layout-spinner {
@@ -317,8 +329,10 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 16px;
+  gap: 6px 14px;
+  border-top: 1px solid rgba(229, 220, 203, 0.74);
   color: #3f7d58;
+  padding-top: 2px;
   font-size: 13px;
   font-weight: 700;
 }
@@ -340,7 +354,7 @@
 }
 
 .auth-layout-switch-link {
-  gap: 4px;
+  gap: 6px;
   color: #596258;
   font-weight: 500;
 }

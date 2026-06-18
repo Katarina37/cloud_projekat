@@ -122,7 +122,7 @@
 }
 
 .map-hero-action-primary {
-  background: rgba(75, 112, 54, 0.92);
+  background: rgba(201, 104, 25, 0.92);
 }
 
 .map-hero-action-secondary {
@@ -144,6 +144,11 @@
 .map-hero-action:hover {
   border-color: rgba(255, 255, 255, 0.94);
   box-shadow: 0 15px 34px rgba(33, 44, 25, 0.28);
+}
+
+.map-hero-action-primary:hover,
+.map-hero-action-primary:focus-visible {
+  background: rgba(180, 82, 17, 0.96);
 }
 
 .map-hero-action:focus-visible {

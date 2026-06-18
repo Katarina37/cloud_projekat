@@ -6,9 +6,9 @@ import {
   createParcel,
   getApiErrorMessage,
   updateParcel,
+  type CropDto,
   type ParcelDto,
   type UpdateParcelRequest,
-  type CropDto,
 } from '../api/apiClient';
 
 type ParcelFormModalProps = {
@@ -32,12 +32,12 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
     const parsedLongitude = Number(longitude);
 
     if (!trimmedName) {
-      setError('Name ne sme biti prazan.');
+      setError('Naziv ne sme biti prazan.');
       return null;
     }
 
     if (latitude.trim() === '' || !Number.isFinite(parsedLatitude) || parsedLatitude < -90 || parsedLatitude > 90) {
-      setError('Latitude mora biti između -90 i 90.');
+      setError('Geografska sirina mora biti izmedju -90 i 90.');
       return null;
     }
 
@@ -47,7 +47,7 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
       || parsedLongitude < -180
       || parsedLongitude > 180
     ) {
-      setError('Longitude mora biti između -180 i 180.');
+      setError('Geografska duzina mora biti izmedju -180 i 180.');
       return null;
     }
 
@@ -95,7 +95,7 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
       onClose();
     } catch (error) {
       setError(
-        getApiErrorMessage(error, isEditMode ? 'Greška pri izmeni parcele.' : 'Greška pri dodavanju parcele.'),
+        getApiErrorMessage(error, isEditMode ? 'Greska pri izmeni parcele.' : 'Greska pri dodavanju parcele.'),
       );
     } finally {
       setLoading(false);
@@ -118,8 +118,8 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
             <h2 id="parcel-form-title">{title}</h2>
             <p>Unesi naziv i koordinate parcele.</p>
             {isEditMode ? (
-              <p style={{ marginTop: 6, fontSize: 13, color: '#666' }}>
-                Kreirano: {parcel && parcel.createdAt ? new Date(parcel.createdAt).toLocaleString() : '—'}
+              <p className="modal-meta-text">
+                Kreirano: {parcel && parcel.createdAt ? new Date(parcel.createdAt).toLocaleString() : '-'}
               </p>
             ) : null}
           </div>
@@ -127,8 +127,8 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
             aria-label="Zatvori modal"
             className="modal-close-button"
             disabled={loading}
-            type="button"
             onClick={handleClose}
+            type="button"
           >
             <X size={18} />
           </button>
@@ -136,7 +136,7 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            Name
+            Naziv
             <input
               autoFocus
               onChange={(event) => setName(event.target.value)}
@@ -147,18 +147,18 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
           </label>
 
           {isEditMode && crops && crops.length > 0 ? (
-            <div style={{ marginTop: 8 }}>
-              <label style={{ display: 'block', marginBottom: 6 }}>Kulture na parceli</label>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {crops.map((c) => (
-                  <span key={c.id} className="chip" style={{ padding: '6px 10px' }}>{c.name}</span>
+            <div className="modal-form-field">
+              <span className="modal-form-label">Kulture na parceli</span>
+              <div className="modal-chip-row">
+                {crops.map((crop) => (
+                  <span className="chip" key={crop.id}>{crop.name}</span>
                 ))}
               </div>
             </div>
           ) : null}
 
           <label>
-            Latitude
+            Geografska sirina
             <input
               max="90"
               min="-90"
@@ -171,7 +171,7 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
           </label>
 
           <label>
-            Longitude
+            Geografska duzina
             <input
               max="180"
               min="-180"
@@ -190,7 +190,7 @@ export default function ParcelFormModal({ parcel, onClose, onSaved, crops }: Par
           ) : null}
 
           <button className="primary-button orange-button" disabled={loading} type="submit">
-            {loading ? 'Čuvanje...' : title}
+            {loading ? 'Cuvanje...' : title}
           </button>
         </form>
       </section>

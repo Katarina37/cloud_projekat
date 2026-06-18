@@ -1,7 +1,7 @@
 // Stranica za administraciju korisnika.
 
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, UserX, Users } from 'lucide-react';
+import { Plus, Sprout, Trash2, UserRoundCheck, UserX, Users } from 'lucide-react';
 import {
   deactivateAdminUser,
   deleteAdminUser,
@@ -170,7 +170,21 @@ export default function AdminUsersPage() {
                       </td>
                       <td>{user.email}</td>
                       <td>{user.phoneNumber}</td>
-                      <td>{user.role}</td>
+                      <td>
+                        <StatusBadge tone={user.role === 'Beekeeper' ? 'info' : 'warning'}>
+                          {user.role === 'Beekeeper' ? (
+                            <>
+                              <UserRoundCheck size={13} />
+                              Pcelar
+                            </>
+                          ) : (
+                            <>
+                              <Sprout size={13} />
+                              Farmer
+                            </>
+                          )}
+                        </StatusBadge>
+                      </td>
                       <td>
                         <StatusBadge tone={user.isActive ? 'good' : 'muted'}>
                           {user.isActive ? 'Aktivan' : 'Neaktivan'}

@@ -1,4 +1,4 @@
-// Modal za unos i izmenu podataka (RescheduleSprayingModal).
+// Modal za promenu termina tretiranja.
 
 import { type FormEvent, useState } from 'react';
 import { X } from 'lucide-react';
@@ -29,7 +29,7 @@ export default function RescheduleSprayingModal({
     const parsedDurationHours = Number(newDurationHours);
 
     if (!newStartTime) {
-      setError('NewStartTime je obavezan.');
+      setError('Novi termin pocetka je obavezan.');
       return null;
     }
 
@@ -39,7 +39,7 @@ export default function RescheduleSprayingModal({
       || !Number.isInteger(parsedDurationHours)
       || parsedDurationHours <= 0
     ) {
-      setError('NewDurationHours mora biti veći od 0.');
+      setError('Novo trajanje mora biti ceo broj veci od 0.');
       return null;
     }
 
@@ -73,7 +73,7 @@ export default function RescheduleSprayingModal({
       await onSaved(result.weatherWarning);
       onClose();
     } catch (error) {
-      setError(getApiErrorMessage(error, 'Greška pri pomeranju tretiranja.'));
+      setError(getApiErrorMessage(error, 'Greska pri pomeranju tretiranja.'));
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ export default function RescheduleSprayingModal({
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            NewStartTime
+            Novi termin pocetka
             <input
               autoFocus
               onChange={(event) => setNewStartTime(event.target.value)}
@@ -116,7 +116,7 @@ export default function RescheduleSprayingModal({
           </label>
 
           <label>
-            NewDurationHours
+            Novo trajanje (sati)
             <input
               min="1"
               onChange={(event) => setNewDurationHours(event.target.value)}
@@ -134,7 +134,7 @@ export default function RescheduleSprayingModal({
           ) : null}
 
           <button className="primary-button orange-button" disabled={loading} type="submit">
-            {loading ? 'Čuvanje...' : 'Pomeri termin'}
+            {loading ? 'Cuvanje...' : 'Pomeri termin'}
           </button>
         </form>
       </section>

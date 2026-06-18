@@ -1,7 +1,7 @@
 // Modal za unos i izmenu podataka (ApiaryFormModal).
 
 import { type FormEvent, useState } from 'react';
-import { X } from 'lucide-react';
+import { ImagePlus, X } from 'lucide-react';
 import {
   createApiary,
   getApiErrorMessage,
@@ -38,27 +38,27 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
     const parsedLongitude = Number(longitude);
 
     if (!trimmedName) {
-      setError('Name ne sme biti prazan.');
+      setError('Naziv ne sme biti prazan.');
       return null;
     }
 
     if (latitude.trim() === '' || !Number.isFinite(parsedLatitude) || parsedLatitude < -90 || parsedLatitude > 90) {
-      setError('Latitude mora biti između -90 i 90.');
+      setError('Geografska sirina mora biti izmedju -90 i 90.');
       return null;
     }
 
     if (longitude.trim() === '' || !Number.isFinite(parsedLongitude) || parsedLongitude < -180 || parsedLongitude > 180) {
-      setError('Longitude mora biti između -180 i 180.');
+      setError('Geografska duzina mora biti izmedju -180 i 180.');
       return null;
     }
 
     if (image && image.size > maxImageSizeBytes) {
-      setError('Slika ne sme biti veća od 5 MB.');
+      setError('Slika ne sme biti veca od 5 MB.');
       return null;
     }
 
     if (image && !supportedImageTypes.has(image.type)) {
-      setError('Podržani formati slike su JPG, PNG i WEBP.');
+      setError('Podrzani formati slike su JPG, PNG i WEBP.');
       return null;
     }
 
@@ -69,6 +69,12 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
       longitude: parsedLongitude,
       terrainDescription: trimmedTerrainDescription.length > 0 ? trimmedTerrainDescription : null,
     };
+  };
+
+  const handleClose = () => {
+    if (!loading) {
+      onClose();
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -95,7 +101,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
       setError(
         getApiErrorMessage(
           error,
-          isEditMode ? 'Greška pri izmeni pčelinjaka.' : 'Greška pri dodavanju pčelinjaka.',
+          isEditMode ? 'Greska pri izmeni pcelinjaka.' : 'Greska pri dodavanju pcelinjaka.',
         ),
       );
     } finally {
@@ -103,10 +109,10 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
     }
   };
 
-  const title = isEditMode ? 'Izmeni pčelinjak' : 'Dodaj pčelinjak';
+  const title = isEditMode ? 'Izmeni pcelinjak' : 'Dodaj pcelinjak';
 
   return (
-    <div className="modal-overlay" onClick={onClose} role="presentation">
+    <div className="modal-overlay" onClick={handleClose} role="presentation">
       <section
         aria-labelledby="apiary-form-title"
         aria-modal="true"
@@ -119,14 +125,20 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
             <h2 id="apiary-form-title">{title}</h2>
             <p>Unesi osnovne podatke o lokaciji.</p>
           </div>
-          <button aria-label="Zatvori modal" className="modal-close-button" type="button" onClick={onClose}>
+          <button
+            aria-label="Zatvori modal"
+            className="modal-close-button"
+            disabled={loading}
+            onClick={handleClose}
+            type="button"
+          >
             <X size={18} />
           </button>
         </div>
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            Name
+            Naziv
             <input
               autoFocus
               onChange={(event) => setName(event.target.value)}
@@ -137,7 +149,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
           </label>
 
           <label>
-            Latitude
+            Geografska sirina
             <input
               max="90"
               min="-90"
@@ -150,7 +162,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
           </label>
 
           <label>
-            Longitude
+            Geografska duzina
             <input
               max="180"
               min="-180"
@@ -163,7 +175,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
           </label>
 
           <label>
-            TerrainDescription
+            Opis terena
             <textarea
               onChange={(event) => setTerrainDescription(event.target.value)}
               placeholder="Opis terena"
@@ -172,10 +184,14 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
             />
           </label>
 
-          <label>
-            {isEditMode ? 'Nova slika (opciono)' : 'Slika (opciono)'}
+          <div className="modal-form-field">
+            <span className="modal-form-label">
+              {isEditMode ? 'Nova slika (opciono)' : 'Slika (opciono)'}
+            </span>
             <input
               accept=".jpg,.jpeg,.png,.webp"
+              className="visually-hidden"
+              id="apiary-image"
               onChange={(event) => {
                 const selectedFile = event.target.files && event.target.files.length > 0
                   ? event.target.files[0]
@@ -184,7 +200,16 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
               }}
               type="file"
             />
-          </label>
+            <label className="file-upload-control" htmlFor="apiary-image">
+              <span className="file-upload-button">
+                <ImagePlus aria-hidden="true" size={18} />
+                Odaberi sliku
+              </span>
+              <span className="file-upload-name">
+                {image ? image.name : 'JPG, PNG ili WEBP do 5 MB'}
+              </span>
+            </label>
+          </div>
 
           {error ? (
             <p className="form-error" role="alert">
@@ -193,7 +218,7 @@ export default function ApiaryFormModal({ apiary, onClose, onSaved }: ApiaryForm
           ) : null}
 
           <button className="primary-button apiary-submit-button" disabled={loading} type="submit">
-            {loading ? 'Čuvanje...' : title}
+            {loading ? 'Cuvanje...' : title}
           </button>
         </form>
       </section>

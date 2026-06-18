@@ -27,7 +27,7 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
     }
 
     if (!startTime) {
-      setError('StartTime je obavezan.');
+      setError('Termin pocetka je obavezan.');
       return null;
     }
 
@@ -37,7 +37,7 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
       || !Number.isInteger(parsedDurationHours)
       || parsedDurationHours <= 0
     ) {
-      setError('DurationHours mora biti veći od 0.');
+      setError('Trajanje mora biti ceo broj veci od 0.');
       return null;
     }
 
@@ -80,7 +80,7 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
       await onSaved(result.weatherWarning);
       onClose();
     } catch (error) {
-      setError(getApiErrorMessage(error, 'Greška pri zakazivanju tretiranja.'));
+      setError(getApiErrorMessage(error, 'Greska pri zakazivanju tretiranja.'));
     } finally {
       setLoading(false);
     }
@@ -97,7 +97,7 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
       >
         <div className="modal-header">
           <div>
-            <h2 id="spraying-form-title">Zakaži tretiranje</h2>
+            <h2 id="spraying-form-title">Zakazi tretiranje</h2>
             <p>Unesite termin i trajanje tretiranja za izabranu parcelu.</p>
           </div>
           <button
@@ -113,7 +113,7 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            StartTime
+            Termin pocetka
             <input
               autoFocus
               onChange={(event) => setStartTime(event.target.value)}
@@ -123,7 +123,7 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
           </label>
 
           <label>
-            DurationHours
+            Trajanje (sati)
             <input
               min="1"
               onChange={(event) => setDurationHours(event.target.value)}
@@ -135,7 +135,7 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
           </label>
 
           <label>
-            PreparationType
+            Preparat
             <input
               onChange={(event) => setPreparationType(event.target.value)}
               placeholder="Naziv preparata"
@@ -151,7 +151,7 @@ export default function SprayingFormModal({ selectedParcelId, onClose, onSaved }
           ) : null}
 
           <button className="primary-button orange-button" disabled={loading} type="submit">
-            {loading ? 'Čuvanje...' : 'Zakaži tretiranje'}
+            {loading ? 'Cuvanje...' : 'Zakazi tretiranje'}
           </button>
         </form>
       </section>

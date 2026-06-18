@@ -1,4 +1,4 @@
-// Modal za unos i izmenu podataka (CompleteSprayingModal).
+// Modal za unos stvarnih podataka o zavrsenom tretiranju.
 
 import { type FormEvent, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
@@ -42,7 +42,7 @@ export default function CompleteSprayingModal({
       })
       .catch((requestError) => {
         if (active) {
-          setError(getApiErrorMessage(requestError, 'Greška pri učitavanju kultura sa parcele.'));
+          setError(getApiErrorMessage(requestError, 'Greska pri ucitavanju kultura sa parcele.'));
         }
       })
       .finally(() => {
@@ -58,7 +58,7 @@ export default function CompleteSprayingModal({
 
   const validateForm = (): CompleteSprayingRequest | null => {
     if (!actualStartTime) {
-      setError('Stvarni početak je obavezan.');
+      setError('Stvarni pocetak je obavezan.');
       return null;
     }
 
@@ -71,7 +71,7 @@ export default function CompleteSprayingModal({
     const end = new Date(actualEndTime);
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
-      setError('Stvarni kraj mora biti posle stvarnog početka.');
+      setError('Stvarni kraj mora biti posle stvarnog pocetka.');
       return null;
     }
 
@@ -83,7 +83,7 @@ export default function CompleteSprayingModal({
     const trimmedNote = note.trim();
 
     if (trimmedNote.length > 1000) {
-      setError('Napomena može imati najviše 1000 karaktera.');
+      setError('Napomena moze imati najvise 1000 karaktera.');
       return null;
     }
 
@@ -119,7 +119,7 @@ export default function CompleteSprayingModal({
       await onSaved();
       onClose();
     } catch (requestError) {
-      setError(getApiErrorMessage(requestError, 'Greška pri završavanju tretiranja.'));
+      setError(getApiErrorMessage(requestError, 'Greska pri zavrsavanju tretiranja.'));
     } finally {
       setSaving(false);
     }
@@ -136,7 +136,7 @@ export default function CompleteSprayingModal({
       >
         <div className="modal-header">
           <div>
-            <h2 id="complete-spraying-title">Završi tretiranje</h2>
+            <h2 id="complete-spraying-title">Zavrsi tretiranje</h2>
             <p>Unesite stvarne podatke koji ulaze u digitalni karton prskanja.</p>
           </div>
           <button
@@ -152,7 +152,7 @@ export default function CompleteSprayingModal({
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            Stvarni početak
+            Stvarni pocetak
             <input
               autoFocus
               disabled={saving}
@@ -180,7 +180,7 @@ export default function CompleteSprayingModal({
               value={cropId}
             >
               <option value="">
-                {loadingCrops ? 'Učitavanje kultura...' : 'Izaberite kulturu'}
+                {loadingCrops ? 'Ucitavanje kultura...' : 'Izaberite kulturu'}
               </option>
               {crops.map((crop) => (
                 <option key={crop.id} value={crop.id}>
@@ -219,7 +219,7 @@ export default function CompleteSprayingModal({
             disabled={saving || loadingCrops || crops.length === 0}
             type="submit"
           >
-            {saving ? 'Čuvanje...' : 'Sačuvaj digitalni karton'}
+            {saving ? 'Cuvanje...' : 'Sacuvaj digitalni karton'}
           </button>
         </form>
       </section>
