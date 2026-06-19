@@ -6,11 +6,12 @@ import './AuthLayout.css';
 type AuthLayoutProps = {
   children: ReactNode;
   videoSrc: string;
+  variant?: 'default' | 'compact';
 };
 
-export default function AuthLayout({ children, videoSrc }: AuthLayoutProps) {
+export default function AuthLayout({ children, videoSrc, variant = 'default' }: AuthLayoutProps) {
   return (
-    <main className="auth-layout">
+    <main className={`auth-layout${variant === 'compact' ? ' auth-layout-compact' : ''}`}>
       <div className="auth-layout-video" aria-hidden="true">
         <video autoPlay loop muted playsInline>
           <source src={videoSrc} type="video/mp4" />

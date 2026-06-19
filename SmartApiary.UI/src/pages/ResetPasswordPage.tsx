@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <AuthLayout videoSrc={registerVideo}>
+    <AuthLayout videoSrc={registerVideo} variant="compact">
       <>
         <header className="auth-layout-card-header">
           <div className="auth-layout-brand">

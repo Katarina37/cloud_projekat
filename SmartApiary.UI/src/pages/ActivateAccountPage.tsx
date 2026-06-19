@@ -43,7 +43,7 @@ export default function ActivateAccountPage() {
   };
 
   return (
-    <AuthLayout videoSrc={registerVideo}>
+    <AuthLayout videoSrc={registerVideo} variant="compact">
       <>
         <header className="auth-layout-card-header">
           <div className="auth-layout-brand">
@@ -54,14 +54,14 @@ export default function ActivateAccountPage() {
             </div>
           </div>
           <p className="auth-layout-subtitle">
-            Postavite lozinku i napravite prvi korak ka svom pametnom pčelinjaku.
+            Postavite lozinku i aktivirajte pristup aplikaciji.
           </p>
         </header>
 
-        <div className="auth-layout-note">
+        <div className="auth-layout-note auth-layout-note-compact">
           <Info size={18} aria-hidden="true" />
           <p>
-            Aktivacioni link automatski popunjava token. Ako imate samo token, unesite ga ispod.
+            Link iz emaila automatski popunjava token. Ako nije popunjen, unesite ga rucno.
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default function ActivateAccountPage() {
             autoComplete="one-time-code"
             icon={<Key size={19} />}
             id="activation-token"
-            label="Aktivacioni token"
+            label="Token"
             onChange={(event) => setToken(event.target.value)}
             placeholder="Token iz aktivacionog linka"
             required
@@ -80,13 +80,12 @@ export default function ActivateAccountPage() {
 
           <AuthField
             autoComplete="new-password"
-            helperText="Koristite najmanje 8 znakova."
             icon={<Lock size={19} />}
             id="activation-password"
             label="Nova lozinka"
             minLength={8}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Kreirajte sigurnu lozinku"
+            placeholder="Najmanje 8 znakova"
             required
             type="password"
             value={password}
@@ -96,10 +95,10 @@ export default function ActivateAccountPage() {
             autoComplete="new-password"
             icon={<Lock size={19} />}
             id="activation-password-confirmation"
-            label="Potvrdite lozinku"
+            label="Potvrda lozinke"
             minLength={8}
             onChange={(event) => setConfirmPassword(event.target.value)}
-            placeholder="Ponovite novu lozinku"
+            placeholder="Ponovite lozinku"
             required
             type="password"
             value={confirmPassword}
@@ -122,13 +121,13 @@ export default function ActivateAccountPage() {
             <span className="auth-layout-submit-icon" aria-hidden="true">
               {isSubmitting ? <LoaderCircle className="auth-layout-spinner" size={18} /> : <KeyRound size={18} />}
             </span>
-            <span>{isSubmitting ? 'Aktivacija...' : 'Aktiviraj'}</span>
+            <span>{isSubmitting ? 'Aktivacija...' : 'Aktiviraj nalog'}</span>
           </button>
         </form>
 
         <div className="auth-layout-links">
           <Link className="auth-layout-switch-link" to="/login">
-            Već imate nalog? <span>Prijavite se</span>
+            Vec imate nalog? <span>Prijavite se</span>
           </Link>
         </div>
       </>
