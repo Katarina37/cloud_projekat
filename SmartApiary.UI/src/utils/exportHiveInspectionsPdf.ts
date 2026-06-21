@@ -42,7 +42,7 @@ export async function exportHiveInspectionsPdf(
   cursorY += 27;
 
   const header = [
-    'Datum',
+    'Datum i vreme',
     'Ramovi med',
     'Ramovi leglo',
     'Boja podnjace',
@@ -162,7 +162,15 @@ export async function exportHiveInspectionsPdf(
 
 function formatDate(value: string) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? toPdfText(value) : date.toLocaleDateString('sr-Latn-BA');
+  return Number.isNaN(date.getTime())
+    ? toPdfText(value)
+    : date.toLocaleString('sr-Latn-BA', {
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
 }
 
 function formatWeight(value: number) {

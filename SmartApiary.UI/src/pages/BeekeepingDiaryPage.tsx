@@ -247,7 +247,7 @@ export default function BeekeepingDiaryPage() {
 
   const columns: DataTableColumn<HiveInspectionDto>[] = [
     {
-      header: 'Datum',
+      header: 'Datum i vreme',
       render: (inspection) => (
         <div className="table-title">
           <strong>{formatDate(inspection.date)}</strong>
@@ -470,7 +470,15 @@ export default function BeekeepingDiaryPage() {
 function formatDate(value: string) {
   const date = new Date(value);
 
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleString('sr-Latn-RS', {
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
 }
 
 function formatWeight(value: number) {

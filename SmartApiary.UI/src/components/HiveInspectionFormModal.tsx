@@ -24,7 +24,7 @@ export default function HiveInspectionFormModal({
 }: HiveInspectionFormModalProps) {
   const isEditMode = inspection !== undefined;
   const [date, setDate] = useState(
-    toInputDate(inspection ? inspection.date : undefined),
+    toInputDateTime(inspection ? inspection.date : undefined),
   );
   const [framesWithHoney, setFramesWithHoney] = useState(
     inspection ? String(inspection.framesWithHoney) : '0',
@@ -63,7 +63,7 @@ export default function HiveInspectionFormModal({
     }
 
     if (!date) {
-      setError('Datum je obavezan.');
+      setError('Datum i vreme su obavezni.');
       return;
     }
 
@@ -153,8 +153,13 @@ export default function HiveInspectionFormModal({
 
         <form className="modal-form" onSubmit={handleSubmit}>
           <label>
-            Datum
-            <input autoFocus onChange={(event) => setDate(event.target.value)} type="date" value={date} />
+            Datum i vreme pregleda
+            <input
+              autoFocus
+              onChange={(event) => setDate(event.target.value)}
+              type="datetime-local"
+              value={date}
+            />
           </label>
 
           <label>
@@ -235,16 +240,21 @@ export default function HiveInspectionFormModal({
   );
 }
 
-function toInputDate(value?: string) {
-  if (!value) {
-    return new Date().toISOString().slice(0, 10);
+function toInputDateTime(value?: string) {
+  const date = value ? new Date(value) : new Date();
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
   }
 
-  if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-    return value.slice(0, 10);
-  }
+  return [
+    date.getFullYear(),
+    padDatePart(date.getMonth() + 1),
+    padDatePart(date.getDate()),
+  ].join('-')
+    + `T${padDatePart(date.getHours())}:${padDatePart(date.getMinutes())}`;
+}
 
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime()) ? value.slice(0, 10) : date.toISOString().slice(0, 10);
+function padDatePart(value: number) {
+  return String(value).padStart(2, '0');
 }
