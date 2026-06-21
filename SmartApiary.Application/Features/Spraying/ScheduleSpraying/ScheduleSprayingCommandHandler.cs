@@ -13,13 +13,10 @@ namespace SmartApiary.Application.Features.Spraying.ScheduleSpraying;
 
 public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSprayingCommand, Result<Guid>>
 {
-    private const double NotificationRadiusKm = 5d;
-
     private readonly ICurrentUserService _currentUserService;
     private readonly IParcelRepository _parcelRepository;
     private readonly IWeatherService _weatherService;
     private readonly ISprayingQueueService _sprayingQueueService;
-    private readonly IApiaryRepository _apiaryRepository;
     private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -28,7 +25,6 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
         IParcelRepository parcelRepository,
         IWeatherService weatherService,
         ISprayingQueueService sprayingQueueService,
-        IApiaryRepository apiaryRepository,
         ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IUnitOfWork unitOfWork)
     {
@@ -36,7 +32,6 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
         _parcelRepository = parcelRepository;
         _weatherService = weatherService;
         _sprayingQueueService = sprayingQueueService;
-        _apiaryRepository = apiaryRepository;
         _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _unitOfWork = unitOfWork;
     }
@@ -69,16 +64,13 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
             request.DurationHours,
             request.PreparationType);
 
-        // Pcelinjaci do 5 km dobijaju obavestenje.
-        var nearbyApiaries = await _apiaryRepository.FindWithinRadiusAsync(
-            parcel.Location, NotificationRadiusKm, cancellationToken);
-        var notifiedBeekeepersCount = nearbyApiaries.Select(a => a.BeekeeperId).Distinct().Count();
-
-        announcement.SetNotifiedBeekeepersCount(notifiedBeekeepersCount);
-
         var title = "Pesticide spraying scheduled";
 
-        // Queue trigger ce odraditi slanje obavestenja.
+        // Najavu prvo cuvamo sa brojem 0. Queue trigger ce tek nakon
+        // kreiranja obavestenja upisati koliko je pcelara obavesteno.
+        await _sprayingAnnouncementRepository.AddAsync(announcement, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
         await _sprayingQueueService.EnqueueAsync(new SprayingNotificationMessage(
             announcement.Id,
             parcel.Id,
@@ -92,9 +84,6 @@ public sealed class ScheduleSprayingCommandHandler : IRequestHandler<ScheduleSpr
             title,
             "Warning: planned pesticide spraying may endanger nearby bee colonies.",
             NotificationType.PesticideWarning), cancellationToken);
-
-        await _sprayingAnnouncementRepository.AddAsync(announcement, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(announcement.Id, weatherWarning);
     }

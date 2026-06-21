@@ -17,6 +17,7 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
     private readonly ICropRepository _cropRepository;
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationSender _notificationSender;
+    private readonly ISprayingAnnouncementRepository _sprayingAnnouncementRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserRepository _userRepository;
 
@@ -25,6 +26,7 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
         ICropRepository cropRepository,
         INotificationRepository notificationRepository,
         INotificationSender notificationSender,
+        ISprayingAnnouncementRepository sprayingAnnouncementRepository,
         IUnitOfWork unitOfWork,
         IUserRepository userRepository)
     {
@@ -32,6 +34,7 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
         _cropRepository = cropRepository;
         _notificationRepository = notificationRepository;
         _notificationSender = notificationSender;
+        _sprayingAnnouncementRepository = sprayingAnnouncementRepository;
         _unitOfWork = unitOfWork;
         _userRepository = userRepository;
     }
@@ -81,6 +84,25 @@ public sealed class SprayingNotificationService : ISprayingNotificationService
                 message);
 
             await _notificationRepository.AddAsync(notification, cancellationToken);
+        }
+
+        // Broj se upisuje tek kada Queue trigger stvarno napravi obavestenja.
+        // Za pomeranje i otkazivanje saljemo nova obavestenja, ali ne menjamo
+        // rezultat prvobitne najave prskanja.
+        if (notificationMessage.NotificationType == NotificationType.PesticideWarning)
+        {
+            var announcement = await _sprayingAnnouncementRepository.GetByIdAsync(
+                notificationMessage.AnnouncementId,
+                cancellationToken);
+
+            if (announcement is null)
+            {
+                throw new InvalidOperationException(
+                    $"Spraying announcement '{notificationMessage.AnnouncementId}' was not found.");
+            }
+
+            announcement.RecordNotificationResult(apiariesByBeekeeper.Count);
+            _sprayingAnnouncementRepository.Update(announcement);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -109,14 +109,16 @@ public class SprayingAnnouncement
         Status = SprayingStatus.Completed;
     }
 
-    public void SetNotifiedBeekeepersCount(int count)
+    public void RecordNotificationResult(int notifiedBeekeepersCount)
     {
-        if (count < 0)
+        if (notifiedBeekeepersCount < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(count), "Count cannot be negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(notifiedBeekeepersCount),
+                "Notified beekeepers count cannot be negative.");
         }
 
-        NotifiedBeekeepersCount = count;
+        NotifiedBeekeepersCount = notifiedBeekeepersCount;
     }
 
     private static int RequirePositiveDuration(int durationHours)
