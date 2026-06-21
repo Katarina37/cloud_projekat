@@ -89,6 +89,7 @@ builder.Services.AddValidatorsFromAssembly(applicationAssembly);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RoleAuthorizationBehavior<,>));
 
 // Ovde ubacujemo SQL, Azure Storage i ostale servise.
 builder.Services.AddInfrastructure(builder.Configuration);

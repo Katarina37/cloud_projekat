@@ -4,6 +4,8 @@ import type { ResultResponse } from './apiResult';
 import type { UserRole } from './authApi';
 import apiClient from './httpClient';
 
+export type ManagedUserRole = Exclude<UserRole, 'Admin'>;
+
 export type AdminUserDto = {
   id: string;
   firstName: string;
@@ -20,7 +22,7 @@ export type CreateAdminUserRequest = {
   lastName: string;
   email: string;
   phoneNumber: string;
-  role: UserRole;
+  role: ManagedUserRole;
 };
 
 export async function getAdminUsers(): Promise<AdminUserDto[]> {

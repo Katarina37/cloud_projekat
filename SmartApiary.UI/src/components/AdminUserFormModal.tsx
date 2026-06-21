@@ -5,7 +5,7 @@ import { AtSign, Phone, Sprout, User, UserRoundCheck, X } from 'lucide-react';
 import {
   createAdminUser,
   getApiErrorMessage,
-  type UserRole,
+  type ManagedUserRole,
 } from '../api/apiClient';
 
 type AdminUserFormModalProps = {
@@ -14,7 +14,7 @@ type AdminUserFormModalProps = {
 };
 
 const roleOptions: {
-  value: UserRole;
+  value: ManagedUserRole;
   label: string;
   description: string;
   Icon: typeof UserRoundCheck;
@@ -38,7 +38,7 @@ export default function AdminUserFormModal({ onClose, onSaved }: AdminUserFormMo
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [role, setRole] = useState<UserRole>('Beekeeper');
+  const [role, setRole] = useState<ManagedUserRole>('Beekeeper');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

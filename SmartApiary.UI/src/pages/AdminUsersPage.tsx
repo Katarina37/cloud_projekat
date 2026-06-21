@@ -1,7 +1,7 @@
 // Stranica za administraciju korisnika.
 
 import { useEffect, useState } from 'react';
-import { Plus, Sprout, Trash2, UserRoundCheck, UserX, Users } from 'lucide-react';
+import { Plus, ShieldCheck, Sprout, Trash2, UserRoundCheck, UserX, Users } from 'lucide-react';
 import {
   deactivateAdminUser,
   deleteAdminUser,
@@ -171,19 +171,7 @@ export default function AdminUsersPage() {
                       <td>{user.email}</td>
                       <td>{user.phoneNumber}</td>
                       <td>
-                        <StatusBadge tone={user.role === 'Beekeeper' ? 'info' : 'warning'}>
-                          {user.role === 'Beekeeper' ? (
-                            <>
-                              <UserRoundCheck size={13} />
-                              Pcelar
-                            </>
-                          ) : (
-                            <>
-                              <Sprout size={13} />
-                              Farmer
-                            </>
-                          )}
-                        </StatusBadge>
+                        <UserRoleBadge role={user.role} />
                       </td>
                       <td>
                         <StatusBadge tone={user.isActive ? 'good' : 'muted'}>
@@ -240,4 +228,31 @@ function formatDate(value: string) {
   const date = new Date(value);
 
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
+function UserRoleBadge({ role }: { role: AdminUserDto['role'] }) {
+  if (role === 'Admin') {
+    return (
+      <StatusBadge tone="good">
+        <ShieldCheck size={13} />
+        Administrator
+      </StatusBadge>
+    );
+  }
+
+  if (role === 'Beekeeper') {
+    return (
+      <StatusBadge tone="info">
+        <UserRoundCheck size={13} />
+        Pcelar
+      </StatusBadge>
+    );
+  }
+
+  return (
+    <StatusBadge tone="warning">
+      <Sprout size={13} />
+      Farmer
+    </StatusBadge>
+  );
 }
