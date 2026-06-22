@@ -2,6 +2,7 @@
 
 import {
   Bell,
+  BookOpen,
   Boxes,
   CalendarClock,
   Cpu,
@@ -26,6 +27,7 @@ const beekeeperNavigation = [
   { path: '/pcelinjaci', label: 'Pčelinjaci', icon: MapPinned },
   { path: '/kosnice', label: 'Košnice', icon: Boxes },
   { path: '/uredjaji', label: 'Uređaji', icon: Cpu },
+  { path: '/dnevnik', label: 'Dnevnik', icon: BookOpen },
   { path: '/upozorenja', label: 'Upozorenja', icon: Bell },
 ];
 

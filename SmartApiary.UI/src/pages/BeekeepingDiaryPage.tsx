@@ -11,7 +11,6 @@ import {
   type ApiaryDto,
   type HiveDto,
   type HiveInspectionDto,
-  type PagedResult,
 } from '../api/apiClient';
 import DataTable, { type DataTableColumn } from '../components/DataTable';
 import HiveInspectionFormModal from '../components/HiveInspectionFormModal';
@@ -74,7 +73,7 @@ export default function BeekeepingDiaryPage() {
       setPageNumber(1);
       setTotalPages(1);
       setTotalCount(0);
-      setError('Greška pri učitavanju');
+      setError('Greška pri učitavanju.');
       return null;
     } finally {
       setLoading(false);
@@ -92,7 +91,7 @@ export default function BeekeepingDiaryPage() {
       setHives([]);
       setSelectedHiveId('');
       setInspections([]);
-      setError('Greška pri učitavanju');
+      setError('Greška pri učitavanju.');
       return false;
     } finally {
       setLoading(false);
@@ -123,14 +122,13 @@ export default function BeekeepingDiaryPage() {
       setHives([]);
       setSelectedHiveId('');
       setInspections([]);
-      setError('Greška pri učitavanju');
+      setError('Greška pri učitavanju.');
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    // Ucitavanje pcelinjaka, kosnica i prvih zapisa.
     fetchInitialData();
   }, []);
 
@@ -198,7 +196,7 @@ export default function BeekeepingDiaryPage() {
       const selectedApiary = apiaries.find((apiary) => apiary.id === selectedApiaryId);
       const selectedHive = hives.find((hive) => hive.id === selectedHiveId);
       const apiaryName = selectedApiary ? selectedApiary.name : '-';
-      const hiveLabel = selectedHive ? selectedHive.label : 'koznica';
+      const hiveLabel = selectedHive ? selectedHive.label : 'košnica';
 
       await exportHiveInspectionsPdf(
         apiaryName,
@@ -268,6 +266,7 @@ export default function BeekeepingDiaryPage() {
     },
     {
       header: 'Napomena',
+      className: 'table-text-cell',
       render: (inspection) => {
         const notes = inspection.notes ? inspection.notes.trim() : '';
         return notes ? notes : <span className="muted-text">-</span>;
@@ -402,12 +401,12 @@ export default function BeekeepingDiaryPage() {
       ) : null}
 
       {!loading && !error && selectedHiveId && inspections.length === 0 ? (
-        <section className="section-card">Nema zapisa za ovu košnicu</section>
+        <section className="section-card">Nema zapisa za ovu košnicu.</section>
       ) : null}
 
       {!loading && !error && selectedHiveId && inspections.length > 0 ? (
         <section className="section-card table-card">
-          <div className="filter-row">
+          <div className="diary-table-toolbar">
             <label>
               Broj zapisa po strani
               <select disabled={loading} onChange={handlePageSizeChange} value={pageSize}>
@@ -419,7 +418,7 @@ export default function BeekeepingDiaryPage() {
               </select>
             </label>
 
-            <div className="muted-text">
+            <div className="diary-table-summary">
               Strana {pageNumber} od {totalPages} · Ukupno zapisa: {totalCount}
             </div>
 
