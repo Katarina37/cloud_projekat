@@ -9,6 +9,7 @@ import './styles/layout.css';
 import './styles/components.css';
 import './styles/dashboard.css';
 import './styles/resources.css';
+import './styles/telemetry-and-diary.css';
 import './styles/maps-and-cards.css';
 import './styles/alerts.css';
 import 'leaflet/dist/leaflet.css';

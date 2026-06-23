@@ -19,41 +19,41 @@ export default function TelemetryStatusCards({ latestStatus }: TelemetryStatusCa
   }
 
   return (
-    <section className="stats-grid" aria-label="Poslednje merenje">
+    <section className="stats-grid telemetry-status-grid" aria-label="Poslednje merenje">
       <StatCard
         title="Trenutna težina"
         value={`${formatNumber(latestStatus.weightKg, 1)} kg`}
         detail="poslednje merenje"
         icon={<Scale size={20} />}
-        tone="green"
+        tone="weight"
       />
       <StatCard
         title="Temperatura"
         value={`${formatNumber(latestStatus.temperatureCelsius, 1)}°C`}
         detail="poslednje merenje"
         icon={<Thermometer size={20} />}
-        tone="green"
+        tone="temperature"
       />
       <StatCard
         title="Vlažnost"
         value={`${formatNumber(latestStatus.humidityPercent, 0)}%`}
         detail="poslednje merenje"
         icon={<Droplets size={20} />}
-        tone="green"
+        tone="humidity"
       />
       <StatCard
         title="Baterija"
         value={`${formatNumber(latestStatus.batteryPercent, 0)}%`}
         detail="poslednje merenje"
         icon={<Battery size={20} />}
-        tone="green"
+        tone="battery"
       />
       <StatCard
         title="Vreme poslednjeg merenja"
         value={formatDateTime(latestStatus.timestamp)}
         detail="vreme zapisa"
         icon={<Clock size={20} />}
-        tone="green"
+        tone="time"
       />
     </section>
   );

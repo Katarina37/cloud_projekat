@@ -36,9 +36,9 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
   }));
 
   return (
-    <>
+    <div className="telemetry-chart-stack">
       <section className="card-grid two">
-        <ChartCard title="Težina kroz vreme" subtitle="Poslednjih 7 dana">
+        <ChartCard className="telemetry-chart-card" title="Težina kroz vreme" subtitle="Poslednjih 7 dana">
           <ResponsiveContainer width="100%" height={310}>
             <LineChart data={telemetryChartData} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
               <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
@@ -57,7 +57,7 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Temperatura i vlažnost" subtitle="Uslovi u košnici">
+        <ChartCard className="telemetry-chart-card" title="Temperatura i vlažnost" subtitle="Uslovi u košnici">
           <ResponsiveContainer width="100%" height={310}>
             <LineChart data={telemetryChartData} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
               <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
@@ -78,19 +78,20 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
                 name="Vlažnost"
                 stroke="#22C55E"
                 strokeWidth={3}
+                strokeDasharray="7 5"
               />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
       </section>
 
-      <ChartCard title="Dnevna promena težine" subtitle="Promena po danima">
+      <ChartCard className="telemetry-chart-card telemetry-delta-card" title="Dnevna promena težine" subtitle="Promena po danima">
         {deltaChartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={deltaChartData} margin={{ top: 8, right: 16, left: -12, bottom: 0 }}>
               <CartesianGrid stroke="#E5E7EB" strokeDasharray="4 4" vertical={false} />
               <XAxis dataKey="date" tickLine={false} axisLine={false} />
-              <YAxis tickLine={false} axisLine={false} unit="%" />
+              <YAxis tickLine={false} axisLine={false} unit=" kg" />
               <Tooltip content={<WeightDeltaTooltip />} cursor={{ fill: 'rgba(217, 150, 31, 0.08)' }} />
               <Bar dataKey="deltaKg" name="Promena" radius={[8, 8, 0, 0]}>
                 {/* Zelena boja oznacava rast, a crvena pad tezine. */}
@@ -110,7 +111,7 @@ export default function TelemetryCharts({ telemetryReadings, dailyDeltas }: Tele
           </div>
         )}
       </ChartCard>
-    </>
+    </div>
   );
 }
 
@@ -136,7 +137,7 @@ function WeightDeltaTooltip({ active, payload }: WeightDeltaTooltipProps) {
       <span className="chart-delta-tooltip-date">{point.fullDate}</span>
       <div className="chart-delta-tooltip-value">
         <span>Promena</span>
-        <strong>{formatPercent(point.deltaKg)}</strong>
+        <strong>{formatWeightDelta(point.deltaKg)}</strong>
       </div>
     </div>
   );
@@ -184,9 +185,9 @@ function formatFullDate(value: string) {
   });
 }
 
-function formatPercent(value: number) {
+function formatWeightDelta(value: number) {
   return `${value.toLocaleString('sr-Latn-RS', {
     maximumFractionDigits: 2,
     minimumFractionDigits: 0,
-  })}%`;
+  })} kg`;
 }

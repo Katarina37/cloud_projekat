@@ -1,7 +1,7 @@
 // Zajednicka UI komponenta: TelemetryFilters.
 
+import { SlidersHorizontal } from 'lucide-react';
 import type { ApiaryDto, HiveDto } from '../api/apiClient';
-import SectionCard from './SectionCard';
 
 type TelemetryFiltersProps = {
   apiaries: ApiaryDto[];
@@ -23,10 +23,19 @@ export default function TelemetryFilters({
   onHiveChange,
 }: TelemetryFiltersProps) {
   return (
-    <SectionCard title="Filteri" subtitle="Izaberite pčelinjak i košnicu">
-      <div className="device-filter-grid">
+    <section className="section-card resource-filter-card telemetry-filter-card">
+      <div className="resource-filter-heading">
+        <div className="resource-filter-icon">
+          <SlidersHorizontal size={19} />
+        </div>
+        <div>
+          <h2>Izaberite izvor telemetrije</h2>
+          <p>Grafikoni i posljednji status pripadaju trenutno izabranoj košnici.</p>
+        </div>
+      </div>
+      <div className="device-filter-grid telemetry-filter-grid">
         <label>
-          Pčelinjak
+          <span><b>01</b> Pčelinjak</span>
           <select
             disabled={disabled}
             onChange={(event) => onApiaryChange(event.target.value)}
@@ -42,7 +51,7 @@ export default function TelemetryFilters({
 
         {hives.length > 0 ? (
           <label>
-            Košnica
+            <span><b>02</b> Košnica</span>
             <select disabled={disabled} onChange={(event) => onHiveChange(event.target.value)} value={selectedHiveId}>
               {hives.map((hive) => (
                 <option key={hive.id} value={hive.id}>
@@ -53,6 +62,6 @@ export default function TelemetryFilters({
           </label>
         ) : null}
       </div>
-    </SectionCard>
+    </section>
   );
 }

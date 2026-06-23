@@ -3,6 +3,14 @@
 
 import { useEffect, useState } from 'react';
 import {
+  Activity,
+  AlertCircle,
+  BarChart3,
+  MapPinned,
+  Radio,
+  Warehouse,
+} from 'lucide-react';
+import {
   getApiaries,
   getApiErrorMessage,
   getDailyWeightDeltas,
@@ -16,6 +24,7 @@ import {
   type TelemetryReadingDto,
   type TelemetryUpdateDto,
 } from '../api/apiClient';
+import telemetryBanner from '../assets/banners/telemetry-banner.png';
 import PageHeader from '../components/PageHeader';
 import TelemetryCharts from '../components/TelemetryCharts';
 import TelemetryFilters from '../components/TelemetryFilters';
@@ -39,6 +48,8 @@ export default function TelemetryPage() {
   const [dailyDeltaRefreshVersion, setDailyDeltaRefreshVersion] = useState(0);
   const hasTelemetryForSelectedPeriod = telemetryReadings.length > 0;
   const hasAnyTelemetry = hasTelemetryForSelectedPeriod || latestStatus !== null || dailyDeltas.length > 0;
+  const selectedApiary = apiaries.find((apiary) => apiary.id === selectedApiaryId);
+  const selectedHive = hives.find((hive) => hive.id === selectedHiveId);
 
   const clearHiveTelemetry = () => {
     setTelemetryReadings([]);
@@ -228,11 +239,53 @@ export default function TelemetryPage() {
   };
 
   return (
-    <div className="page-stack">
+    <div className="page-stack resource-page telemetry-page banner-page">
       <PageHeader
+        bannerImage={telemetryBanner}
         title="Telemetrija"
-        subtitle="Grafici težine, temperature, vlažnosti i poslednje merenje"
+        subtitle="Pratite težinu, temperaturu, vlažnost i bateriju košnice kroz istorijska i nova merenja."
+        action={
+          <div className="page-banner-live-status" aria-label="Telemetrija se osvježava uživo">
+            <Radio aria-hidden="true" size={18} />
+            <span>Podaci uživo</span>
+          </div>
+        }
       />
+
+      {!loading && apiaries.length > 0 ? (
+        <section className="resource-summary-grid" aria-label="Pregled telemetrije">
+          <article className="resource-summary-card telemetry-tone-readings">
+            <div className="resource-summary-icon">
+              <Activity size={22} />
+            </div>
+            <div>
+              <span>Merenja u periodu</span>
+              <strong>{telemetryReadings.length}</strong>
+              <small>poslednjih 7 dana</small>
+            </div>
+          </article>
+          <article className="resource-summary-card resource-tone-apiary">
+            <div className="resource-summary-icon">
+              <MapPinned size={22} />
+            </div>
+            <div>
+              <span>Aktivni pčelinjak</span>
+              <strong className="resource-summary-name">{selectedApiary?.name ?? 'Nije izabran'}</strong>
+              <small>{apiaries.length} dostupno</small>
+            </div>
+          </article>
+          <article className="resource-summary-card telemetry-tone-hive">
+            <div className="resource-summary-icon">
+              <Warehouse size={22} />
+            </div>
+            <div>
+              <span>Košnica na vezi</span>
+              <strong className="resource-summary-name">{selectedHive?.label ?? 'Nije izabrana'}</strong>
+              <small>{latestStatus ? 'poslednje merenje dostupno' : 'čeka prvo merenje'}</small>
+            </div>
+          </article>
+        </section>
+      ) : null}
 
       {apiaries.length > 0 ? (
         <TelemetryFilters
@@ -246,40 +299,101 @@ export default function TelemetryPage() {
         />
       ) : null}
 
-      {loading ? <section className="section-card">Učitavanje telemetrije...</section> : null}
+      {loading ? (
+        <section className="section-card resource-loading" aria-busy="true" aria-live="polite">
+          <span className="resource-spinner" />
+          <div>
+            <strong>Učitavanje telemetrije</strong>
+            <p>Pripremamo poslednja merenja i grafikone košnice.</p>
+          </div>
+        </section>
+      ) : null}
 
       {error ? (
-        <section className="section-card message-card error" role="alert">
-          <strong>{telemetryLoadErrorMessage}</strong>
-          {error !== telemetryLoadErrorMessage ? <span>{error}</span> : null}
+        <section className="section-card message-card error resource-feedback" role="alert">
+          <AlertCircle size={20} />
+          <div>
+            <strong>{telemetryLoadErrorMessage}</strong>
+            {error !== telemetryLoadErrorMessage ? <p>{error}</p> : null}
+          </div>
         </section>
       ) : null}
 
       {!loading && !error && apiaries.length === 0 ? (
-        <section className="section-card">Prvo dodajte pčelinjak.</section>
+        <section className="section-card resource-empty-state">
+          <div className="resource-empty-icon">
+            <MapPinned size={28} />
+          </div>
+          <h2>Najpre dodajte pčelinjak</h2>
+          <p>Telemetrija se prikazuje za košnice koje pripadaju vašim pčelinjacima.</p>
+        </section>
       ) : null}
 
       {!loading && !error && selectedApiaryId && hives.length === 0 ? (
-        <section className="section-card">Prvo dodajte košnicu za izabrani pčelinjak.</section>
+        <section className="section-card resource-empty-state">
+          <div className="resource-empty-icon">
+            <Warehouse size={28} />
+          </div>
+          <h2>Još nema košnica</h2>
+          <p>Dodajte košnicu u pčelinjak „{selectedApiary?.name}“ da biste pratili njena merenja.</p>
+        </section>
       ) : null}
 
       {!loading && !error && selectedHiveId && !hasAnyTelemetry ? (
         <>
+          <section className="telemetry-section-heading">
+            <div>
+              <span className="resource-eyebrow">Status košnice</span>
+              <h2>Poslednje merenje</h2>
+            </div>
+          </section>
           <TelemetryStatusCards latestStatus={latestStatus} />
-          <section className="section-card">Za ovu košnicu još nema telemetrijskih podataka.</section>
+          <section className="section-card resource-empty-state">
+            <div className="resource-empty-icon">
+              <Activity size={28} />
+            </div>
+            <h2>Još nema telemetrijskih podataka</h2>
+            <p>Pokrenite simulator ili povezani uređaj da biste dobili prvo merenje.</p>
+          </section>
         </>
       ) : null}
 
       {!loading && !error && selectedHiveId && hasAnyTelemetry && !hasTelemetryForSelectedPeriod ? (
         <>
+          <section className="telemetry-section-heading">
+            <div>
+              <span className="resource-eyebrow">Status košnice</span>
+              <h2>Poslednje merenje</h2>
+            </div>
+          </section>
           <TelemetryStatusCards latestStatus={latestStatus} />
-          <section className="section-card">Za izabrani period nema telemetrijskih podataka za grafike.</section>
+          <section className="section-card resource-empty-state">
+            <div className="resource-empty-icon">
+              <BarChart3 size={28} />
+            </div>
+            <h2>Nema podataka za izabrani period</h2>
+            <p>Poslednji status postoji, ali nema merenja u poslednjih sedam dana.</p>
+          </section>
         </>
       ) : null}
 
       {!loading && !error && selectedHiveId && hasTelemetryForSelectedPeriod ? (
         <>
+          <section className="telemetry-section-heading">
+            <div>
+              <span className="resource-eyebrow">Status košnice</span>
+              <h2>Poslednje merenje</h2>
+            </div>
+            <p>Vrednosti se osvežavaju kada novo merenje stigne preko SignalR veze.</p>
+          </section>
           <TelemetryStatusCards latestStatus={latestStatus} />
+          <section className="telemetry-section-heading telemetry-chart-heading">
+            <div>
+              <span className="resource-eyebrow">Istorija merenja</span>
+              <h2>Kretanje podataka kroz vrijeme</h2>
+            </div>
+            <p>Grafikoni obuhvataju poslednjih sedam dana za izabranu košnicu.</p>
+          </section>
           <TelemetryCharts telemetryReadings={telemetryReadings} dailyDeltas={dailyDeltas} />
         </>
       ) : null}

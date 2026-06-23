@@ -11,6 +11,8 @@ export default function DashboardLayout() {
     '/pcelinjaci',
     '/kosnice',
     '/uredjaji',
+    '/telemetrija',
+    '/dnevnik',
     '/upozorenja',
     '/kulture',
     '/tretiranja',

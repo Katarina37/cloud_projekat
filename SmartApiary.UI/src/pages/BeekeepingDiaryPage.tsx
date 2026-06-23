@@ -1,7 +1,17 @@
 // Stranica sa pcelarskim dnevnikom.
 
 import { type ChangeEvent, useEffect, useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  AlertCircle,
+  BookOpenCheck,
+  CheckCircle2,
+  FileDown,
+  MapPinned,
+  Pencil,
+  Plus,
+  Trash2,
+  Warehouse,
+} from 'lucide-react';
 import {
   deleteHiveInspection,
   getApiaries,
@@ -12,6 +22,7 @@ import {
   type HiveDto,
   type HiveInspectionDto,
 } from '../api/apiClient';
+import diaryBanner from '../assets/banners/diary-banner.png';
 import DataTable, { type DataTableColumn } from '../components/DataTable';
 import HiveInspectionFormModal from '../components/HiveInspectionFormModal';
 import PageHeader from '../components/PageHeader';
@@ -33,6 +44,8 @@ export default function BeekeepingDiaryPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingInspection, setEditingInspection] = useState<HiveInspectionDto | null>(null);
   const [deletingInspectionId, setDeletingInspectionId] = useState<string | null>(null);
+  const selectedApiary = apiaries.find((apiary) => apiary.id === selectedApiaryId);
+  const selectedHive = hives.find((hive) => hive.id === selectedHiveId);
 
   async function loadInspections(hiveId: string, nextPageNumber: number, nextPageSize: number) {
     const response = await getHiveInspectionsByHive(hiveId, nextPageNumber, nextPageSize);
@@ -324,22 +337,26 @@ export default function BeekeepingDiaryPage() {
   };
 
   return (
-    <div className="page-stack">
+    <div className="page-stack resource-page diary-page banner-page">
       <PageHeader
+        bannerImage={diaryBanner}
         title="Pčelarski dnevnik"
-        subtitle="Zapisi pregleda košnica i zapažanja sa terena"
+        subtitle="Vodite urednu istoriju pregleda košnica, stanja matice, prinosa meda i zapažanja sa terena."
         action={
-          <div className="row-actions">
+          <div className="row-actions page-banner-actions">
             <button
-              className="secondary-action-button"
+              aria-label="Preuzmi PDF karton košnice"
+              className="secondary-action-button page-banner-action page-banner-action-secondary"
               disabled={!selectedHiveId || totalCount === 0}
               onClick={handleExportPdf}
               type="button"
             >
-              PDF karton
+              <FileDown aria-hidden="true" size={19} />
+              <span className="page-banner-action-label">PDF karton</span>
             </button>
             <button
-              className="primary-button apiary-add-button"
+              aria-label="Dodaj zapis u pčelarski dnevnik"
+              className="primary-button apiary-add-button page-banner-action"
               disabled={!selectedHiveId}
               onClick={() => {
                 setSuccessMessage(null);
@@ -347,16 +364,60 @@ export default function BeekeepingDiaryPage() {
               }}
               type="button"
             >
-              <Plus size={18} />
-              Dodaj zapis
+              <Plus aria-hidden="true" size={20} />
+              <span className="page-banner-action-label">Dodaj zapis</span>
             </button>
           </div>
         }
       />
 
+      {!loading && apiaries.length > 0 ? (
+        <section className="resource-summary-grid" aria-label="Pregled pčelarskog dnevnika">
+          <article className="resource-summary-card diary-tone-records">
+            <div className="resource-summary-icon">
+              <BookOpenCheck size={22} />
+            </div>
+            <div>
+              <span>Ukupno zapisa</span>
+              <strong>{totalCount}</strong>
+              <small>za izabranu košnicu</small>
+            </div>
+          </article>
+          <article className="resource-summary-card resource-tone-apiary">
+            <div className="resource-summary-icon">
+              <MapPinned size={22} />
+            </div>
+            <div>
+              <span>Aktivni pčelinjak</span>
+              <strong className="resource-summary-name">{selectedApiary?.name ?? 'Nije izabran'}</strong>
+              <small>{apiaries.length} dostupno</small>
+            </div>
+          </article>
+          <article className="resource-summary-card diary-tone-hive">
+            <div className="resource-summary-icon">
+              <Warehouse size={22} />
+            </div>
+            <div>
+              <span>Košnica za pregled</span>
+              <strong className="resource-summary-name">{selectedHive?.label ?? 'Nije izabrana'}</strong>
+              <small>{hives.length} u aktivnom pčelinjaku</small>
+            </div>
+          </article>
+        </section>
+      ) : null}
+
       {apiaries.length > 0 ? (
-        <section className="section-card">
-          <div className="device-filter-grid">
+        <section className="section-card resource-filter-card diary-filter-card">
+          <div className="resource-filter-heading">
+            <div className="resource-filter-icon">
+              <BookOpenCheck size={19} />
+            </div>
+            <div>
+              <h2>Izaberite karton košnice</h2>
+              <p>Zapisi i PDF karton se prikazuju samo za trenutno izabranu košnicu.</p>
+            </div>
+          </div>
+          <div className="device-filter-grid diary-filter-grid">
             <label>
               Pčelinjak
               <select disabled={loading} onChange={handleApiaryChange} value={selectedApiaryId}>
@@ -382,30 +443,73 @@ export default function BeekeepingDiaryPage() {
         </section>
       ) : null}
 
-      {loading ? <section className="section-card">Učitavanje dnevnika...</section> : null}
+      {loading ? (
+        <section className="section-card resource-loading" aria-busy="true" aria-live="polite">
+          <span className="resource-spinner" />
+          <div>
+            <strong>Učitavanje pčelarskog dnevnika</strong>
+            <p>Pripremamo zapise za izabranu košnicu.</p>
+          </div>
+        </section>
+      ) : null}
 
-      {successMessage ? <section className="section-card message-card success">{successMessage}</section> : null}
+      {successMessage ? (
+        <section className="section-card message-card success resource-feedback" role="status">
+          <CheckCircle2 size={20} />
+          <strong>{successMessage}</strong>
+        </section>
+      ) : null}
 
       {error ? (
-        <section className="section-card message-card error" role="alert">
-          {error}
+        <section className="section-card message-card error resource-feedback" role="alert">
+          <AlertCircle size={20} />
+          <strong>{error}</strong>
         </section>
       ) : null}
 
       {!loading && !error && apiaries.length === 0 ? (
-        <section className="section-card">Prvo dodajte pčelinjak da biste vodili dnevnik.</section>
+        <section className="section-card resource-empty-state">
+          <div className="resource-empty-icon">
+            <MapPinned size={28} />
+          </div>
+          <h2>Najpre dodajte pčelinjak</h2>
+          <p>Pčelarski dnevnik se vodi po košnici, zato je prvo potreban pčelinjak.</p>
+        </section>
       ) : null}
 
       {!loading && !error && selectedApiaryId && hives.length === 0 ? (
-        <section className="section-card">Prvo dodajte košnicu za izabrani pčelinjak.</section>
+        <section className="section-card resource-empty-state">
+          <div className="resource-empty-icon">
+            <Warehouse size={28} />
+          </div>
+          <h2>Još nema košnica</h2>
+          <p>Dodajte košnicu u pčelinjak „{selectedApiary?.name}“ da biste vodili njen karton.</p>
+        </section>
       ) : null}
 
       {!loading && !error && selectedHiveId && inspections.length === 0 ? (
-        <section className="section-card">Nema zapisa za ovu košnicu.</section>
+        <section className="section-card resource-empty-state">
+          <div className="resource-empty-icon">
+            <BookOpenCheck size={28} />
+          </div>
+          <h2>Još nema zapisa</h2>
+          <p>Zabeležite prvi pregled košnice „{selectedHive?.label}“ i započnite njenu istoriju.</p>
+          <button className="primary-button" onClick={() => setIsCreateModalOpen(true)} type="button">
+            <Plus size={18} />
+            Dodaj prvi zapis
+          </button>
+        </section>
       ) : null}
 
       {!loading && !error && selectedHiveId && inspections.length > 0 ? (
-        <section className="section-card table-card">
+        <section className="section-card table-card resource-table-card diary-table-card">
+          <div className="resource-table-header">
+            <div>
+              <span className="resource-eyebrow">Karton košnice</span>
+              <h2>Istorija pregleda</h2>
+              <p>{selectedApiary?.name} · {selectedHive?.label} · {formatRecordCount(totalCount)}</p>
+            </div>
+          </div>
           <div className="diary-table-toolbar">
             <label>
               Broj zapisa po strani
@@ -488,4 +592,23 @@ function formatTextValue(value: string | null | undefined) {
   const trimmed = value ? value.trim() : '';
 
   return trimmed ? trimmed : <span className="muted-text">-</span>;
+}
+
+function formatRecordCount(value: number) {
+  const lastTwoDigits = value % 100;
+  const lastDigit = value % 10;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return `${value} zapisa`;
+  }
+
+  if (lastDigit === 1) {
+    return `${value} zapis`;
+  }
+
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return `${value} zapisa`;
+  }
+
+  return `${value} zapisa`;
 }
