@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   MapPinned,
+  Radio,
   Sprout,
   Users,
   Wheat,
@@ -27,6 +28,7 @@ const beekeeperNavigation = [
   { path: '/pcelinjaci', label: 'Pčelinjaci', icon: MapPinned },
   { path: '/kosnice', label: 'Košnice', icon: Boxes },
   { path: '/uredjaji', label: 'Uređaji', icon: Cpu },
+  { path: '/telemetrija', label: 'Telemetrija', icon: Radio },
   { path: '/dnevnik', label: 'Dnevnik', icon: BookOpen },
   { path: '/upozorenja', label: 'Upozorenja', icon: Bell },
 ];
