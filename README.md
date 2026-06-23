@@ -151,6 +151,22 @@ Ako Visual Studio pita da li verujemo lokalnom HTTPS sertifikatu, izabrati `Yes`
 
 > `SmartApiary.Simulator` se ne stavlja među startup projekte. On se pokreće posebno samo kada želimo da šaljemo lažne podatke sa uređaja.
 
+Simulator se za obican rad pokrece iz posebnog terminala:
+
+```powershell
+dotnet run --project .\SmartApiary.Simulator
+```
+
+Za brzu demonstraciju grafika pokrenuti isti simulator:
+
+```powershell
+dotnet run --project .\SmartApiary.Simulator
+```
+
+U konzolnom meniju izabrati opciju `4. demo mode za grafike`. Demo rezim za nekoliko
+sekundi salje istorijska merenja za prethodnih sest dana i zatim se zaustavlja. Ostali
+rezimi i dalje salju nova merenja sve do `Ctrl+C`.
+
 ### 2.6. Pokretanje frontenda
 
 > Frontend se pokreće u novom terminalu. Backend, Functions i Azurite treba ostaviti uključene.

@@ -43,6 +43,7 @@ public static class SimulatorModeParser
         {
             SimulatorMode.LowBattery => "low battery mode",
             SimulatorMode.WeightDrop => "weight drop mode",
+            SimulatorMode.Demo => "demo mode",
             _ => "normal mode"
         };
     }

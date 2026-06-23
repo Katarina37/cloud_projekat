@@ -16,14 +16,17 @@ import {
   type DeviceDto,
   type HiveDto,
   type LatestHiveStatusDto,
+  type TelemetryUpdateDto,
 } from '../api/apiClient';
 import DashboardCharts from '../components/DashboardCharts';
 import DashboardStats from '../components/DashboardStats';
 import DashboardStatus from '../components/DashboardStatus';
 import PageHeader from '../components/PageHeader';
 import ParcelCropsOverview from '../components/ParcelCropsOverview';
+import useTelemetrySignalR from '../hooks/useTelemetrySignalR';
 
 const dashboardErrorMessage = 'Greška pri učitavanju podataka';
+const dailyDeltaRefreshDelayMilliseconds = 500;
 
 export default function DashboardPage() {
   const [apiaries, setApiaries] = useState<ApiaryDto[]>([]);
@@ -36,11 +39,13 @@ export default function DashboardPage() {
   const [devices, setDevices] = useState<DeviceDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dailyDeltaRefreshVersion, setDailyDeltaRefreshVersion] = useState(0);
 
   const clearHiveData = () => {
     setLatestStatus(null);
     setDailyDeltas([]);
     setDevices([]);
+    setDailyDeltaRefreshVersion(0);
   };
 
   async function loadHiveData(hiveId: string) {
@@ -105,6 +110,50 @@ export default function DashboardPage() {
     // Pocetno ucitavanje podataka za pregled sistema.
     loadDashboard();
   }, []);
+
+  const receiveTelemetryUpdate = (update: TelemetryUpdateDto) => {
+    if (update.apiaryId !== selectedApiaryId || update.hiveId !== selectedHiveId) {
+      return;
+    }
+
+    setLatestStatus({
+      hiveId: update.hiveId,
+      timestamp: update.timestamp,
+      weightKg: update.weight,
+      temperatureCelsius: update.temperature,
+      humidityPercent: update.humidity,
+      batteryPercent: update.batteryLevel,
+    });
+
+    setDailyDeltaRefreshVersion((currentVersion) => currentVersion + 1);
+  };
+
+  useTelemetrySignalR(selectedApiaryId, receiveTelemetryUpdate);
+
+  useEffect(() => {
+    if (!selectedHiveId || dailyDeltaRefreshVersion === 0) {
+      return;
+    }
+
+    let isActive = true;
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const { from, to } = getDashboardDateRange();
+        const refreshedDeltas = await getDailyWeightDeltas(selectedHiveId, from, to);
+
+        if (isActive) {
+          setDailyDeltas(refreshedDeltas);
+        }
+      } catch (requestError) {
+        console.error('Failed to refresh dashboard daily weight deltas.', requestError);
+      }
+    }, dailyDeltaRefreshDelayMilliseconds);
+
+    return () => {
+      isActive = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [selectedHiveId, dailyDeltaRefreshVersion]);
 
   const handleApiaryChange = async (event: ChangeEvent<HTMLSelectElement>) => {
     const nextApiaryId = event.target.value;

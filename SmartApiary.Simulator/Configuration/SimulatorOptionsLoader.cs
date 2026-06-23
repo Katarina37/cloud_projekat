@@ -52,6 +52,7 @@ public static class SimulatorOptionsLoader
         var deviceSerialNumber = Environment.GetEnvironmentVariable("SMARTAPIARY_DEVICE_SERIAL_NUMBER");
         var deviceIdentifier = Environment.GetEnvironmentVariable("SMARTAPIARY_DEVICE_IDENTIFIER");
         var intervalSeconds = Environment.GetEnvironmentVariable("SMARTAPIARY_INTERVAL_SECONDS");
+        var demoIntervalMilliseconds = Environment.GetEnvironmentVariable("SMARTAPIARY_DEMO_INTERVAL_MILLISECONDS");
 
         return options with
         {
@@ -59,7 +60,10 @@ public static class SimulatorOptionsLoader
             DeviceAccessToken = GetStringOverride(deviceAccessToken, options.DeviceAccessToken),
             DeviceSerialNumber = GetStringOverride(deviceSerialNumber, options.DeviceSerialNumber),
             DeviceIdentifier = GetStringOverride(deviceIdentifier, options.DeviceIdentifier),
-            IntervalSeconds = GetPositiveIntOverride(intervalSeconds, options.IntervalSeconds)
+            IntervalSeconds = GetPositiveIntOverride(intervalSeconds, options.IntervalSeconds),
+            DemoIntervalMilliseconds = GetPositiveIntOverride(
+                demoIntervalMilliseconds,
+                options.DemoIntervalMilliseconds)
         };
     }
 

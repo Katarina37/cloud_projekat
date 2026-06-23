@@ -6,5 +6,6 @@ public enum SimulatorMode
 {
     Normal = 1,
     LowBattery = 2,
-    WeightDrop = 3
+    WeightDrop = 3,
+    Demo = 4
 }

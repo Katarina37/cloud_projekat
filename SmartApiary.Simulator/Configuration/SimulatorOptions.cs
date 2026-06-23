@@ -16,6 +16,8 @@ public sealed record SimulatorOptions
 
     public int IntervalSeconds { get; init; } = 5;
 
+    public int DemoIntervalMilliseconds { get; init; } = 150;
+
     public bool HasDeviceAccessToken => !string.IsNullOrWhiteSpace(DeviceAccessToken);
 
     public bool HasActivationDetails =>
@@ -24,7 +26,11 @@ public sealed record SimulatorOptions
 
     public int NormalizedIntervalSeconds => Math.Max(1, IntervalSeconds);
 
+    public int NormalizedDemoIntervalMilliseconds => Math.Max(1, DemoIntervalMilliseconds);
+
     public TimeSpan Interval => TimeSpan.FromSeconds(NormalizedIntervalSeconds);
+
+    public TimeSpan DemoInterval => TimeSpan.FromMilliseconds(NormalizedDemoIntervalMilliseconds);
 
     public bool TryGetTelemetryEndpoint([NotNullWhen(true)] out Uri? endpoint)
     {

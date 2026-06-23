@@ -22,8 +22,9 @@ if (!options.TryGetActivationEndpoint(out var activationEndpoint))
     return;
 }
 
-// Biramo normalan rad, slabu bateriju ili pad tezine.
+// Biramo normalan rad, slabu bateriju, pad tezine ili demo grafika.
 var mode = SelectMode(args);
+var demoMode = mode == SimulatorMode.Demo;
 
 using var httpClient = new HttpClient();
 using var cancellationTokenSource = new CancellationTokenSource();
@@ -71,8 +72,7 @@ if (string.IsNullOrWhiteSpace(deviceAccessToken))
         return;
     }
 }
-// Generator pravi merenje, sender ga salje.
-var generator = new TelemetryGenerator(mode);
+// Sender salje merenja Function-u.
 var sender = new TelemetrySender(httpClient, telemetryEndpoint);
 
 Console.CancelKeyPress += (_, eventArgs) =>
@@ -85,29 +85,76 @@ Console.CancelKeyPress += (_, eventArgs) =>
 Console.WriteLine("SmartApiary simulator je pokrenut.");
 Console.WriteLine($"Endpoint: {telemetryEndpoint}");
 Console.WriteLine($"Mode: {mode.ToDisplayName()}");
-Console.WriteLine($"Interval: {options.NormalizedIntervalSeconds}s");
+Console.WriteLine(demoMode
+    ? $"Interval: {options.NormalizedDemoIntervalMilliseconds}ms"
+    : $"Interval: {options.NormalizedIntervalSeconds}s");
 Console.WriteLine("Prekid: Ctrl+C");
 Console.WriteLine();
+
+if (demoMode)
+{
+    var demoGenerator = new DemoTelemetryGenerator();
+    var demoReadings = demoGenerator.Generate(DateTime.UtcNow);
+    var sentReadingsCount = 0;
+
+    Console.WriteLine($"Demo salje {demoReadings.Count} merenja za prethodnih 6 dana.");
+    Console.WriteLine();
+
+    foreach (var payload in demoReadings)
+    {
+        try
+        {
+            var sent = await SendPayloadAsync(
+                payload,
+                sender,
+                deviceAccessToken,
+                cancellationTokenSource.Token);
+
+            if (sent)
+            {
+                sentReadingsCount++;
+            }
+        }
+        catch (OperationCanceledException) when (cancellationTokenSource.Token.IsCancellationRequested)
+        {
+            break;
+        }
+        catch (HttpRequestException exception)
+        {
+            Console.WriteLine($"Greska pri slanju: {exception.Message}");
+        }
+
+        Console.WriteLine();
+
+        try
+        {
+            await Task.Delay(options.DemoInterval, cancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException) when (cancellationTokenSource.Token.IsCancellationRequested)
+        {
+            break;
+        }
+    }
+
+    Console.WriteLine(
+        $"Demo je zavrsen. Uspesno poslato: {sentReadingsCount}/{demoReadings.Count} merenja.");
+    return;
+}
+
+var generator = new TelemetryGenerator(mode);
 
 // Vezbe 2: saljemo novo merenje u krug sve do Ctrl+C.
 while (!cancellationTokenSource.Token.IsCancellationRequested)
 {
     var payload = generator.Generate(DateTime.UtcNow);
 
-    Console.WriteLine($"Saljem: {FormatPayload(payload)}");
-
     try
     {
-        var result = await sender.SendAsync(
+        await SendPayloadAsync(
             payload,
+            sender,
             deviceAccessToken,
             cancellationTokenSource.Token);
-        Console.WriteLine($"API odgovor: {(int)result.StatusCode} {result.ReasonPhrase}");
-
-        if (!string.IsNullOrWhiteSpace(result.Body))
-        {
-            Console.WriteLine(result.Body);
-        }
     }
     catch (OperationCanceledException) when (cancellationTokenSource.Token.IsCancellationRequested)
     {
@@ -149,6 +196,7 @@ static SimulatorMode SelectMode(string[] args)
     Console.WriteLine("1. normal mode");
     Console.WriteLine("2. low battery mode");
     Console.WriteLine("3. weight drop mode");
+    Console.WriteLine("4. demo mode za grafike");
     Console.Write("Izbor [1]: ");
 
     var choice = Console.ReadLine();
@@ -157,6 +205,7 @@ static SimulatorMode SelectMode(string[] args)
     {
         "2" => SimulatorMode.LowBattery,
         "3" => SimulatorMode.WeightDrop,
+        "4" => SimulatorMode.Demo,
         _ => SimulatorMode.Normal
     };
 }
@@ -185,6 +234,29 @@ static string? GetModeArgument(string[] args)
     }
 
     return null;
+}
+
+static async Task<bool> SendPayloadAsync(
+    TelemetryPayload payload,
+    TelemetrySender sender,
+    string deviceAccessToken,
+    CancellationToken cancellationToken)
+{
+    Console.WriteLine($"Saljem: {FormatPayload(payload)}");
+
+    var result = await sender.SendAsync(
+        payload,
+        deviceAccessToken,
+        cancellationToken);
+
+    Console.WriteLine($"API odgovor: {(int)result.StatusCode} {result.ReasonPhrase}");
+
+    if (!string.IsNullOrWhiteSpace(result.Body))
+    {
+        Console.WriteLine(result.Body);
+    }
+
+    return (int)result.StatusCode is >= 200 and < 300;
 }
 
 static string FormatPayload(TelemetryPayload payload)
